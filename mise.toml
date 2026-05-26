@@ -1,0 +1,40 @@
+[tools]
+node = "24"
+pnpm = "11"
+lefthook = "2"
+
+[tasks.dev]
+description = "Serve Grayjay plugins locally"
+run = "pnpm run dev"
+
+[tasks.validate]
+description = "Validate plugin scripts and configs"
+run = "pnpm run validate"
+
+[tasks.format]
+description = "Format project files"
+run = "pnpm run format"
+
+[tasks.format-check]
+description = "Check project formatting"
+run = "pnpm run format:check"
+
+[tasks.lint]
+description = "Lint project JavaScript"
+run = "pnpm run lint"
+
+[tasks.check]
+description = "Run format, lint, and validation checks"
+run = "pnpm run check"
+
+[tasks.bump]
+description = "Bump plugin config versions"
+run = "pnpm run bump"
+
+[tasks.sign]
+description = "Sign plugin scripts"
+run = "pnpm run sign"
+
+[tasks.sign-bump]
+description = "Bump plugin config versions and sign scripts"
+run = "pnpm run sign-bump"

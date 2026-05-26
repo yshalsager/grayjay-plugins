@@ -1,0 +1,26 @@
+{
+  "private": true,
+  "license": "AGPL-3.0-or-later",
+  "type": "module",
+  "scripts": {
+    "dev": "sirv . --dev --cors --host 0.0.0.0 --port ${PORT:-3000}",
+    "validate": "node scripts/validate.mjs",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "check": "pnpm run format:check && pnpm run lint && pnpm run validate",
+    "bump": "zx scripts/bump-and-sign.mjs bump",
+    "sign": "zx scripts/bump-and-sign.mjs sign",
+    "sign-bump": "zx scripts/bump-and-sign.mjs sign-bump"
+  },
+  "devDependencies": {
+    "@clack/prompts": "1.4.0",
+    "@eslint/js": "10.0.1",
+    "eslint": "10.4.0",
+    "globals": "17.6.0",
+    "prettier": "3.8.3",
+    "sirv-cli": "3.0.1",
+    "zx": "8.8.5"
+  }
+}

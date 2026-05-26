@@ -1,0 +1,5 @@
+pre-commit:
+  commands:
+    fix:
+      run: pnpm run format && pnpm run lint:fix && pnpm run validate
+      stage_fixed: true

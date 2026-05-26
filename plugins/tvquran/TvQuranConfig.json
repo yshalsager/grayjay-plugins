@@ -1,0 +1,83 @@
+{
+  "name": "tvQuran",
+  "description": "Browse tvQuran.com Quran selections, category/collection playlists, reciter channels, direct MP3 audio, and nested YouTube video/live content.",
+  "author": "yshalsager",
+  "authorUrl": "https://github.com/yshalsager",
+  "platformUrl": "https://tvquran.com",
+  "sourceUrl": "https://raw.githubusercontent.com/yshalsager/grayjay-plugins/master/plugins/tvquran/TvQuranConfig.json",
+  "repositoryUrl": "https://github.com/yshalsager/grayjay-plugins",
+  "scriptUrl": "./TvQuranScript.js",
+  "version": 1,
+  "iconUrl": "./TvQuranIcon.png",
+  "id": "a0fb03cb-937e-47a6-ad2a-dde53da9b1c9",
+  "scriptSignature": "MFP5FUzpaGFy4GCrUoRJs4loXDlQTWPeLbAW+CtJ5yUGIeeNBjqglbYiPYAO8YOie6XmQ3OkJfun2pIWUG88m4eMCXOdt+o8+BeKE23VDvrVR7JAsnmy4BxaeIf8PlbvC4SJyxfUOZIr+Usi5SKLZPwgfLugtgyXdsxePIxXVdGItFeHt2KEardR1Q/XFs9VngxTDhMWwiIsMySbLjOA/DySGrhYSCqb0g8lwlkWsWQbymrtHaCWoLF5mjwr8KK5TdH8Eu4GQnw+0irpow+Xga9KyY5j5Ukz7wIjQfZlab2cEWbl0+mva2GFSeWXdle12OGmhutQywehcCs+s8VSzm6HFK9H2xcllrfSNnHY37A8DjYFqFrFF9YquKSOvdUu5UV8NUMmw0eGQMlFvyo91+/aa5dfF0FqtZ8gA2eoESn0fkK/ejafVaQXM5jWLOFgilDsLjg8QvbTRcXVb9h59+eDW/fJl7tWALqBeIyVx7v3zh/perbyJicV2xiLMioAwdUFf8iL08Awgp7S/eq/R7d3P8VWZ2bqFEImVohRiUhtvadnyHFOfP2i3b2dqeuPAzCgXfCVD+UVx/d2ZMHtrs2or0LlT9V8IGNTiuilki6YOCrqyOaaFDcUcNT8hCuqxgInlNDg0DnXVcqBLOGcGZWTKZaRWaBxW7A9wn/3JSM=",
+  "scriptPublicKey": "MIICIjANBgkqhkiG9w0BAQEFAAOCAg8AMIICCgKCAgEAwi2xI2mEI/H1NQqXhdU2DLze4ik+YxgC5QIq+MXgHWYXW0JCUrLsiSRHhYv22wo0PPj64V/WANZ4AyAmpCthJhlvfVc0CYlOjK52jBBTZCbs/3yU+GrRS+HnZNogA6tu/89Lcyheqvoks8XQ/M60PVgCnwzy1EDS6MODR+47J2y/cBeKqr/agYXerfDyrFoVdVICsWFTFJ/w3MQ+faVt+CDxYiYWJ38ntJjOrF6xiMrO1jgqBp9ND9H/2uBYEECE8GnujqUsod8dSctYkNNTM5MVkgZKUjchuRBAoNRlSTcvaSZi1j1CREjqKJDfq8jt5zwbV79N8wpUGpxmQ4e5K+6HNfnvIe+jA9W5sjFOT/q1ztkYO8MKRsJAiqoJBxvglRu9/lqvNIzJsyLr6afB49DQxoUBNWn2pQIQk/AZe8GA5FRCUFwbDXYa3ly5H57B8ZavXaY864N5yLnylt2LWrj7XqGSOh2vGWkS836m6trthFZdsigCxMB55USDIj5HHtxCQH1oHmmuJFn/uZW28RIIbSN+9vGsf9KvmxZ28cPeJwHalGNBq7Qp7YAEu+SOr5W8Hq4wh1e2JMCQbEqZU8qBNZWaz0HGC2ISkSBrDiWEb+epTzLBeD0pdz2Vy1avGHW4oOM8d/c8hLDwJ+vkLdQ5mddr2VjCoNt8SQBJapECAwEAAQ==",
+  "packages": ["Http"],
+  "allowEval": false,
+  "allowUrls": ["tvquran.com", ".tvquran.com", "i.ytimg.com", "youtube.com", ".youtube.com", "youtu.be"],
+  "settings": [
+    {
+      "variable": "language",
+      "name": "Site Language",
+      "description": "Language used for tvQuran pages, reciter names, category names, and item titles.",
+      "type": "Dropdown",
+      "default": "0",
+      "options": ["Arabic", "English", "German"]
+    },
+    {
+      "variable": "homeMode",
+      "name": "Home Page",
+      "description": "Choose what the tvQuran home tab shows.",
+      "type": "Dropdown",
+      "default": "0",
+      "options": ["Selections", "Videos", "Live videos", "Reciter recitations", "Prayer recitations"]
+    },
+    {
+      "variable": "homeCategory",
+      "name": "Home Category",
+      "description": "Choose which tvQuran category appears on the home tab.",
+      "type": "Dropdown",
+      "default": "0",
+      "options": [
+        "Beautiful Quran recitation",
+        "Rare Recitations",
+        "Recitations by children",
+        "Ruqyah",
+        "Daily Dhikr",
+        "Dua",
+        "Adhan and Takbir",
+        "Amazing Quran",
+        "Visitors recitations"
+      ]
+    },
+    {
+      "variable": "homeSort",
+      "name": "Home Sort",
+      "description": "Choose how tvQuran category selections are sorted on the home tab.",
+      "type": "Dropdown",
+      "default": "0",
+      "options": ["Random", "Recent", "Most listened", "Most liked"]
+    },
+    {
+      "variable": "sortDirection",
+      "name": "Sort Direction",
+      "description": "Choose whether tvQuran category pages are loaded newest/highest first or oldest/lowest first.",
+      "type": "Dropdown",
+      "default": "0",
+      "options": ["Descending", "Ascending"]
+    },
+    {
+      "variable": "reciterSort",
+      "name": "Reciter Sort",
+      "description": "Choose how reciter channel browsing is sorted when no reciter search text is entered.",
+      "type": "Dropdown",
+      "default": "0",
+      "options": ["Most played", "Newest", "Narration"]
+    }
+  ],
+  "changelog": {
+    "1": [
+      "Initial tvQuran category selections, category/collection playlists, Arabic/English/German site language support, reciter channels, moshaf/collection metadata, direct MP3 playback, reciter recitations home mode, nested YouTube video/live/prayer-recitation content, selection sorting and sort direction, direct collection URL support, paginated search, reciter/surah/category search filters, paged channel search, channel peeks, richer suggestions, audio/video recommendations, richer category/video channel metadata, bounded caches, and config-relative fallback thumbnail support."
+    ]
+  }
+}

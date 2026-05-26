@@ -1,0 +1,74 @@
+{
+  "name": "MP3Quran",
+  "description": "Browse MP3Quran.net reciters, moshaf playlists, surah audio tracks with ayah chapters/subtitles, tafsir playlists/audio, reminder video playlists, recent reads, live Quran radio streams, and live TV.",
+  "author": "yshalsager",
+  "authorUrl": "https://github.com/yshalsager",
+  "platformUrl": "https://mp3quran.net",
+  "sourceUrl": "https://raw.githubusercontent.com/yshalsager/grayjay-plugins/master/plugins/mp3quran/Mp3QuranConfig.json",
+  "repositoryUrl": "https://github.com/yshalsager/grayjay-plugins",
+  "scriptUrl": "./Mp3QuranScript.js",
+  "version": 1,
+  "iconUrl": "./Mp3QuranIcon.png",
+  "id": "6f5406d8-0e8d-4a81-85ee-554c89d9f460",
+  "scriptSignature": "JXiDLS73snDPBGQCcs81rsydlorxQ+k8MvuYnr21YdGcUuR5Bupo0L/ypjh5vOZUzYxtMMschHgwdxZ47R+yaOL4Yh7+uJtXRrSDG/Ijdn0K9Z5lPk/VO8k8iqwJWP8b100LAeG21rslwK/BlSeMXwY4UQlpIP7Bk9mz3q4Ge8Vyh9ZlIyLgKsgzgSBI7dRli71QhjJxYr4/YPFBQicxpWKhmur2s/7AouQkRAmtfqy6rCwrVuVlpNWKobvTwlDlT8G/68Bbg8bqhl2ZdDrlq7WqOImf9Lry8nAAS9TkXMdDCOffZNmOK3pXoZNZPmi6/mFXUIFgJ09duprPoDWT+fsmjijU0uIWwKBV1/cr0jj0HkPOKAdWtQ47/HpDndNqlS2mYJzf9uQBXvcIS1Y0H6ve2mChKuA648iCA+MSz0mDnR8NlfZq+IyIwjxWWlAV4kgU25Zi4jLYV6qdW2UtXNM9YM+8Yu8ncgYDhu0/GD2kXQ0tY8osy6EmQOPdmdVfk9W3CCDSvPCRjrFXATZ0Boqk2FW3Zba4i1wkAqg8aGK98qAlAJZmdEdnoNvhq8bWFrAfVtyfW5R4pwswfseQNpp6OBlGz9EB78gSU8re9vlrXaOSLc5DpGi23RqFXTaASk42jseiIBUqEF14tnjkdhrCiKyr0V6lDO8cFvPZX8Q=",
+  "scriptPublicKey": "MIICIjANBgkqhkiG9w0BAQEFAAOCAg8AMIICCgKCAgEAwi2xI2mEI/H1NQqXhdU2DLze4ik+YxgC5QIq+MXgHWYXW0JCUrLsiSRHhYv22wo0PPj64V/WANZ4AyAmpCthJhlvfVc0CYlOjK52jBBTZCbs/3yU+GrRS+HnZNogA6tu/89Lcyheqvoks8XQ/M60PVgCnwzy1EDS6MODR+47J2y/cBeKqr/agYXerfDyrFoVdVICsWFTFJ/w3MQ+faVt+CDxYiYWJ38ntJjOrF6xiMrO1jgqBp9ND9H/2uBYEECE8GnujqUsod8dSctYkNNTM5MVkgZKUjchuRBAoNRlSTcvaSZi1j1CREjqKJDfq8jt5zwbV79N8wpUGpxmQ4e5K+6HNfnvIe+jA9W5sjFOT/q1ztkYO8MKRsJAiqoJBxvglRu9/lqvNIzJsyLr6afB49DQxoUBNWn2pQIQk/AZe8GA5FRCUFwbDXYa3ly5H57B8ZavXaY864N5yLnylt2LWrj7XqGSOh2vGWkS836m6trthFZdsigCxMB55USDIj5HHtxCQH1oHmmuJFn/uZW28RIIbSN+9vGsf9KvmxZ28cPeJwHalGNBq7Qp7YAEu+SOr5W8Hq4wh1e2JMCQbEqZU8qBNZWaz0HGC2ISkSBrDiWEb+epTzLBeD0pdz2Vy1avGHW4oOM8d/c8hLDwJ+vkLdQ5mddr2VjCoNt8SQBJapECAwEAAQ==",
+  "packages": ["Http"],
+  "allowEval": false,
+  "allowUrls": [
+    "mp3quran.net",
+    ".mp3quran.net",
+    "qurango.net",
+    ".qurango.net",
+    "stream.radiojar.com",
+    "win.holol.com",
+    "upload.mp3quran.net",
+    "server17.mp3quran.net",
+    "cdn.jsdelivr.net",
+    ".jsdelivr.net"
+  ],
+  "settings": [
+    {
+      "variable": "language",
+      "name": "Catalog Language",
+      "description": "Language used for reciter, surah, and radio names.",
+      "type": "Dropdown",
+      "default": "0",
+      "options": [
+        "Arabic",
+        "English",
+        "French",
+        "Russian",
+        "German",
+        "Spanish",
+        "Turkish",
+        "Chinese",
+        "Thai",
+        "Urdu",
+        "Bengali",
+        "Bosnian",
+        "Uyghur",
+        "Persian",
+        "Tajik (Cyrillic)",
+        "Malayalam",
+        "Tagalog",
+        "Indonesian",
+        "Portuguese",
+        "Hausa",
+        "Swahili"
+      ]
+    },
+    {
+      "variable": "homeMode",
+      "name": "Home Page",
+      "description": "Choose what the home tab shows.",
+      "type": "Dropdown",
+      "default": "0",
+      "options": ["Live radios", "Complete recitations", "Live TV", "Recent reads", "Tafsir audio", "Videos"]
+    }
+  ],
+  "changelog": {
+    "1": [
+      "Initial MP3Quran reciters, moshaf playlists, tracks, ayah chapters/subtitles, tafsir playlists/audio, video-type playlists/videos, recent reads, live radio, live TV, reciter/search filters, channels, channel peeks, richer suggestions, localized labels, thumbnails, and recommendations."
+    ]
+  }
+}
