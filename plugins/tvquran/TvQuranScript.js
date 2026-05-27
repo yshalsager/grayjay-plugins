@@ -702,7 +702,7 @@ class TvQuranPager extends VideoPager {
     const html = callHtml(url)
     const selections = parseSelections(html)
     const videos = selections.map(selectionToVideo)
-    const hasMore = Boolean(context.categoryId) && videos.length >= DEFAULT_LIMIT
+    const hasMore = Boolean(context.categoryId) && pageHasMore(html)
 
     super(videos, hasMore, context)
   }
@@ -716,7 +716,7 @@ class TvQuranPager extends VideoPager {
     const html = callHtml(categoryUrl(this.context.categoryId, this.context.page, this.context.view))
     const videos = parseSelections(html).map(selectionToVideo)
     this.results = videos
-    this.hasMore = videos.length >= DEFAULT_LIMIT
+    this.hasMore = pageHasMore(html)
     this.context.page += 1
     return this
   }
@@ -812,7 +812,7 @@ class TvQuranVideoPager extends VideoPager {
     const html = callHtml(videoCategoryUrl(videoType, page))
     const videos = parseTvVideos(html, videoType).map(tvVideoToNested)
 
-    super(videos, hasLoadMore(html) || videos.length >= DEFAULT_LIMIT, { videoType, page: page + 1 })
+    super(videos, pageHasMore(html), { videoType, page: page + 1 })
   }
 
   nextPage() {
@@ -2093,13 +2093,14 @@ function selectionViewFromOrder(order) {
 }
 
 function categoryUrl(id, page, view = 'random') {
-  return `${BASE_URL}/${language()}/selections/category/${id}/category/${page}?json=1&view=${encodeURIComponent(view)}&sort=${sortDirection()}`
+  const pageParam = page > 1 ? `&page=${page}` : ''
+  return `${BASE_URL}/${language()}/selections/category/${id}?json=1${pageParam}&view=${encodeURIComponent(view)}&sort=${sortDirection()}`
 }
 
 function videoCategoryUrl(typeOrId, page = 1) {
   const category = VIDEO_CATEGORIES.find((item) => item.type === typeOrId || String(item.id) === String(typeOrId)) ?? VIDEO_CATEGORIES[0]
-  const pagePath = page > 1 ? `/category/${page}` : ''
-  return `${BASE_URL}/${language()}/videos/category/${category.id}/${videoCategorySlug(category)}${pagePath}?json=1&view=new&sort=${sortDirection()}`
+  const pageParam = page > 1 ? `&page=${page}` : ''
+  return `${BASE_URL}/${language()}/videos/category/${category.id}/${videoCategorySlug(category)}?json=1${pageParam}&view=new&sort=${sortDirection()}`
 }
 
 function selectionCategoryPageUrl(category) {
@@ -2338,8 +2339,8 @@ function hasLoadMore(html) {
   return /id=["']load-more["']/.test(String(html ?? ''))
 }
 
-function pageHasMore(html, items) {
-  return hasLoadMore(html) || items.length >= DEFAULT_LIMIT
+function pageHasMore(html) {
+  return hasLoadMore(html)
 }
 
 function extractYoutubeId(value) {
