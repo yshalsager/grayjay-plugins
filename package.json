@@ -5,6 +5,9 @@
   "scripts": {
     "dev": "sirv . --dev --cors --host 0.0.0.0 --port ${PORT:-3000}",
     "validate": "node scripts/validate.mjs",
+    "test:live": "node --test --test-concurrency=1 tests/live/*.live.mjs",
+    "test:live:mp3quran": "node --test --test-concurrency=1 tests/live/mp3quran.live.mjs",
+    "test:live:tvquran": "node --test --test-concurrency=1 tests/live/tvquran.live.mjs",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint": "eslint .",

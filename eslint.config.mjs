@@ -13,6 +13,7 @@ const grayjay_globals = readonly([
   'PlatformNestedMediaContent',
   'PlatformPlaylist',
   'PlatformPlaylistDetails',
+  'PlatformVideo',
   'PlatformVideoDetails',
   'PlaylistPager',
   'ScriptException',
@@ -36,7 +37,7 @@ export default [
   },
   js.configs.recommended,
   {
-    files: ['*.config.mjs', 'scripts/**/*.mjs'],
+    files: ['*.config.mjs', 'scripts/**/*.mjs', 'tests/**/*.mjs'],
     languageOptions: {
       globals: globals.node
     }
