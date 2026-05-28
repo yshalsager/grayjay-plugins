@@ -82,8 +82,7 @@ Use Grayjay Desktop's Developer Portal while serving this repository from your c
    On macOS:
 
    ```sh
-   mkdir -p "$HOME/Library/Application Support/Grayjay"
-   touch "$HOME/Library/Application Support/Grayjay/DEV"
+   mise run grayjay-desktop-dev-mode
    ```
 
    Restart Grayjay Desktop after creating the file.
@@ -98,16 +97,14 @@ Use Grayjay Desktop's Developer Portal while serving this repository from your c
 3. Find Grayjay Desktop's local server port:
 
    ```sh
-   cat "$HOME/Library/Application Support/Grayjay/port"
+   mise run grayjay-desktop-port
    ```
 
 4. Open the Developer Portal in your browser:
 
-   ```text
-   http://127.0.0.1:PORT/Developer/Index
+   ```sh
+   mise run grayjay-desktop-dev
    ```
-
-   Replace `PORT` with the value from the `port` file.
 
 5. Load a plugin using the local config URL:
 

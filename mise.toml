@@ -27,6 +27,26 @@ run = "pnpm run lint"
 description = "Run format, lint, and validation checks"
 run = "pnpm run check"
 
+[tasks.grayjay-desktop-dev-mode]
+description = "Enable Grayjay Desktop developer mode"
+run = "mkdir -p \"$HOME/Library/Application Support/Grayjay\" && touch \"$HOME/Library/Application Support/Grayjay/DEV\""
+
+[tasks.grayjay-desktop-port]
+description = "Print Grayjay Desktop local server port"
+run = 'printf "%s\n" "$(cat "$HOME/Library/Application Support/Grayjay/port")"'
+
+[tasks.grayjay-desktop-dev]
+description = "Open Grayjay Desktop Developer Portal"
+run = '''
+port="$(mise run grayjay-desktop-port)"
+printf "Developer Portal:\nhttp://127.0.0.1:%s/Developer/Index\n\n" "$port"
+printf "Plugin config URLs:\n"
+find plugins -mindepth 2 -maxdepth 2 -name '*Config.json' -print | sort | while IFS= read -r config; do
+  printf "http://127.0.0.1:3000/%s\n" "$config"
+done
+open "http://127.0.0.1:$port/Developer/Index"
+'''
+
 [tasks.bump]
 description = "Bump plugin config versions"
 run = "pnpm run bump"
