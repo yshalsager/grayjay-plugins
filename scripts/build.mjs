@@ -2,6 +2,7 @@ import { dirname } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { build } from 'vite'
 import { ensure_file, load_plugin_registry, parse_plugin_args, plugin_usage, select_plugins } from './plugin-registry.mjs'
+import { vite_aliases } from './vite-aliases.mjs'
 
 export const strip_region_comments = () => ({
   name: 'grayjay-strip-region-comments',
@@ -23,6 +24,9 @@ export const build_plugin = async (plugin) => {
     configFile: false,
     logLevel: 'warn',
     plugins: [strip_region_comments()],
+    resolve: {
+      alias: vite_aliases
+    },
     build: {
       emptyOutDir: false,
       minify: false,

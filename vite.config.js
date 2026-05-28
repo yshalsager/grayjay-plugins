@@ -3,6 +3,7 @@ import { relative } from 'node:path'
 import { defineConfig } from 'vite'
 import { build_plugin } from './scripts/build.mjs'
 import { load_plugin_registry } from './scripts/plugin-registry.mjs'
+import { vite_aliases } from './scripts/vite-aliases.mjs'
 
 const should_rebuild = (file) => {
   const path = relative(process.cwd(), file).replaceAll('\\', '/')
@@ -72,6 +73,9 @@ const grayjay_rebuild = () => {
 
 export default defineConfig({
   plugins: [grayjay_rebuild()],
+  resolve: {
+    alias: vite_aliases
+  },
   server: {
     host: '0.0.0.0',
     port: Number(process.env.PORT ?? 3000),
