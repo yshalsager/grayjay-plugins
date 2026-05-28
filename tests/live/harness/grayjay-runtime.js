@@ -2,6 +2,7 @@ import { execFileSync } from 'node:child_process'
 import { readFile } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
 import vm from 'node:vm'
+import { load_plugin_registry } from '@scripts/plugin-registry.mjs'
 
 const root_dir = new URL('../../../', import.meta.url).pathname
 
@@ -140,29 +141,14 @@ const curl_get = (url, headers = {}) => {
   }
 }
 
-export const plugin_paths = {
-  mp3quran: {
-    config_path: 'plugins/mp3quran/Mp3QuranConfig.json',
-    script_path: 'plugins/mp3quran/Mp3QuranScript.js'
-  },
-  tvquran: {
-    config_path: 'plugins/tvquran/TvQuranConfig.json',
-    script_path: 'plugins/tvquran/TvQuranScript.js'
-  },
-  archiveorg: {
-    config_path: 'plugins/archiveorg/ArchiveOrgConfig.json',
-    script_path: 'plugins/archiveorg/ArchiveOrgScript.js'
-  }
-}
-
 export async function load_plugin(name, settings = {}) {
-  const paths = plugin_paths[name]
-  if (!paths) {
+  const plugin = (await load_plugin_registry()).find((item) => item.value === name)
+  if (!plugin) {
     throw new Error(`Unknown plugin: ${name}`)
   }
 
-  const config_path = join(root_dir, paths.config_path)
-  const script_path = join(root_dir, paths.script_path)
+  const config_path = join(root_dir, plugin.config_path)
+  const script_path = join(root_dir, plugin.script_path)
   const config = JSON.parse(await readFile(config_path, 'utf8'))
   const script = await readFile(script_path, 'utf8')
   const source = {}

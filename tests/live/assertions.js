@@ -1,38 +1,38 @@
-import assert from 'node:assert/strict'
 import { execFileSync } from 'node:child_process'
+import { expect } from 'vitest'
 
 export function assert_pager(pager, label) {
-  assert.ok(pager, `${label}: expected pager`)
-  assert.ok(Array.isArray(pager.results), `${label}: expected results array`)
-  assert.ok(pager.results.length > 0, `${label}: expected at least one result`)
-  assert.equal(typeof pager.hasMore, 'boolean', `${label}: expected boolean hasMore`)
+  expect(pager, `${label}: expected pager`).toBeTruthy()
+  expect(Array.isArray(pager.results), `${label}: expected results array`).toBe(true)
+  expect(pager.results.length, `${label}: expected at least one result`).toBeGreaterThan(0)
+  expect(typeof pager.hasMore, `${label}: expected boolean hasMore`).toBe('boolean')
   return pager.results
 }
 
 export function assert_item(item, label) {
-  assert.ok(item, `${label}: expected item`)
-  assert.ok(non_empty(item.name ?? item.contentName), `${label}: expected name`)
-  assert.ok(non_empty(item.url ?? item.contentUrl), `${label}: expected URL`)
+  expect(item, `${label}: expected item`).toBeTruthy()
+  expect(non_empty(item.name ?? item.contentName), `${label}: expected name`).toBe(true)
+  expect(non_empty(item.url ?? item.contentUrl), `${label}: expected URL`).toBe(true)
   return item
 }
 
 export function assert_channel(channel, label) {
   assert_item(channel, label)
-  assert.ok(non_empty(channel.thumbnail), `${label}: expected thumbnail`)
-  assert.ok(Array.isArray(channel.urlAlternatives), `${label}: expected URL alternatives`)
+  expect(non_empty(channel.thumbnail), `${label}: expected thumbnail`).toBe(true)
+  expect(Array.isArray(channel.urlAlternatives), `${label}: expected URL alternatives`).toBe(true)
   return channel
 }
 
 export function assert_playlist(playlist, label) {
   assert_item(playlist, label)
-  assert.ok(playlist.thumbnails, `${label}: expected thumbnails`)
+  expect(playlist.thumbnails, `${label}: expected thumbnails`).toBeTruthy()
   return playlist
 }
 
 export function assert_details(details, label) {
   assert_item(details, label)
-  assert.ok(details.author, `${label}: expected author`)
-  assert.ok(details.thumbnails || details.contentThumbnails, `${label}: expected thumbnails`)
+  expect(details.author, `${label}: expected author`).toBeTruthy()
+  expect(details.thumbnails || details.contentThumbnails, `${label}: expected thumbnails`).toBeTruthy()
   return details
 }
 
@@ -79,14 +79,14 @@ export function media_sources(item) {
 
 export function assert_has_media(item, label) {
   if (item.contentUrl) {
-    assert.ok(/^https?:\/\//.test(item.contentUrl), `${label}: expected nested media contentUrl`)
+    expect(/^https?:\/\//.test(item.contentUrl), `${label}: expected nested media contentUrl`).toBe(true)
     return []
   }
 
   const sources = media_sources(item)
-  assert.ok(sources.length > 0, `${label}: expected media source`)
+  expect(sources.length, `${label}: expected media source`).toBeGreaterThan(0)
   for (const source of sources) {
-    assert.ok(/^https?:\/\//.test(source.url), `${label}: expected HTTP media URL: ${source.url}`)
+    expect(/^https?:\/\//.test(source.url), `${label}: expected HTTP media URL: ${source.url}`).toBe(true)
   }
   return sources
 }
@@ -114,7 +114,7 @@ export async function assert_reachable_url(url, label) {
     )
   )
 
-  assert.ok((code >= 200 && code < 300) || code === 416, `${label}: expected reachable media URL ${url}, got ${code}`)
+  expect((code >= 200 && code < 300) || code === 416, `${label}: expected reachable media URL ${url}, got ${code}`).toBe(true)
 }
 
 export async function assert_first_media_reachable(item, label) {
@@ -132,8 +132,8 @@ export function find_by_url_part(items, part) {
 
 export function first_filter_value(capabilities, id) {
   const filter = capabilities.filters.find((item) => item.id === id)
-  assert.ok(filter, `expected filter ${id}`)
-  assert.ok(filter.filters.length > 0, `expected filter ${id} values`)
+  expect(filter, `expected filter ${id}`).toBeTruthy()
+  expect(filter.filters.length, `expected filter ${id} values`).toBeGreaterThan(0)
   return filter.filters[0].value
 }
 
