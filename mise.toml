@@ -27,6 +27,10 @@ run = "pnpm run lint"
 description = "Run format, lint, and validation checks"
 run = "pnpm run check"
 
+[tasks.scaffold]
+description = "Scaffold a new Grayjay plugin"
+run = "pnpm run scaffold --"
+
 [tasks.grayjay-desktop-dev-mode]
 description = "Enable Grayjay Desktop developer mode"
 run = "mkdir -p \"$HOME/Library/Application Support/Grayjay\" && touch \"$HOME/Library/Application Support/Grayjay/DEV\""
