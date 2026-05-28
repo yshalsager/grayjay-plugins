@@ -3,10 +3,7 @@ import globals from 'globals'
 
 const readonly = (names) => Object.fromEntries(names.map((name) => [name, 'readonly']))
 
-const grayjay_globals = readonly([
-  'AudioUrlSource',
-  'ChannelPager',
-  'HLSSource',
+const grayjay_platform_globals = readonly([
   'PlatformAuthorLink',
   'PlatformChannel',
   'PlatformID',
@@ -14,30 +11,40 @@ const grayjay_globals = readonly([
   'PlatformPlaylist',
   'PlatformPlaylistDetails',
   'PlatformVideo',
-  'PlatformVideoDetails',
-  'PlaylistPager',
-  'ScriptException',
+  'PlatformVideoDetails'
+])
+
+const grayjay_media_globals = readonly([
+  'AudioUrlSource',
+  'HLSSource',
   'Thumbnail',
   'Thumbnails',
-  'Type',
   'UnMuxVideoSourceDescriptor',
-  'VideoPager',
   'VideoSourceDescriptor',
-  'VideoUrlSource',
+  'VideoUrlSource'
+])
+
+const grayjay_plugin_globals = readonly([
+  'ChannelPager',
+  'PlaylistPager',
+  'ScriptException',
+  'Type',
+  'VideoPager',
   'IS_TESTING',
   'bridge',
-  'http',
   'log',
   'source'
 ])
 
+const grayjay_http_globals = readonly(['ScriptException', 'http'])
+
 export default [
   {
-    ignores: ['node_modules/**']
+    ignores: ['node_modules/**', 'tmp/**']
   },
   js.configs.recommended,
   {
-    files: ['*.config.mjs', 'scripts/**/*.mjs', 'tests/**/*.mjs'],
+    files: ['*.config.js', '*.config.mjs', 'scripts/**/*.mjs', 'tests/**/*.mjs', 'tests/**/*.js'],
     languageOptions: {
       globals: globals.node
     }
@@ -46,7 +53,48 @@ export default [
     files: ['plugins/**/*.js'],
     languageOptions: {
       sourceType: 'script',
-      globals: grayjay_globals
+      globals: {
+        ...grayjay_platform_globals,
+        ...grayjay_media_globals,
+        ...grayjay_http_globals,
+        ...grayjay_plugin_globals
+      }
+    },
+    rules: {
+      'no-unused-vars': ['warn', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }]
+    }
+  },
+  {
+    files: ['src/plugins/**/*.js'],
+    languageOptions: {
+      globals: grayjay_plugin_globals
+    },
+    rules: {
+      'no-unused-vars': ['warn', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }]
+    }
+  },
+  {
+    files: ['src/lib/grayjay.js'],
+    languageOptions: {
+      globals: grayjay_platform_globals
+    },
+    rules: {
+      'no-unused-vars': ['warn', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }]
+    }
+  },
+  {
+    files: ['src/lib/media.js'],
+    languageOptions: {
+      globals: grayjay_media_globals
+    },
+    rules: {
+      'no-unused-vars': ['warn', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }]
+    }
+  },
+  {
+    files: ['src/lib/http.js'],
+    languageOptions: {
+      globals: grayjay_http_globals
     },
     rules: {
       'no-unused-vars': ['warn', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }]

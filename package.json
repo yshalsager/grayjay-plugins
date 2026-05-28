@@ -3,16 +3,22 @@
   "license": "AGPL-3.0-or-later",
   "type": "module",
   "scripts": {
-    "dev": "sirv . --dev --cors --host 0.0.0.0 --port ${PORT:-3000}",
+    "dev": "vite",
+    "build": "node scripts/build.mjs",
+    "build:all": "node scripts/build.mjs --plugin all",
+    "scaffold": "node scripts/scaffold-plugin.mjs",
     "validate": "node scripts/validate.mjs",
-    "test:live": "node --test --test-concurrency=1 tests/live/*.live.mjs",
-    "test:live:mp3quran": "node --test --test-concurrency=1 tests/live/mp3quran.live.mjs",
-    "test:live:tvquran": "node --test --test-concurrency=1 tests/live/tvquran.live.mjs",
+    "test": "vitest run tests/unit",
+    "test:watch": "vitest tests/unit",
+    "test:live": "vitest run tests/live",
+    "test:live:mp3quran": "vitest run tests/live/mp3quran.live.test.js",
+    "test:live:tvquran": "vitest run tests/live/tvquran.live.test.js",
+    "test:live:archiveorg": "vitest run tests/live/archiveorg.live.test.js",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "check": "pnpm run format:check && pnpm run lint && pnpm run validate",
+    "check": "pnpm run format:check && pnpm run lint && pnpm run build:all && pnpm run validate && pnpm run test",
     "bump": "zx scripts/bump-and-sign.mjs bump",
     "sign": "zx scripts/bump-and-sign.mjs sign",
     "sign-bump": "zx scripts/bump-and-sign.mjs sign-bump"
@@ -23,7 +29,8 @@
     "eslint": "10.4.0",
     "globals": "17.6.0",
     "prettier": "3.8.3",
-    "sirv-cli": "3.0.1",
+    "vite": "^8.0.14",
+    "vitest": "^4.1.7",
     "zx": "8.8.5"
   }
 }

@@ -3,28 +3,30 @@
 import { promises as node_fs } from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
+import { parseArgs } from 'node:util'
 import { $ } from 'zx'
 import { intro, outro, cancel, isCancel, multiselect, text, confirm, spinner } from '@clack/prompts'
+import { assert_fresh_script, ensure_file, load_plugin_registry, select_plugins } from './plugin-registry.mjs'
+import { build_plugin } from './build.mjs'
 
 $.verbose = false
 
-const plugins = [
-  {
-    label: 'MP3Quran',
-    value: 'mp3quran',
-    config_path: 'plugins/mp3quran/Mp3QuranConfig.json',
-    script_path: 'plugins/mp3quran/Mp3QuranScript.js'
-  },
-  {
-    label: 'tvQuran',
-    value: 'tvquran',
-    config_path: 'plugins/tvquran/TvQuranConfig.json',
-    script_path: 'plugins/tvquran/TvQuranScript.js'
-  }
-]
-
-const modes = new Set(['bump', 'sign', 'sign-bump', 'both'])
-const raw_args = process.argv.slice(2).filter((arg) => !arg.endsWith('.mjs'))
+const mode_actions = {
+  bump: [true, false],
+  sign: [false, true],
+  'sign-bump': [true, true],
+  both: [true, true]
+}
+const raw_args = process.argv.slice(2).filter((arg) => arg !== '--' && !arg.endsWith('.mjs'))
+const plugins = await load_plugin_registry()
+const plugin_values = plugins.map((plugin) => plugin.value)
+const plugin_choices = `${plugin_values.join(', ')}, or all`
+const plugin_option_help = plugins
+  .flatMap((plugin) => [
+    `  --message-${plugin.value} <text> changelog entry for ${plugin.label}`,
+    `  --version-${plugin.value} <n>    set ${plugin.label} version`
+  ])
+  .join('\n')
 
 const usage = `Usage:
   pnpm run bump -- [options]
@@ -37,87 +39,66 @@ Modes:
   sign-bump  bump selected plugin configs, then sign their scripts
 
 Options:
-  -p, --plugin <name>       plugin to process: mp3quran, tvquran, or all (repeatable, comma-separated)
+  -p, --plugin <name>       plugin to process: ${plugin_choices} (repeatable, comma-separated)
   -k, --key <path>          signing private key path (default: $GRAYJAY_SIGN_KEY)
   -m, --message <text>      changelog entry for all selected plugins
   --message-file <path>     read changelog entry from file
-  --message-mp3quran <text> changelog entry for MP3Quran
-  --message-tvquran <text>  changelog entry for tvQuran
   --version <number>        set next version for all selected plugins
-  --version-mp3quran <n>    set MP3Quran version
-  --version-tvquran <n>     set tvQuran version
+${plugin_option_help}
   -y, --yes                 skip confirmation prompt
   --dry-run                 print planned changes without writing files
   --no-input                fail instead of prompting for missing values
   -h, --help                show this help`
 
 const parse_args = (args) => {
-  const options = {
-    plugins: [],
-    messages: {},
-    versions: {},
-    yes: false,
-    dry_run: false,
-    no_input: false
-  }
-  let mode = null
-
-  for (let i = 0; i < args.length; i += 1) {
-    const arg = args[i]
-
-    if (arg === '--') continue
-
-    if (!arg.startsWith('-') && !mode) {
-      mode = arg
-      continue
+  const { values, positionals } = parseArgs({
+    args,
+    allowPositionals: true,
+    options: {
+      plugin: { type: 'string', short: 'p', multiple: true },
+      key: { type: 'string', short: 'k' },
+      message: { type: 'string', short: 'm' },
+      'message-file': { type: 'string' },
+      version: { type: 'string' },
+      yes: { type: 'boolean', short: 'y' },
+      'dry-run': { type: 'boolean' },
+      'no-input': { type: 'boolean' },
+      help: { type: 'boolean', short: 'h' },
+      ...Object.fromEntries(plugin_values.map((plugin) => [`message-${plugin}`, { type: 'string' }])),
+      ...Object.fromEntries(plugin_values.map((plugin) => [`version-${plugin}`, { type: 'string' }]))
     }
+  })
 
-    const read_value = () => {
-      const value = args[i + 1]
-      if (!value || value.startsWith('-')) throw new Error(`Missing value for ${arg}`)
-      i += 1
-      return value
+  return {
+    mode: positionals[0] ?? 'sign-bump',
+    options: {
+      plugins: values.plugin?.flatMap((value) => value.split(',')) ?? [],
+      messages: Object.fromEntries(plugin_values.map((plugin) => [plugin, values[`message-${plugin}`]]).filter(([, value]) => value)),
+      versions: Object.fromEntries(plugin_values.map((plugin) => [plugin, values[`version-${plugin}`]]).filter(([, value]) => value)),
+      key: values.key,
+      message: values.message,
+      message_file: values['message-file'],
+      version: values.version,
+      yes: values.yes,
+      dry_run: values['dry-run'],
+      no_input: values['no-input'],
+      help: values.help
     }
-
-    if (arg === '-h' || arg === '--help') options.help = true
-    else if (arg === '-p' || arg === '--plugin') options.plugins.push(...read_value().split(','))
-    else if (arg.startsWith('--plugin=')) options.plugins.push(...arg.slice('--plugin='.length).split(','))
-    else if (arg === '-k' || arg === '--key') options.key = read_value()
-    else if (arg.startsWith('--key=')) options.key = arg.slice('--key='.length)
-    else if (arg === '-m' || arg === '--message') options.message = read_value()
-    else if (arg.startsWith('--message=')) options.message = arg.slice('--message='.length)
-    else if (arg === '--message-file') options.message_file = read_value()
-    else if (arg.startsWith('--message-file=')) options.message_file = arg.slice('--message-file='.length)
-    else if (arg === '--message-mp3quran') options.messages.mp3quran = read_value()
-    else if (arg.startsWith('--message-mp3quran=')) options.messages.mp3quran = arg.slice('--message-mp3quran='.length)
-    else if (arg === '--message-tvquran') options.messages.tvquran = read_value()
-    else if (arg.startsWith('--message-tvquran=')) options.messages.tvquran = arg.slice('--message-tvquran='.length)
-    else if (arg === '--version') options.version = read_value()
-    else if (arg.startsWith('--version=')) options.version = arg.slice('--version='.length)
-    else if (arg === '--version-mp3quran') options.versions.mp3quran = read_value()
-    else if (arg.startsWith('--version-mp3quran=')) options.versions.mp3quran = arg.slice('--version-mp3quran='.length)
-    else if (arg === '--version-tvquran') options.versions.tvquran = read_value()
-    else if (arg.startsWith('--version-tvquran=')) options.versions.tvquran = arg.slice('--version-tvquran='.length)
-    else if (arg === '-y' || arg === '--yes') options.yes = true
-    else if (arg === '--dry-run') options.dry_run = true
-    else if (arg === '--no-input') options.no_input = true
-    else throw new Error(`Unknown option: ${arg}`)
   }
-
-  return { mode: mode || 'sign-bump', options }
 }
 
 const { mode: raw_mode, options } = parse_args(raw_args)
 const mode = raw_mode === 'both' ? 'sign-bump' : raw_mode
-const should_bump = ['bump', 'sign-bump'].includes(mode)
-const should_sign = ['sign', 'sign-bump'].includes(mode)
+const [should_bump, should_sign] = mode_actions[raw_mode] ?? []
+const action_label = mode === 'sign-bump' ? 'Bump and sign' : `${mode[0].toUpperCase()}${mode.slice(1)}`
+const progress_label = mode === 'sign-bump' ? 'Bumping and signing' : `${action_label}ing`
 
 if (options.help) {
   console.log(usage)
   process.exit(0)
 }
 
-if (!modes.has(raw_mode)) {
+if (!mode_actions[raw_mode]) {
   console.error(`Unknown mode: ${raw_mode}\n\n${usage}`)
   process.exit(2)
 }
@@ -134,7 +115,6 @@ const fail_or_prompt = (message) => {
 }
 
 const expand_home = (value) => (value?.startsWith('~/') ? path.join(os.homedir(), value.slice(2)) : value)
-const mode_label = mode === 'sign-bump' ? 'sign-bump' : mode
 
 const read_config = async (config_path) => JSON.parse(await node_fs.readFile(config_path, 'utf8'))
 
@@ -154,32 +134,10 @@ const sign_script = async (key_path, script_path) => {
   return (await $`openssl dgst -sha512 -sign ${key_path} -binary ${script_path} | openssl base64 -A`.text()).trim()
 }
 
-const ensure_file = async (file_path) => {
-  try {
-    await node_fs.access(file_path)
-  } catch {
-    throw new Error(`Missing file: ${file_path}`)
-  }
-}
-
 const parse_version = (value, label) => {
   const version = Number(value)
   if (!Number.isInteger(version) || version < 1) throw new Error(`${label} must be a positive integer`)
   return version
-}
-
-const selected_from_cli = () => {
-  const values = options.plugins.map((value) => value.trim()).filter(Boolean)
-  if (!values.length) return null
-  if (values.includes('all')) return plugins
-
-  const selected = []
-  for (const value of values) {
-    const plugin = plugins.find((item) => item.value === value)
-    if (!plugin) throw new Error(`Unknown plugin: ${value}`)
-    if (!selected.includes(plugin)) selected.push(plugin)
-  }
-  return selected
 }
 
 const message_file_text = options.message_file ? (await node_fs.readFile(expand_home(options.message_file), 'utf8')).trim() : null
@@ -213,57 +171,54 @@ const resolve_key_path = async () => {
 }
 
 if (!options.no_input) {
-  intro(mode === 'sign-bump' ? 'Bump and sign Grayjay plugins' : `${mode[0].toUpperCase()}${mode.slice(1)} Grayjay plugins`)
+  intro(`${action_label} Grayjay plugins`)
 }
 
-const selected_plugins = selected_from_cli() ?? (options.no_input ? fail_or_prompt('Missing plugin selection') : null)
-
-const prompt_plugins = async () => plugins.filter((plugin) => selected_values.includes(plugin.value))
-
-let selected_values = null
+const selected_plugins = select_plugins(plugins, options.plugins) ?? (options.no_input ? fail_or_prompt('Missing plugin selection') : null)
 let resolved_plugins = selected_plugins
 
 if (!resolved_plugins) {
-  selected_values = stop_if_cancelled(
+  const selected_values = stop_if_cancelled(
     await multiselect({
       message: `Select plugins to ${mode === 'sign-bump' ? 'bump and sign' : mode}`,
       required: true,
       options: plugins.map((plugin) => ({ label: plugin.label, value: plugin.value }))
     })
   )
-  resolved_plugins = await prompt_plugins()
+  resolved_plugins = select_plugins(plugins, selected_values)
 }
 
 const key_path = should_sign ? await resolve_key_path() : null
 const public_key_path = key_path ? `${key_path}.pub` : null
 
 if (should_sign) {
-  await ensure_file(key_path)
-  await ensure_file(public_key_path)
+  await Promise.all([ensure_file(key_path), ensure_file(public_key_path)])
+  if (!options.dry_run) for (const plugin of resolved_plugins) await build_plugin(plugin)
+  await Promise.all(resolved_plugins.map((plugin) => assert_fresh_script(plugin, ' before signing.')))
 }
 
-const changes = []
+const changes = await Promise.all(
+  resolved_plugins.map(async (plugin) => {
+    const config = await read_config(plugin.config_path)
+    const version = Number(config.version)
 
-for (const plugin of resolved_plugins) {
-  const config = await read_config(plugin.config_path)
-  const version = Number(config.version)
+    if (!Number.isInteger(version)) throw new Error(`${plugin.config_path} has a non-integer version`)
 
-  if (!Number.isInteger(version)) throw new Error(`${plugin.config_path} has a non-integer version`)
+    const next_version = parse_version(options.versions[plugin.value] ?? options.version ?? version + 1, `${plugin.label} version`)
+    if (should_bump && next_version <= version)
+      throw new Error(`${plugin.label} next version (${next_version}) must be greater than current version (${version})`)
 
-  const next_version = parse_version(options.versions[plugin.value] ?? options.version ?? version + 1, `${plugin.label} version`)
-  if (should_bump && next_version <= version)
-    throw new Error(`${plugin.label} next version (${next_version}) must be greater than current version (${version})`)
-
-  const changelog = should_bump ? await resolve_message(plugin, next_version) : null
-  changes.push({ plugin, config, current_version: version, next_version, changelog })
-}
+    const changelog = should_bump ? await resolve_message(plugin, next_version) : null
+    return { plugin, config, current_version: version, next_version, changelog }
+  })
+)
 
 const summary = changes
   .map((change) => (should_bump ? `${change.plugin.label} v${change.current_version} -> v${change.next_version}` : change.plugin.label))
   .join(', ')
 
 if (options.dry_run) {
-  console.log(`${mode_label}: ${summary}`)
+  console.log(`${mode}: ${summary}`)
   for (const change of changes) {
     if (should_bump) console.log(`${change.plugin.value}: ${change.changelog}`)
     if (should_sign) console.log(`${change.plugin.value}: sign ${change.plugin.script_path}`)
@@ -275,7 +230,7 @@ if (!options.yes) {
   if (options.no_input) throw new Error('Missing --yes for non-interactive write')
   const confirmed = stop_if_cancelled(
     await confirm({
-      message: `${mode === 'sign-bump' ? 'Bump and sign' : mode[0].toUpperCase() + mode.slice(1)} ${summary}?`,
+      message: `${action_label} ${summary}?`,
       initialValue: true
     })
   )
@@ -287,7 +242,7 @@ if (!options.yes) {
 }
 
 const spin = options.no_input ? null : spinner()
-spin?.start(mode === 'sign-bump' ? 'Bumping and signing plugins' : `${mode[0].toUpperCase()}${mode.slice(1)}ing plugins`)
+spin?.start(`${progress_label} plugins`)
 
 try {
   const public_key = should_sign ? await read_public_key(public_key_path) : null

@@ -1,0 +1,17 @@
+[
+  {
+    "value": "mp3quran",
+    "label": "MP3Quran",
+    "stem": "Mp3Quran"
+  },
+  {
+    "value": "tvquran",
+    "label": "tvQuran",
+    "stem": "TvQuran"
+  },
+  {
+    "value": "archiveorg",
+    "label": "Archive.org",
+    "stem": "ArchiveOrg"
+  }
+]

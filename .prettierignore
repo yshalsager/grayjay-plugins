@@ -1,2 +1,4 @@
 node_modules
 pnpm-lock.yaml
+plugins/*/*Script.js
+scripts/templates/**/*.tpl
