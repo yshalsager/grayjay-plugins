@@ -1,0 +1,41 @@
+{
+  "name": "Mixlr",
+  "description": "Browse public Mixlr live audio channels and events.",
+  "author": "yshalsager",
+  "authorUrl": "https://github.com/yshalsager",
+  "platformUrl": "https://mixlr.com",
+  "sourceUrl": "https://raw.githubusercontent.com/yshalsager/grayjay-plugins/master/plugins/mixlr/MixlrConfig.json",
+  "repositoryUrl": "https://github.com/yshalsager/grayjay-plugins",
+  "scriptUrl": "./MixlrScript.js",
+  "version": 1,
+  "iconUrl": "https://mixlr.com/favicon.ico",
+  "id": "62c60a1f-99e5-4b60-81e6-5ea04f923b6c",
+  "packages": ["Http"],
+  "allowEval": false,
+  "allowUrls": ["mixlr.com", ".mixlr.com", "apicdn.mixlr.com", "api.mixlr.com", "listen.mixlr.com", "imagescdn.mixlr.com"],
+  "settings": [
+    {
+      "variable": "homeMode",
+      "name": "Home Page",
+      "description": "Choose what Mixlr home shows.",
+      "type": "Dropdown",
+      "default": "0",
+      "options": ["Popular live", "Category live", "Search live"]
+    },
+    {
+      "variable": "homeCategory",
+      "name": "Home Category",
+      "description": "Category used when Home Page is set to Category live.",
+      "type": "Dropdown",
+      "default": "0",
+      "options": ["Popular", "Religion", "Talk", "Culture", "Eclectic", "Sports", "Uncategorized"]
+    }
+  ],
+  "changelog": {
+    "1": [
+      "Initial Mixlr public live audio plugin with popular/category/search live feeds, channel search, direct channel/event URL handling, live MP3 playback, channel peeks, and recommendations."
+    ]
+  },
+  "scriptPublicKey": "MIICIjANBgkqhkiG9w0BAQEFAAOCAg8AMIICCgKCAgEAwi2xI2mEI/H1NQqXhdU2DLze4ik+YxgC5QIq+MXgHWYXW0JCUrLsiSRHhYv22wo0PPj64V/WANZ4AyAmpCthJhlvfVc0CYlOjK52jBBTZCbs/3yU+GrRS+HnZNogA6tu/89Lcyheqvoks8XQ/M60PVgCnwzy1EDS6MODR+47J2y/cBeKqr/agYXerfDyrFoVdVICsWFTFJ/w3MQ+faVt+CDxYiYWJ38ntJjOrF6xiMrO1jgqBp9ND9H/2uBYEECE8GnujqUsod8dSctYkNNTM5MVkgZKUjchuRBAoNRlSTcvaSZi1j1CREjqKJDfq8jt5zwbV79N8wpUGpxmQ4e5K+6HNfnvIe+jA9W5sjFOT/q1ztkYO8MKRsJAiqoJBxvglRu9/lqvNIzJsyLr6afB49DQxoUBNWn2pQIQk/AZe8GA5FRCUFwbDXYa3ly5H57B8ZavXaY864N5yLnylt2LWrj7XqGSOh2vGWkS836m6trthFZdsigCxMB55USDIj5HHtxCQH1oHmmuJFn/uZW28RIIbSN+9vGsf9KvmxZ28cPeJwHalGNBq7Qp7YAEu+SOr5W8Hq4wh1e2JMCQbEqZU8qBNZWaz0HGC2ISkSBrDiWEb+epTzLBeD0pdz2Vy1avGHW4oOM8d/c8hLDwJ+vkLdQ5mddr2VjCoNt8SQBJapECAwEAAQ==",
+  "scriptSignature": "DvcurF1W3Bl81goyXSgHSGAzJeAO9I9j4CKqKnHJv8pB3OBs3KloOa+OROw4MAM95SRre4G29RHvE2QlEx5mux31WeYVInnX5d//YSVO40tAv4R3O7LZ1fcEaPwcKS8UKKrsdaYez1KatuFTxSz2u6SgYQqZ3yZe8EixVPbUUqYU0VzbCWUGyEhPZzSIm3xo2FhC8b7DpUmDoPJ6Ml8lC+c2DlUCSHPPkoaHUQ1QeTzonq1a92Xxr7/VxUCM8b6+fQo7HNe2LLL4GOL4IQqCseJyVCah3v0cdV91r+OPZ6qlOt6p8HxoGwmFUzFaIaXiTCXokmeeqYvKtHUk8b7z3uPSNzgPDGjg4INkxu+N+GFZ6BsixFFHwWDskH/itVRmINlTnM2wAKWMJ2K1g2k0PvThauvrGgc8kxpFjtU/k5b3uA2LQPC2Bu64mgQquURfRENVco16/EVqnxfvVZviJqa6dki4MdZ1ohFMdWGmQFO2idaNFxLAT/Vbue3164YxAqSlFMl+Bh62rRZYB/WnZ/xmciSOqeV012jfBzOxBvdZ2JZeARSI7v8eN7FTx2PXFeQ2Ws+5+czIvHq79wJgtUeq/Hu2IJsBpfw6xXrrYsUfRl3XqubG2/6dQqjhe72kf5kESAGbSv/ZJrL5BpTVmRIhaOmWjqMcRNJPxeL2rWM="
+}

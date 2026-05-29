@@ -13,5 +13,10 @@
     "value": "archiveorg",
     "label": "Archive.org",
     "stem": "ArchiveOrg"
+  },
+  {
+    "value": "mixlr",
+    "label": "Mixlr",
+    "stem": "Mixlr"
   }
 ]

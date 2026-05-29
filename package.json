@@ -14,6 +14,7 @@
     "test:live:mp3quran": "vitest run tests/live/mp3quran.live.test.js",
     "test:live:tvquran": "vitest run tests/live/tvquran.live.test.js",
     "test:live:archiveorg": "vitest run tests/live/archiveorg.live.test.js",
+    "test:live:mixlr": "vitest run tests/live/mixlr.live.test.js",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint": "eslint .",
