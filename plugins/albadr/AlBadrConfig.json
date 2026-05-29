@@ -1,0 +1,33 @@
+{
+  "name": "البدر",
+  "description": "دروس الشيخ عبد الرزاق البدر الصوتية والبث المباشر عبر Mixlr.",
+  "author": "yshalsager",
+  "authorUrl": "https://github.com/yshalsager",
+  "platformUrl": "https://www.al-badr.net",
+  "sourceUrl": "https://raw.githubusercontent.com/yshalsager/grayjay-plugins/master/plugins/albadr/AlBadrConfig.json",
+  "repositoryUrl": "https://github.com/yshalsager/grayjay-plugins",
+  "scriptUrl": "./AlBadrScript.js",
+  "version": 1,
+  "iconUrl": "./AlBadrIcon.png",
+  "id": "e092f7f1-1661-4e1c-9fe7-c7dd9dd218fb",
+  "packages": ["Http"],
+  "allowEval": false,
+  "allowUrls": ["al-badr.net", ".al-badr.net", "www.al-badr.net", "mixlr.com", ".mixlr.com"],
+  "settings": [
+    {
+      "variable": "homeMode",
+      "name": "الصفحة الرئيسية",
+      "description": "اختر ما يظهر في تبويب الصفحة الرئيسية لمصدر البدر.",
+      "type": "Dropdown",
+      "default": "0",
+      "options": ["جديد الدروس", "محاضرات مختارة", "المحاضرات", "الخطب", "البث المباشر"]
+    }
+  ],
+  "changelog": {
+    "1": [
+      "الإصدار الأول لمصدر البدر: جديد الدروس، المحاضرات المختارة، قنوات التصنيفات، قوائم السلاسل، البحث، روابط الموقع المباشرة، تشغيل MP3، التوصيات، والبث المباشر كمحتوى Mixlr متداخل."
+    ]
+  },
+  "scriptPublicKey": "MIICIjANBgkqhkiG9w0BAQEFAAOCAg8AMIICCgKCAgEAwi2xI2mEI/H1NQqXhdU2DLze4ik+YxgC5QIq+MXgHWYXW0JCUrLsiSRHhYv22wo0PPj64V/WANZ4AyAmpCthJhlvfVc0CYlOjK52jBBTZCbs/3yU+GrRS+HnZNogA6tu/89Lcyheqvoks8XQ/M60PVgCnwzy1EDS6MODR+47J2y/cBeKqr/agYXerfDyrFoVdVICsWFTFJ/w3MQ+faVt+CDxYiYWJ38ntJjOrF6xiMrO1jgqBp9ND9H/2uBYEECE8GnujqUsod8dSctYkNNTM5MVkgZKUjchuRBAoNRlSTcvaSZi1j1CREjqKJDfq8jt5zwbV79N8wpUGpxmQ4e5K+6HNfnvIe+jA9W5sjFOT/q1ztkYO8MKRsJAiqoJBxvglRu9/lqvNIzJsyLr6afB49DQxoUBNWn2pQIQk/AZe8GA5FRCUFwbDXYa3ly5H57B8ZavXaY864N5yLnylt2LWrj7XqGSOh2vGWkS836m6trthFZdsigCxMB55USDIj5HHtxCQH1oHmmuJFn/uZW28RIIbSN+9vGsf9KvmxZ28cPeJwHalGNBq7Qp7YAEu+SOr5W8Hq4wh1e2JMCQbEqZU8qBNZWaz0HGC2ISkSBrDiWEb+epTzLBeD0pdz2Vy1avGHW4oOM8d/c8hLDwJ+vkLdQ5mddr2VjCoNt8SQBJapECAwEAAQ==",
+  "scriptSignature": "m1qeSIblK/8Ex3ybLZOTC/BhCs0YS/pHeAlmi67DFZm8ybkyCfGG3iV9qLuGU5F1pSuTh/nYGCmhSGozF3UzE4W2fZu/AZ2DQgwZj1b9WhBWHlCyTqFoiI848TQTfIrVLo9YB4Qo+J4GEXda1HdbXA2Zq2GJPHxrdGmTWlBqaAdqDuVmjehy34vpIWmat60dGLxNLMOkC4aAFziJiTjgGAxDvQ9YEYOasOLJkjCoHiaHmyAfEowf2lOZRW224HPCqqmiFdwoFgWOmXDo0NoIrO7O5PS30PIYpFaxzyPo5F8WJzx3ixQT5dRiR8quuVd323yeX5GmAdj8tu8G8KIxSGW2jJdYr3GY6Qih0o7lQxhaAx4En/EAk4a+ySqgB3BGDncmNJxef6ERwkJYPyZH5ngWEsNDMen4n/XNIWY44vy7PgwLkspXH2/NJ2YzE1spqtCoVCZiVjCy2Z2w75AHzyTFFt5/zHJCZsduBuNwhUhl+bOMkxzv4IqdgkWd8PS6AgYvEMX7giG0rcAR6S9ChRrpLWeoV97c587+ZD25ChiBRFGJy1xESesgc8pId1Ej1poT7YDg9Eu6cTkXZMME91aifdLiRXyjVO1A1642RRp8JM7oETJzkdBUCxK7qYVEuhdPOdOy+9ra2OTLmC8xlYD9BJxVVl4uGNPyQWHSEpg="
+}

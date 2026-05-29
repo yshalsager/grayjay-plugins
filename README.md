@@ -4,6 +4,7 @@
 [![Install tvQuran](https://img.shields.io/badge/Install-tvQuran-2ea44f)](https://raw.githubusercontent.com/yshalsager/grayjay-plugins/master/plugins/tvquran/TvQuranConfig.json)
 [![Install Archive.org](https://img.shields.io/badge/Install-Archive.org-2ea44f)](https://raw.githubusercontent.com/yshalsager/grayjay-plugins/master/plugins/archiveorg/ArchiveOrgConfig.json)
 [![Install Mixlr](https://img.shields.io/badge/Install-Mixlr-2ea44f)](https://raw.githubusercontent.com/yshalsager/grayjay-plugins/master/plugins/mixlr/MixlrConfig.json)
+[![Install AlBadr](https://img.shields.io/badge/Install-AlBadr-2ea44f)](https://raw.githubusercontent.com/yshalsager/grayjay-plugins/master/plugins/albadr/AlBadrConfig.json)
 
 [Grayjay](https://grayjay.app/) plugins in one repository. Current sources:
 
@@ -11,6 +12,7 @@
 - `plugins/tvquran`: [tvQuran.com](https://tvquran.com) Arabic/English/German recitation selections, category/collection playlists, reciter channels, direct collection links, richer category/video channel metadata, reciter/surah/category filters, direct MP3 links, recommendations, and nested YouTube video/live/prayer-recitation links from the public site pages.
 - `plugins/archiveorg`: [Internet Archive](https://archive.org) search-only audio/video plugin with Archive.org item playlists, direct playable file details, and direct `/details` or `/download` URL handling.
 - `plugins/mixlr`: [Mixlr](https://mixlr.com) public live audio channels/events, popular/category/search live feeds, channel search, direct channel/event URL handling, live MP3 playback, channel peeks, and recommendations.
+- `plugins/albadr`: [AlBadr](https://www.al-badr.net) Sheikh Abdul Razzaq al-Badr lessons with latest/selected home feeds, category channels, series playlists, direct MP3 lesson playback, search, recommendations, and nested Mixlr live content.
 
 Plugin icons come from the original source sites:
 
@@ -18,6 +20,7 @@ Plugin icons come from the original source sites:
 - tvQuran: `https://tvquran.com/bundles/tvquran/img/favicon/apple-touch-icon-144x144-precomposed.png`
 - Archive.org: `https://archive.org/images/glogo.png`
 - Mixlr: `https://mixlr.com/favicon.ico`
+- AlBadr: `https://www.al-badr.net/assets/images/logo-albadr.png` vendored as `plugins/albadr/AlBadrIcon.png`
 
 Install URLs need to point at hosted raw config files after publishing this repo. The config files currently target this GitHub raw layout:
 
@@ -25,6 +28,7 @@ Install URLs need to point at hosted raw config files after publishing this repo
 - `https://raw.githubusercontent.com/yshalsager/grayjay-plugins/master/plugins/tvquran/TvQuranConfig.json`
 - `https://raw.githubusercontent.com/yshalsager/grayjay-plugins/master/plugins/archiveorg/ArchiveOrgConfig.json`
 - `https://raw.githubusercontent.com/yshalsager/grayjay-plugins/master/plugins/mixlr/MixlrConfig.json`
+- `https://raw.githubusercontent.com/yshalsager/grayjay-plugins/master/plugins/albadr/AlBadrConfig.json`
 
 ## Playlist Support
 
@@ -33,6 +37,7 @@ Install URLs need to point at hosted raw config files after publishing this repo
 - Direct tvQuran collection URLs are recognized as both channel URLs and playlist URLs, so shared collection links can open into either navigation surface depending on what Grayjay asks for.
 - Archive.org exposes items as playlists, with each playable audio/video file represented as a playlist entry. It does not provide a home feed; use search to discover items.
 - Mixlr is live-only in v1; it intentionally does not expose playlists until recordings or collections are implemented as concrete playable lists.
+- AlBadr exposes each `/sub/{id}` lesson series as a playlist, category channels expose their series through channel playlists, and the site live page is represented as nested Mixlr content.
 
 ## MP3Quran Ayah Text
 
@@ -78,6 +83,7 @@ Use Grayjay's Android DevServer while serving this repository from your computer
    http://COMPUTER_IP:3000/plugins/tvquran/TvQuranConfig.json
    http://COMPUTER_IP:3000/plugins/archiveorg/ArchiveOrgConfig.json
    http://COMPUTER_IP:3000/plugins/mixlr/MixlrConfig.json
+   http://COMPUTER_IP:3000/plugins/albadr/AlBadrConfig.json
    ```
 
 6. In the DevServer UI:
@@ -129,6 +135,7 @@ Use Grayjay Desktop's Developer Portal while serving this repository from your c
    http://127.0.0.1:3000/plugins/tvquran/TvQuranConfig.json
    http://127.0.0.1:3000/plugins/archiveorg/ArchiveOrgConfig.json
    http://127.0.0.1:3000/plugins/mixlr/MixlrConfig.json
+   http://127.0.0.1:3000/plugins/albadr/AlBadrConfig.json
    ```
 
 6. In the Developer Portal:
@@ -300,7 +307,7 @@ pnpm run sign -- --plugin all --key ~/.ssh/ysh --yes --no-input
 pnpm run sign-bump -- --plugin all --message "Release notes" --key ~/.ssh/ysh --yes --no-input
 ```
 
-Use `--dry-run` to preview without writing files. `--plugin` accepts `mp3quran`, `tvquran`, `archiveorg`, `mixlr`, or `all`, and can be repeated or comma-separated.
+Use `--dry-run` to preview without writing files. `--plugin` accepts `mp3quran`, `tvquran`, `archiveorg`, `mixlr`, `albadr`, or `all`, and can be repeated or comma-separated.
 
 ## Sources
 
@@ -313,6 +320,7 @@ Use `--dry-run` to preview without writing files. `--plugin` accepts `mp3quran`,
 - [Internet Archive metadata API](https://archive.org/developers/md-read.html)
 - [Internet Archive files, formats, and derivatives guide](https://help.archive.org/help/files-formats-and-derivatives-a-basic-guide/)
 - [Internet Archive search API](https://doc-tools.readthedocs.io/en/ia-test-gsod/item-search-apis.html)
+- [AlBadr website](https://www.al-badr.net)
 - [Grayjay plugin development docs](https://gitlab.futo.org/videostreaming/grayjay/-/blob/master/plugin-development.md)
 - [Grayjay sample plugin](https://gitlab.futo.org/videostreaming/plugins/sample)
 - [Grayjay RadioBrowser plugin](https://gitlab.futo.org/videostreaming/plugins/radiobrowser)

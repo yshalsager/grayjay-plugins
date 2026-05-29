@@ -18,5 +18,10 @@
     "value": "mixlr",
     "label": "Mixlr",
     "stem": "Mixlr"
+  },
+  {
+    "value": "albadr",
+    "label": "AlBadr",
+    "stem": "AlBadr"
   }
 ]
