@@ -3,3 +3,4 @@
 node_modules/
 .pnpm-store/
 tmp/
+.playwright-mcp/

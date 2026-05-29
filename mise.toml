@@ -51,6 +51,26 @@ done
 open "http://127.0.0.1:$port/Developer/Index"
 '''
 
+[tasks.grayjay-desktop-server-unsafe]
+description = "Start Grayjay Desktop server mode without token security for local debugging"
+run = '''
+if [ "$(uname)" = "Darwin" ]; then
+  if [ -d /Applications/Grayjay.app ]; then
+    open -n /Applications/Grayjay.app --args --server --ignore-security
+  else
+    open -n -a "Grayjay" --args --server --ignore-security
+  fi
+else
+  "${GRAYJAY_DESKTOP_BIN:-Grayjay}" --server --ignore-security
+fi
+
+printf "Grayjay Desktop server URL:\nhttp://127.0.0.1:11338\n"
+'''
+
+[tasks.grayjay-load-dev-plugin]
+description = "Load a local dev plugin into Grayjay Desktop server mode"
+run = "node scripts/load-grayjay-dev-plugin.mjs"
+
 [tasks.bump]
 description = "Bump plugin config versions"
 run = "pnpm run bump"
