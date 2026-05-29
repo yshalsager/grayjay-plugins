@@ -1,4 +1,5 @@
 import { content_thumbnails, plugin_icon_url } from '@lib/assets.js'
+import { selected_filter_values } from '@lib/filters.js'
 import { grayjay_platform } from '@lib/grayjay.js'
 import { cache_set, get_json, get_text, init_lru_caches, query_string } from '@lib/http.js'
 import { audio_source_descriptor } from '@lib/media.js'
@@ -764,36 +765,17 @@ function homeCategoryId() {
 }
 
 function selectedCategoryId(filters) {
-  const selected = selectedFilterValues(filters, 'category')[0]
-  if (selected !== undefined) {
-    return filterValue(selected)
-  }
-  return ''
+  const selected = selected_filter_values(filters, 'category')[0]
+  return selected ?? ''
 }
 
 function selectedContent(filters) {
-  const selected = selectedFilterValues(filters, 'content')[0]
-  const value = filterValue(selected)
+  const value = selected_filter_values(filters, 'content')[0]
   return value === 'events' || value === 'channels' ? value : 'all'
 }
 
 function hasSearchFilters(filters) {
-  return selectedFilterValues(filters, 'content').length > 0 || selectedFilterValues(filters, 'category').length > 0
-}
-
-function selectedFilterValues(filters, id) {
-  if (!filters) return []
-  if (Array.isArray(filters)) return filters.filter((filter) => filter?.id === id || filter?.group?.id === id)
-  if (typeof filters.get === 'function') {
-    const value = filters.get(id)
-    return Array.isArray(value) ? value : value ? [value] : []
-  }
-  const value = filters[id]
-  return Array.isArray(value) ? value : value ? [value] : []
-}
-
-function filterValue(value) {
-  return String(value?.value ?? value?.id ?? value ?? '')
+  return selected_filter_values(filters, 'content').length > 0 || selected_filter_values(filters, 'category').length > 0
 }
 
 function contentFilter() {

@@ -66,6 +66,30 @@
 		return thumbnails(url || plugin_icon_url(config, default_icon));
 	}
 
+	function dedupe_strings(values, key = (value) => value) {
+		const seen = {};
+		const result = [];
+		for (const value of values) {
+			const dedupeKey = key(value);
+			if (!dedupeKey || seen[dedupeKey]) continue;
+			seen[dedupeKey] = true;
+			result.push(value);
+		}
+		return result;
+	}
+
+	function selected_filter_values(filters, id) {
+		if (!filters) return [];
+		if (Array.isArray(filters)) return filters.filter((filter) => filter?.id === id || filter?.group?.id === id).map(filter_value).filter(Boolean);
+		let value = filters[id];
+		if (value === void 0 && typeof filters.get === "function") value = filters.get(id);
+		if (value === void 0 || value === null) return [];
+		return (Array.isArray(value) ? value : [value]).map(filter_value).filter(Boolean);
+	}
+	function filter_value(value) {
+		return String(value?.value ?? value?.id ?? value ?? "");
+	}
+
 	function grayjay_platform(platform, get_config_id) {
 		const platform_id = (id) => new PlatformID(platform, String(id), get_config_id());
 		return {
@@ -145,6 +169,30 @@
 				return apply_pager_state(this, new this.constructor(this.context.items, this.context.limit, this.context.offset));
 			}
 		};
+	}
+
+	function quran_name(item, language = "ar") {
+		if (typeof item?.name === "object") return String(item.name[language] ?? item.name.ar ?? item.name.en ?? Object.values(item.name)[0] ?? "").trim();
+		if (item?.name) return String(item.name).trim();
+		if (language === "ar") return String(item?.name_arabic ?? item?.translated_name?.name ?? item?.name_simple ?? "").trim();
+		return String(item?.translated_name?.name ?? item?.name_simple ?? item?.name_arabic ?? "").trim();
+	}
+	function quran_filter_label(item, language = "ar") {
+		return `${quran_name(item, language)} (${item.id})`;
+	}
+	function quran_id_from_filter(value, items, language = "ar", aliases = () => []) {
+		const text = String(value ?? "").trim();
+		const directId = Number(text);
+		if (directId) return directId;
+		const trailingId = Number(text.match(/\((\d+)\)$/)?.[1]);
+		if (trailingId) return trailingId;
+		return Number((items ?? []).find((item) => {
+			return [
+				quran_filter_label(item, language),
+				quran_name(item, language),
+				...aliases(item)
+			].some((name) => name === text);
+		})?.id);
 	}
 
 	var PLATFORM = "MP3Quran";
@@ -327,7 +375,7 @@
 		ensureCatalog();
 		const q = normalize(query);
 		if (!q) return [];
-		return dedupeStrings([
+		return dedupe_strings([
 			text("tracks"),
 			text("radios"),
 			text("liveTv"),
@@ -588,9 +636,9 @@
 	function tracksFromReciters(reciters, query, filters) {
 		const tracks = [];
 		const q = normalize(query);
-		const selectedSurahIds = selectedFilterValues(filters, "surah").map(surahIdFromFilter).filter(Boolean);
-		const selectedRiwayahIds = selectedFilterValues(filters, "riwayah").map(riwayahIdFromFilter).filter(Boolean);
-		const selectedReciterIds = selectedFilterValues(filters, "reciter").map(reciterIdFromFilter).filter(Boolean);
+		const selectedSurahIds = selected_filter_values(filters, "surah").map(surahIdFromFilter).filter(Boolean);
+		const selectedRiwayahIds = selected_filter_values(filters, "riwayah").map(riwayahIdFromFilter).filter(Boolean);
+		const selectedReciterIds = selected_filter_values(filters, "reciter").map(reciterIdFromFilter).filter(Boolean);
 		for (const reciter of reciters) {
 			if (selectedReciterIds.length && selectedReciterIds.indexOf(Number(reciter.id)) < 0) continue;
 			for (const moshaf of reciter.moshaf ?? []) {
@@ -607,14 +655,14 @@
 	}
 	function tafsirTracks(query, filters) {
 		const q = normalize(query);
-		const selectedSurahIds = selectedFilterValues(filters, "surah").map(surahIdFromFilter).filter(Boolean);
-		const selectedTafsirIds = selectedFilterValues(filters, "tafsir-source").map(tafsirIdFromFilter).filter(Boolean);
+		const selectedSurahIds = selected_filter_values(filters, "surah").map(surahIdFromFilter).filter(Boolean);
+		const selectedTafsirIds = selected_filter_values(filters, "tafsir-source").map(tafsirIdFromFilter).filter(Boolean);
 		return (state.tafsirItems ?? []).filter((item) => !selectedTafsirIds.length || selectedTafsirIds.indexOf(Number(item.tafsir_id)) >= 0).filter((item) => !selectedSurahIds.length || selectedSurahIds.indexOf(Number(item.sura_id)) >= 0).filter((item) => !q || tafsirMatches(item, q)).map(tafsirToVideo);
 	}
 	function mp3Videos(query, filters) {
 		const q = normalize(query);
-		const selectedVideoTypeIds = selectedFilterValues(filters, "video-type").map(videoTypeIdFromFilter).filter(Boolean);
-		const selectedReciterIds = selectedFilterValues(filters, "reciter").map(reciterIdFromFilter).filter(Boolean);
+		const selectedVideoTypeIds = selected_filter_values(filters, "video-type").map(videoTypeIdFromFilter).filter(Boolean);
+		const selectedReciterIds = selected_filter_values(filters, "reciter").map(reciterIdFromFilter).filter(Boolean);
 		return (state.videos ?? []).filter((video) => !selectedReciterIds.length || selectedReciterIds.indexOf(Number(video.reciter_id)) >= 0).filter((video) => !selectedVideoTypeIds.length || selectedVideoTypeIds.indexOf(Number(video.video_type)) >= 0).filter((video) => !q || mp3VideoMatches(video, q)).map(mp3VideoToVideo);
 	}
 	function trackToVideo(reciter, moshaf, surahId, includeTimedText = false) {
@@ -901,8 +949,8 @@
 		});
 	}
 	function tafsirPlaylists(filters) {
-		const selectedTafsirIds = selectedFilterValues(filters, "tafsir-source").map(tafsirIdFromFilter).filter(Boolean);
-		const selectedSurahIds = selectedFilterValues(filters, "surah").map(surahIdFromFilter).filter(Boolean);
+		const selectedTafsirIds = selected_filter_values(filters, "tafsir-source").map(tafsirIdFromFilter).filter(Boolean);
+		const selectedSurahIds = selected_filter_values(filters, "surah").map(surahIdFromFilter).filter(Boolean);
 		return (state.tafasir ?? []).filter((tafsir) => !selectedTafsirIds.length || selectedTafsirIds.indexOf(Number(tafsir.id)) >= 0).filter((tafsir) => !selectedSurahIds.length || (state.tafsirItems ?? []).some((item) => Number(item.tafsir_id) === Number(tafsir.id) && selectedSurahIds.indexOf(Number(item.sura_id)) >= 0)).map(tafsirToPlaylist);
 	}
 	function tafsirToPlaylist(tafsir) {
@@ -931,8 +979,8 @@
 		});
 	}
 	function videoTypePlaylists(filters) {
-		const selectedVideoTypeIds = selectedFilterValues(filters, "video-type").map(videoTypeIdFromFilter).filter(Boolean);
-		const selectedReciterIds = selectedFilterValues(filters, "reciter").map(reciterIdFromFilter).filter(Boolean);
+		const selectedVideoTypeIds = selected_filter_values(filters, "video-type").map(videoTypeIdFromFilter).filter(Boolean);
+		const selectedReciterIds = selected_filter_values(filters, "reciter").map(reciterIdFromFilter).filter(Boolean);
 		return (state.videoTypes ?? []).filter((videoType) => !selectedVideoTypeIds.length || selectedVideoTypeIds.indexOf(Number(videoType.id)) >= 0).filter((videoType) => !selectedReciterIds.length || (state.videos ?? []).some((video) => Number(video.video_type) === Number(videoType.id) && selectedReciterIds.indexOf(Number(video.reciter_id)) >= 0)).map(videoTypeToPlaylist);
 	}
 	function videoTypeToPlaylist(videoType) {
@@ -985,9 +1033,9 @@
 		throw new ScriptException("Unsupported MP3Quran playlist URL");
 	}
 	function moshafMatchesFilters(reciter, moshaf, filters) {
-		const selectedReciterIds = selectedFilterValues(filters, "reciter").map(reciterIdFromFilter).filter(Boolean);
-		const selectedRiwayahIds = selectedFilterValues(filters, "riwayah").map(riwayahIdFromFilter).filter(Boolean);
-		const selectedSurahIds = selectedFilterValues(filters, "surah").map(surahIdFromFilter).filter(Boolean);
+		const selectedReciterIds = selected_filter_values(filters, "reciter").map(reciterIdFromFilter).filter(Boolean);
+		const selectedRiwayahIds = selected_filter_values(filters, "riwayah").map(riwayahIdFromFilter).filter(Boolean);
+		const selectedSurahIds = selected_filter_values(filters, "surah").map(surahIdFromFilter).filter(Boolean);
 		return (!selectedReciterIds.length || selectedReciterIds.indexOf(Number(reciter.id)) >= 0) && (!selectedRiwayahIds.length || selectedRiwayahIds.indexOf(Number(moshaf.rewaya_id)) >= 0) && (!selectedSurahIds.length || selectedSurahIds.some((surahId) => parseSurahList(moshaf.surah_list).indexOf(surahId) >= 0));
 	}
 	function playlistMatches(playlist, query) {
@@ -1183,37 +1231,20 @@
 		return normalize(video.reciter_name).indexOf(query) >= 0 || normalize(getVideoTypeName(video.video_type)).indexOf(query) >= 0 || String(video.id ?? "").indexOf(query) >= 0;
 	}
 	function hasSearchFilters(filters) {
-		return selectedFilterValues(filters, "content").length > 0 || selectedFilterValues(filters, "reciter").length > 0 || selectedFilterValues(filters, "surah").length > 0 || selectedFilterValues(filters, "riwayah").length > 0 || selectedFilterValues(filters, "video-type").length > 0 || selectedFilterValues(filters, "tafsir-source").length > 0;
+		return selected_filter_values(filters, "content").length > 0 || selected_filter_values(filters, "reciter").length > 0 || selected_filter_values(filters, "surah").length > 0 || selected_filter_values(filters, "riwayah").length > 0 || selected_filter_values(filters, "video-type").length > 0 || selected_filter_values(filters, "tafsir-source").length > 0;
 	}
 	function contentAllowed(filters, contentType) {
-		const selected = selectedFilterValues(filters, "content");
+		const selected = selected_filter_values(filters, "content");
 		if (selected.length) return selected.indexOf(contentType) >= 0;
-		if (selectedFilterValues(filters, "riwayah").length) return contentType === "tracks";
-		if (selectedFilterValues(filters, "reciter").length) return contentType === "tracks" || contentType === "videos";
-		if (selectedFilterValues(filters, "video-type").length) return contentType === "videos";
-		if (selectedFilterValues(filters, "tafsir-source").length) return contentType === "tafsir";
-		if (selectedFilterValues(filters, "surah").length) return contentType === "tracks" || contentType === "tafsir";
+		if (selected_filter_values(filters, "riwayah").length) return contentType === "tracks";
+		if (selected_filter_values(filters, "reciter").length) return contentType === "tracks" || contentType === "videos";
+		if (selected_filter_values(filters, "video-type").length) return contentType === "videos";
+		if (selected_filter_values(filters, "tafsir-source").length) return contentType === "tafsir";
+		if (selected_filter_values(filters, "surah").length) return contentType === "tracks" || contentType === "tafsir";
 		return true;
 	}
-	function selectedFilterValues(filters, id) {
-		if (!filters) return [];
-		let value = filters[id];
-		if (value === void 0 && filters.get) value = filters.get(id);
-		if (value === void 0 || value === null) return [];
-		if (!Array.isArray(value)) value = [value];
-		return value.map(filterValue).filter(Boolean);
-	}
-	function filterValue(value) {
-		if (typeof value === "object" && value !== null) return String(value.value ?? value.id ?? "");
-		return String(value);
-	}
 	function surahIdFromFilter(value) {
-		const text = String(value ?? "").trim();
-		const directId = Number(text);
-		if (directId) return directId;
-		const trailingId = Number(text.match(/\((\d+)\)$/)?.[1]);
-		if (trailingId) return trailingId;
-		return Number((state.suwar ?? []).find((surah) => surahFilterLabel(surah) === text || surahName(surah) === text)?.id);
+		return quran_id_from_filter(value, state.suwar);
 	}
 	function riwayahIdFromFilter(value) {
 		const text = String(value ?? "").trim();
@@ -1252,10 +1283,10 @@
 		return normalizeFolderUrl(String(value ?? "").replace(/[?#].*$/, ""));
 	}
 	function surahName(surah) {
-		return String(surah.name ?? "").trim();
+		return quran_name(surah);
 	}
 	function surahFilterLabel(surah) {
-		return `${surahName(surah)} (${surah.id})`;
+		return quran_filter_label(surah);
 	}
 	function getVideoTypeName(id) {
 		return state.videoTypeById[String(id)]?.video_type ?? `${text("videoTypeFallback")} ${id}`;
@@ -1329,16 +1360,6 @@
 	}
 	function videoKey(reciterId, videoId) {
 		return `${reciterId}-${videoId}`;
-	}
-	function dedupeStrings(values) {
-		const seen = {};
-		const deduped = [];
-		for (const value of values) {
-			if (!value || seen[value]) continue;
-			seen[value] = true;
-			deduped.push(value);
-		}
-		return deduped;
 	}
 	function logIfTesting(msg) {
 		if (typeof IS_TESTING !== "undefined" && IS_TESTING) log(msg);

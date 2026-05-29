@@ -39,6 +39,18 @@
 		return thumbnails(url || plugin_icon_url(config, default_icon));
 	}
 
+	function selected_filter_values(filters, id) {
+		if (!filters) return [];
+		if (Array.isArray(filters)) return filters.filter((filter) => filter?.id === id || filter?.group?.id === id).map(filter_value).filter(Boolean);
+		let value = filters[id];
+		if (value === void 0 && typeof filters.get === "function") value = filters.get(id);
+		if (value === void 0 || value === null) return [];
+		return (Array.isArray(value) ? value : [value]).map(filter_value).filter(Boolean);
+	}
+	function filter_value(value) {
+		return String(value?.value ?? value?.id ?? value ?? "");
+	}
+
 	function grayjay_platform(platform, get_config_id) {
 		const platform_id = (id) => new PlatformID(platform, String(id), get_config_id());
 		return {
@@ -819,30 +831,14 @@
 		return CATEGORIES[Number(_settings.homeCategory ?? 0)]?.id ?? "";
 	}
 	function selectedCategoryId(filters) {
-		const selected = selectedFilterValues(filters, "category")[0];
-		if (selected !== void 0) return filterValue(selected);
-		return "";
+		return selected_filter_values(filters, "category")[0] ?? "";
 	}
 	function selectedContent(filters) {
-		const selected = selectedFilterValues(filters, "content")[0];
-		const value = filterValue(selected);
+		const value = selected_filter_values(filters, "content")[0];
 		return value === "events" || value === "channels" ? value : "all";
 	}
 	function hasSearchFilters(filters) {
-		return selectedFilterValues(filters, "content").length > 0 || selectedFilterValues(filters, "category").length > 0;
-	}
-	function selectedFilterValues(filters, id) {
-		if (!filters) return [];
-		if (Array.isArray(filters)) return filters.filter((filter) => filter?.id === id || filter?.group?.id === id);
-		if (typeof filters.get === "function") {
-			const value = filters.get(id);
-			return Array.isArray(value) ? value : value ? [value] : [];
-		}
-		const value = filters[id];
-		return Array.isArray(value) ? value : value ? [value] : [];
-	}
-	function filterValue(value) {
-		return String(value?.value ?? value?.id ?? value ?? "");
+		return selected_filter_values(filters, "content").length > 0 || selected_filter_values(filters, "category").length > 0;
 	}
 	function contentFilter() {
 		return {

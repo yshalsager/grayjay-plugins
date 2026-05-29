@@ -39,6 +39,33 @@
 		return thumbnails(plugin_icon_url(config, default_icon));
 	}
 
+	function dedupe_by(items, key) {
+		const seen = {};
+		const result = [];
+		for (const item of items) {
+			const value = key(item);
+			if (!value || seen[value]) continue;
+			seen[value] = true;
+			result.push(item);
+		}
+		return result;
+	}
+	function dedupe_by_url(items) {
+		return dedupe_by(items, (item) => item.url ?? item.contentUrl);
+	}
+
+	function selected_filter_values(filters, id) {
+		if (!filters) return [];
+		if (Array.isArray(filters)) return filters.filter((filter) => filter?.id === id || filter?.group?.id === id).map(filter_value).filter(Boolean);
+		let value = filters[id];
+		if (value === void 0 && typeof filters.get === "function") value = filters.get(id);
+		if (value === void 0 || value === null) return [];
+		return (Array.isArray(value) ? value : [value]).map(filter_value).filter(Boolean);
+	}
+	function filter_value(value) {
+		return String(value?.value ?? value?.id ?? value ?? "");
+	}
+
 	function grayjay_platform(platform, get_config_id) {
 		const platform_id = (id) => new PlatformID(platform, String(id), get_config_id());
 		return {
@@ -484,7 +511,7 @@
 				const loaded = safeLoadSeries(item.id, 0);
 				if (loaded?.items?.[0]) videos.push(itemToVideo(loaded.items[0]));
 			}
-			super(dedupeByUrl(videos), seriesOffset + DEFAULT_LIMIT < category.series.length, {
+			super(dedupe_by_url(videos), seriesOffset + DEFAULT_LIMIT < category.series.length, {
 				categoryId,
 				seriesOffset: seriesOffset + DEFAULT_LIMIT
 			});
@@ -515,11 +542,11 @@
 			const item = loaded?.items?.[loaded.items.length - 1];
 			if (item) items.push(itemToVideo(item));
 		}
-		return dedupeByUrl([liveNested(), ...items]);
+		return dedupe_by_url([liveNested(), ...items]);
 	}
 	function homeSelected() {
 		const html = fetchPage(`${BASE_URL}/`);
-		return dedupeByUrl([liveNested(), ...parseHomeDetailLinks(html).map((item) => safeLoadDetail(item.slug)).filter(Boolean)]);
+		return dedupe_by_url([liveNested(), ...parseHomeDetailLinks(html).map((item) => safeLoadDetail(item.slug)).filter(Boolean)]);
 	}
 	function seriesGroupVideos(group) {
 		const videos = [liveNested()];
@@ -527,7 +554,7 @@
 			const loaded = safeLoadSeries(item.id, 0);
 			if (loaded?.items?.[0]) videos.push(itemToVideo(loaded.items[0]));
 		}
-		return dedupeByUrl(videos);
+		return dedupe_by_url(videos);
 	}
 	function loadCategory(id) {
 		const category = CATEGORIES.find((item) => item.id === String(id));
@@ -682,7 +709,7 @@
 			};
 			series.push(item);
 		}
-		return dedupeBy(series, (item) => item.id);
+		return dedupe_by(series, (item) => item.id);
 	}
 	function parseSeriesItems(html, seriesId, offset, seriesTitle) {
 		const main = mainContent(html);
@@ -704,7 +731,7 @@
 				language: "ar"
 			});
 		}
-		return dedupeBy(items, (item) => item.slug);
+		return dedupe_by(items, (item) => item.slug);
 	}
 	function parseSearchDetailLinks(html) {
 		return parseAnchors(mainContent(html), /\/detail\/[^"'?#]+/).map((item) => ({
@@ -736,7 +763,7 @@
 				title: clean_text(extract_first(`${match[1]} ${match[3]}`, /title=["']([^"']+)["']/i) || match[4])
 			});
 		}
-		return dedupeBy(links, (item) => item.url);
+		return dedupe_by(links, (item) => item.url);
 	}
 	function extractSection(html, title) {
 		const index = String(html ?? "").indexOf(title);
@@ -780,7 +807,7 @@
 			pageUrl: publicSeriesUrl(item.id),
 			count: 0
 		})));
-		state.seriesIndex = dedupeBy(allSeries, (item) => item.id);
+		state.seriesIndex = dedupe_by(allSeries, (item) => item.id);
 		state.seriesById = {};
 		for (const item of state.seriesIndex) state.seriesById[item.id] = item;
 	}
@@ -874,21 +901,8 @@
 		};
 	}
 	function selectedContent(filters) {
-		const value = filterValue(selectedFilterValues(filters, "content")[0]);
+		const value = selected_filter_values(filters, "content")[0];
 		return value === "live" || value === "audio" ? value : "all";
-	}
-	function selectedFilterValues(filters, id) {
-		if (!filters) return [];
-		if (Array.isArray(filters)) return filters.filter((filter) => filter?.id === id || filter?.group?.id === id);
-		if (typeof filters.get === "function") {
-			const value = filters.get(id);
-			return Array.isArray(value) ? value : value ? [value] : [];
-		}
-		const value = filters[id];
-		return Array.isArray(value) ? value : value ? [value] : [];
-	}
-	function filterValue(value) {
-		return String(value?.value ?? value?.id ?? value ?? "");
 	}
 	function cached(cacheName, key, loader) {
 		const cacheKey = String(key);
@@ -1029,20 +1043,6 @@
 		} catch {
 			return String(value ?? "");
 		}
-	}
-	function dedupeByUrl(items) {
-		return dedupeBy(items, (item) => item.url ?? item.contentUrl);
-	}
-	function dedupeBy(items, key) {
-		const seen = {};
-		const result = [];
-		for (const item of items) {
-			const value = key(item);
-			if (!value || seen[value]) continue;
-			seen[value] = true;
-			result.push(item);
-		}
-		return result;
 	}
 	function logIfTesting(message) {
 		if (typeof IS_TESTING !== "undefined" && IS_TESTING) log(message);

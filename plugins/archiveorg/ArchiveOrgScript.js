@@ -37,6 +37,30 @@
 		return config?.absoluteIconUrl ?? plugin_asset(config, config?.iconUrl ?? default_icon);
 	}
 
+	function dedupe_strings(values, key = (value) => value) {
+		const seen = {};
+		const result = [];
+		for (const value of values) {
+			const dedupeKey = key(value);
+			if (!dedupeKey || seen[dedupeKey]) continue;
+			seen[dedupeKey] = true;
+			result.push(value);
+		}
+		return result;
+	}
+
+	function selected_filter_values(filters, id) {
+		if (!filters) return [];
+		if (Array.isArray(filters)) return filters.filter((filter) => filter?.id === id || filter?.group?.id === id).map(filter_value).filter(Boolean);
+		let value = filters[id];
+		if (value === void 0 && typeof filters.get === "function") value = filters.get(id);
+		if (value === void 0 || value === null) return [];
+		return (Array.isArray(value) ? value : [value]).map(filter_value).filter(Boolean);
+	}
+	function filter_value(value) {
+		return String(value?.value ?? value?.id ?? value ?? "");
+	}
+
 	function grayjay_platform(platform, get_config_id) {
 		const platform_id = (id) => new PlatformID(platform, String(id), get_config_id());
 		return {
@@ -401,7 +425,7 @@
 		const terms = searchTerms(query);
 		const clauses = [`"${escapeSearch(query)}"`, escapeSearch(query)];
 		if (terms.length > 1) clauses.push(terms[terms.length - 1]);
-		return `(${dedupeStrings(clauses).join(" OR ")})`;
+		return `(${dedupe_strings(clauses).join(" OR ")})`;
 	}
 	function creatorSearchQuery(creator) {
 		return `creator:"${escapeSearch(creator)}"`;
@@ -735,26 +759,13 @@
 		};
 	}
 	function selectedMedia(filters) {
-		const value = selectedFilterValues(filters, "content")[0];
-		if (filterValue(value) === "audio") return MEDIA.AUDIO;
-		if (filterValue(value) === "video") return MEDIA.VIDEO;
+		const value = selected_filter_values(filters, "content")[0];
+		if (value === "audio") return MEDIA.AUDIO;
+		if (value === "video") return MEDIA.VIDEO;
 		return mediaType();
 	}
-	function selectedFilterValues(filters, id) {
-		if (!filters) return [];
-		if (Array.isArray(filters)) return filters.filter((filter) => filter?.id === id || filter?.group?.id === id);
-		if (typeof filters.get === "function") {
-			const value = filters.get(id);
-			return Array.isArray(value) ? value : value ? [value] : [];
-		}
-		const value = filters[id];
-		return Array.isArray(value) ? value : value ? [value] : [];
-	}
-	function filterValue(value) {
-		return String(value?.value ?? value?.id ?? value ?? "");
-	}
 	function hasSearchFilters(filters) {
-		return selectedFilterValues(filters, "content").length > 0;
+		return selected_filter_values(filters, "content").length > 0;
 	}
 	function mediaType() {
 		const type = Number(_settings.mediaType ?? MEDIA.BOTH);
@@ -899,22 +910,10 @@
 			"بن",
 			"ابن"
 		];
-		return dedupeStrings(normalizeSearch(value).split(" ").filter((term) => term.length > 1 && stopWords.indexOf(term) < 0));
+		return dedupe_strings(normalizeSearch(value).split(" ").filter((term) => term.length > 1 && stopWords.indexOf(term) < 0));
 	}
 	function escapeSearch(value) {
 		return cleanText(value).replace(/["()]/g, " ");
-	}
-	function dedupeStrings(values) {
-		const seen = {};
-		const result = [];
-		for (const value of values) {
-			const text = String(value ?? "").trim();
-			if (text && !seen[text]) {
-				seen[text] = true;
-				result.push(text);
-			}
-		}
-		return result;
 	}
 	function logIfTesting(msg) {
 		if (typeof IS_TESTING !== "undefined" && IS_TESTING) log(msg);

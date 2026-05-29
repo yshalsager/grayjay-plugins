@@ -39,6 +39,30 @@
 		return thumbnails(plugin_icon_url(config, default_icon));
 	}
 
+	function dedupe_strings(values, key = (value) => value) {
+		const seen = {};
+		const result = [];
+		for (const value of values) {
+			const dedupeKey = key(value);
+			if (!dedupeKey || seen[dedupeKey]) continue;
+			seen[dedupeKey] = true;
+			result.push(value);
+		}
+		return result;
+	}
+
+	function selected_filter_values(filters, id) {
+		if (!filters) return [];
+		if (Array.isArray(filters)) return filters.filter((filter) => filter?.id === id || filter?.group?.id === id).map(filter_value).filter(Boolean);
+		let value = filters[id];
+		if (value === void 0 && typeof filters.get === "function") value = filters.get(id);
+		if (value === void 0 || value === null) return [];
+		return (Array.isArray(value) ? value : [value]).map(filter_value).filter(Boolean);
+	}
+	function filter_value(value) {
+		return String(value?.value ?? value?.id ?? value ?? "");
+	}
+
 	function grayjay_platform(platform, get_config_id) {
 		const platform_id = (id) => new PlatformID(platform, String(id), get_config_id());
 		return {
@@ -158,6 +182,30 @@
 				return apply_pager_state(this, new this.constructor(this.context.items, this.context.limit, this.context.offset));
 			}
 		};
+	}
+
+	function quran_name(item, language = "ar") {
+		if (typeof item?.name === "object") return String(item.name[language] ?? item.name.ar ?? item.name.en ?? Object.values(item.name)[0] ?? "").trim();
+		if (item?.name) return String(item.name).trim();
+		if (language === "ar") return String(item?.name_arabic ?? item?.translated_name?.name ?? item?.name_simple ?? "").trim();
+		return String(item?.translated_name?.name ?? item?.name_simple ?? item?.name_arabic ?? "").trim();
+	}
+	function quran_filter_label(item, language = "ar") {
+		return `${quran_name(item, language)} (${item.id})`;
+	}
+	function quran_id_from_filter(value, items, language = "ar", aliases = () => []) {
+		const text = String(value ?? "").trim();
+		const directId = Number(text);
+		if (directId) return directId;
+		const trailingId = Number(text.match(/\((\d+)\)$/)?.[1]);
+		if (trailingId) return trailingId;
+		return Number((items ?? []).find((item) => {
+			return [
+				quran_filter_label(item, language),
+				quran_name(item, language),
+				...aliases(item)
+			].some((name) => name === text);
+		})?.id);
 	}
 
 	function decode_html(value) {
@@ -1540,7 +1588,7 @@
 		} catch (e) {
 			logIfTesting("Failed to load tvQuran reciter suggestions: " + e);
 		}
-		return dedupeStrings(suggestions).slice(0, DEFAULT_LIMIT);
+		return dedupe_strings(suggestions, normalize).slice(0, DEFAULT_LIMIT);
 	};
 	source.search = function(query, type, order, filters) {
 		if (!normalize(query) && !hasSearchFilters(filters)) return source.getHome();
@@ -2182,7 +2230,7 @@
 		}));
 	}
 	function searchReciterCollectionPlaylists(query, filters) {
-		const selectedReciters = selectedFilterValues(filters, "reciter");
+		const selectedReciters = selected_filter_values(filters, "reciter");
 		const reciters = [];
 		if (selectedReciters.length) for (const value of selectedReciters) {
 			const reciter = resolveReciterFilter(value);
@@ -2230,7 +2278,7 @@
 		return getCollectionFromUrl(url);
 	}
 	function categoryMatchesFilters(category, filters) {
-		const categoryIds = selectedFilterValues(filters, "category").map(categoryIdFromFilter).filter(Boolean);
+		const categoryIds = selected_filter_values(filters, "category").map(categoryIdFromFilter).filter(Boolean);
 		return !categoryIds.length || categoryIds.indexOf(Number(category.id)) >= 0;
 	}
 	function playlistMatches(playlist, query) {
@@ -2296,7 +2344,7 @@
 	}
 	function searchSelectionsPage(query, order, filters, page = 1) {
 		const q = normalize(query);
-		const categoryIds = selectedFilterValues(filters, "category").map(categoryIdFromFilter).filter(Boolean);
+		const categoryIds = selected_filter_values(filters, "category").map(categoryIdFromFilter).filter(Boolean);
 		const view = selectionViewFromOrder(order);
 		const selections = [];
 		let hasMore = false;
@@ -2329,7 +2377,7 @@
 	}
 	function searchRecitationsPage(query, page = 1, filters = null) {
 		const q = normalize(query);
-		const selectedReciters = selectedFilterValues(filters, "reciter");
+		const selectedReciters = selected_filter_values(filters, "reciter");
 		if (selectedReciters.length) {
 			const reciters = selectedReciters.map(resolveReciterFilter).filter(Boolean);
 			const results = [];
@@ -2400,11 +2448,8 @@
 	function videoCategoryDescription(category) {
 		return localized(VIDEO_CATEGORY_DESCRIPTIONS[category.type]) || `tvQuran ${videoCategoryName(category)}.`;
 	}
-	function surahName(surah) {
-		return localized(surah.name);
-	}
 	function surahFilterLabel(surah) {
-		return `${surahName(surah)} (${surah.id})`;
+		return quran_filter_label(surah, language());
 	}
 	function text(key) {
 		return LABELS[language()]?.[key] ?? LABELS.en[key] ?? key;
@@ -2499,25 +2544,13 @@
 		};
 	}
 	function hasSearchFilters(filters) {
-		return selectedFilterValues(filters, "content").length > 0 || selectedFilterValues(filters, "category").length > 0 || selectedFilterValues(filters, "reciter").length > 0 || selectedFilterValues(filters, "surah").length > 0;
+		return selected_filter_values(filters, "content").length > 0 || selected_filter_values(filters, "category").length > 0 || selected_filter_values(filters, "reciter").length > 0 || selected_filter_values(filters, "surah").length > 0;
 	}
 	function contentAllowed(filters, contentType) {
-		const selected = selectedFilterValues(filters, "content");
+		const selected = selected_filter_values(filters, "content");
 		if (selected.length) return selected.indexOf(contentType) >= 0;
-		if (selectedFilterValues(filters, "category").length) return contentType === "selections";
+		if (selected_filter_values(filters, "category").length) return contentType === "selections";
 		return true;
-	}
-	function selectedFilterValues(filters, id) {
-		if (!filters) return [];
-		let value = filters[id];
-		if (value === void 0 && filters.get) value = filters.get(id);
-		if (value === void 0 || value === null) return [];
-		if (!Array.isArray(value)) value = [value];
-		return value.map(filterValue).filter(Boolean);
-	}
-	function filterValue(value) {
-		if (typeof value === "object" && value !== null) return String(value.value ?? value.id ?? "");
-		return String(value);
 	}
 	function categoryIdFromFilter(value) {
 		const directId = Number(value);
@@ -2531,30 +2564,25 @@
 		return Number(reciterFilterReciters().find((reciter) => reciter.name === textValue)?.id);
 	}
 	function surahIdFromFilter(value) {
-		const textValue = String(value ?? "").trim();
-		const directId = Number(textValue);
-		if (directId) return directId;
-		const trailingId = Number(textValue.match(/\((\d+)\)$/)?.[1]);
-		if (trailingId) return trailingId;
-		return Number(SURAHS.find((surah) => surahFilterLabel(surah) === textValue || surahName(surah) === textValue || Object.values(surah.name).indexOf(textValue) >= 0)?.id);
+		return quran_id_from_filter(value, SURAHS, language(), (surah) => Object.values(surah.name));
 	}
 	function selectionMatches(selection, query) {
 		return !query || normalize(selection.title).indexOf(query) >= 0 || normalize(selection.author).indexOf(query) >= 0 || normalize(selection.category).indexOf(query) >= 0;
 	}
 	function selectionMatchesFilters(selection, filters) {
-		const selectedReciters = selectedFilterValues(filters, "reciter");
-		const selectedSurahIds = selectedFilterValues(filters, "surah").map(surahIdFromFilter).filter(Boolean);
+		const selectedReciters = selected_filter_values(filters, "reciter");
+		const selectedSurahIds = selected_filter_values(filters, "surah").map(surahIdFromFilter).filter(Boolean);
 		return (!selectedReciters.length || selectedReciters.some((reciter) => normalize(selection.author).indexOf(normalize(reciter)) >= 0)) && (!selectedSurahIds.length || selectedSurahIds.some((surahId) => textMentionsSurah(`${selection.title} ${selection.category}`, surahId)));
 	}
 	function recitationMatchesFilters(recitation, filters) {
-		const selectedReciterIds = selectedFilterValues(filters, "reciter").map(reciterIdFromFilter).filter(Boolean);
-		const selectedReciters = selectedFilterValues(filters, "reciter").map(normalize);
-		const selectedSurahIds = selectedFilterValues(filters, "surah").map(surahIdFromFilter).filter(Boolean);
+		const selectedReciterIds = selected_filter_values(filters, "reciter").map(reciterIdFromFilter).filter(Boolean);
+		const selectedReciters = selected_filter_values(filters, "reciter").map(normalize);
+		const selectedSurahIds = selected_filter_values(filters, "surah").map(surahIdFromFilter).filter(Boolean);
 		return (!selectedReciterIds.length && !selectedReciters.length || selectedReciterIds.indexOf(Number(recitation.reciter.id)) >= 0 || selectedReciters.indexOf(normalize(recitation.reciter.name)) >= 0) && (!selectedSurahIds.length || selectedSurahIds.indexOf(Number(recitation.surahNumber)) >= 0 || selectedSurahIds.some((surahId) => textMentionsSurah(recitation.title, surahId)));
 	}
 	function tvVideoMatchesFilters(video, filters) {
-		const selectedReciters = selectedFilterValues(filters, "reciter").map(normalize);
-		const selectedSurahIds = selectedFilterValues(filters, "surah").map(surahIdFromFilter).filter(Boolean);
+		const selectedReciters = selected_filter_values(filters, "reciter").map(normalize);
+		const selectedSurahIds = selected_filter_values(filters, "surah").map(surahIdFromFilter).filter(Boolean);
 		const searchableText = `${video.title} ${video.description}`;
 		return (!selectedReciters.length || selectedReciters.some((reciter) => normalize(searchableText).indexOf(reciter) >= 0)) && (!selectedSurahIds.length || selectedSurahIds.some((surahId) => textMentionsSurah(searchableText, surahId)));
 	}
@@ -2620,7 +2648,7 @@
 		return `tvquran://collection/${id}${slug ? `/${slug}` : ""}`;
 	}
 	function collectionSummary(collections) {
-		const names = dedupeStrings((collections ?? []).map((collection) => collection.title)).slice(0, 6);
+		const names = dedupe_strings((collections ?? []).map((collection) => collection.title), normalize).slice(0, 6);
 		return names.length ? `${text("collection")}: ${names.join(", ")}` : "";
 	}
 	function reciterChannelUrl(id, slug) {
@@ -2765,17 +2793,6 @@
 			if (seen[playlist.url]) continue;
 			seen[playlist.url] = true;
 			deduped.push(playlist);
-		}
-		return deduped;
-	}
-	function dedupeStrings(values) {
-		const seen = {};
-		const deduped = [];
-		for (const value of values) {
-			const key = normalize(value);
-			if (!key || seen[key]) continue;
-			seen[key] = true;
-			deduped.push(value);
 		}
 		return deduped;
 	}

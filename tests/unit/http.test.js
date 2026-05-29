@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest'
-import { cache_set, get_json, get_text, init_lru_caches, query_string } from '@lib/http.js'
+import { cache_get, cache_set, get_json, get_text, init_lru_caches, query_string } from '@lib/http.js'
 
 describe('http helpers', () => {
   beforeEach(() => {
@@ -37,10 +37,10 @@ describe('http helpers', () => {
     init_lru_caches(state, limits)
     cache_set(state, limits, 'items', 'a', 1)
     cache_set(state, limits, 'items', 'b', 2)
-    cache_set(state, limits, 'items', 'a', 3)
+    cache_get(state, limits, 'items', 'a')
     cache_set(state, limits, 'items', 'c', 4)
 
-    expect(state.items).toEqual({ a: 3, c: 4 })
+    expect(state.items).toEqual({ a: 1, c: 4 })
     expect(state.cacheOrder.items).toEqual(['a', 'c'])
   })
 })

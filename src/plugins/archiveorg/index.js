@@ -1,4 +1,6 @@
 import { plugin_icon_url } from '@lib/assets.js'
+import { dedupe_strings } from '@lib/collections.js'
+import { selected_filter_values } from '@lib/filters.js'
 import { grayjay_platform } from '@lib/grayjay.js'
 import { get_json, query_string } from '@lib/http.js'
 import { audio_sources_descriptor, thumbnails, video_source_descriptor } from '@lib/media.js'
@@ -320,7 +322,7 @@ function userSearchQuery(query) {
     clauses.push(terms[terms.length - 1])
   }
 
-  return `(${dedupeStrings(clauses).join(' OR ')})`
+  return `(${dedupe_strings(clauses).join(' OR ')})`
 }
 
 function creatorSearchQuery(creator) {
@@ -794,41 +796,19 @@ function contentFilter() {
 }
 
 function selectedMedia(filters) {
-  const value = selectedFilterValues(filters, 'content')[0]
-  if (filterValue(value) === 'audio') {
+  const value = selected_filter_values(filters, 'content')[0]
+  if (value === 'audio') {
     return MEDIA.AUDIO
   }
-  if (filterValue(value) === 'video') {
+  if (value === 'video') {
     return MEDIA.VIDEO
   }
 
   return mediaType()
 }
 
-function selectedFilterValues(filters, id) {
-  if (!filters) {
-    return []
-  }
-
-  if (Array.isArray(filters)) {
-    return filters.filter((filter) => filter?.id === id || filter?.group?.id === id)
-  }
-
-  if (typeof filters.get === 'function') {
-    const value = filters.get(id)
-    return Array.isArray(value) ? value : value ? [value] : []
-  }
-
-  const value = filters[id]
-  return Array.isArray(value) ? value : value ? [value] : []
-}
-
-function filterValue(value) {
-  return String(value?.value ?? value?.id ?? value ?? '')
-}
-
 function hasSearchFilters(filters) {
-  return selectedFilterValues(filters, 'content').length > 0
+  return selected_filter_values(filters, 'content').length > 0
 }
 
 function mediaType() {
@@ -1054,7 +1034,7 @@ function normalizeSearch(value) {
 
 function searchTerms(value) {
   const stopWords = ['the', 'and', 'or', 'a', 'an', 'of', 'for', 'to', 'in', 'on', 'with', 'by', 'بن', 'ابن']
-  return dedupeStrings(
+  return dedupe_strings(
     normalizeSearch(value)
       .split(' ')
       .filter((term) => term.length > 1 && stopWords.indexOf(term) < 0)
@@ -1063,19 +1043,6 @@ function searchTerms(value) {
 
 function escapeSearch(value) {
   return cleanText(value).replace(/["()]/g, ' ')
-}
-
-function dedupeStrings(values) {
-  const seen = {}
-  const result = []
-  for (const value of values) {
-    const text = String(value ?? '').trim()
-    if (text && !seen[text]) {
-      seen[text] = true
-      result.push(text)
-    }
-  }
-  return result
 }
 
 function logIfTesting(msg) {

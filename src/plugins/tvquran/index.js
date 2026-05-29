@@ -1,9 +1,12 @@
 import { plugin_icon_url, static_thumbnails } from '@lib/assets.js'
+import { dedupe_strings } from '@lib/collections.js'
+import { selected_filter_values } from '@lib/filters.js'
 import { grayjay_platform } from '@lib/grayjay.js'
 import { extract_first, last_match } from '@lib/html.js'
 import { cache_set, get_text, init_lru_caches } from '@lib/http.js'
 import { audio_source_descriptor, thumbnails } from '@lib/media.js'
 import { apply_pager_state, array_pager_class } from '@lib/paging.js'
+import { quran_filter_label, quran_id_from_filter } from '@lib/quran.js'
 import { clean_text } from '@lib/text.js'
 
 const PLATFORM = 'tvQuran'
@@ -482,7 +485,7 @@ source.searchSuggestions = function (query) {
     }
   }
 
-  return dedupeStrings(suggestions).slice(0, DEFAULT_LIMIT)
+  return dedupe_strings(suggestions, normalize).slice(0, DEFAULT_LIMIT)
 }
 
 source.search = function (query, type, order, filters) {
@@ -1421,7 +1424,7 @@ function reciterCollectionPlaylists(reciter) {
 }
 
 function searchReciterCollectionPlaylists(query, filters) {
-  const selectedReciters = selectedFilterValues(filters, 'reciter')
+  const selectedReciters = selected_filter_values(filters, 'reciter')
   const reciters = []
 
   if (selectedReciters.length) {
@@ -1493,7 +1496,7 @@ function getPlaylistCollectionFromUrl(url) {
 }
 
 function categoryMatchesFilters(category, filters) {
-  const categoryIds = selectedFilterValues(filters, 'category').map(categoryIdFromFilter).filter(Boolean)
+  const categoryIds = selected_filter_values(filters, 'category').map(categoryIdFromFilter).filter(Boolean)
   return !categoryIds.length || categoryIds.indexOf(Number(category.id)) >= 0
 }
 
@@ -1584,7 +1587,7 @@ function searchPage(query, order, filters, page = 1) {
 
 function searchSelectionsPage(query, order, filters, page = 1) {
   const q = normalize(query)
-  const categoryIds = selectedFilterValues(filters, 'category').map(categoryIdFromFilter).filter(Boolean)
+  const categoryIds = selected_filter_values(filters, 'category').map(categoryIdFromFilter).filter(Boolean)
   const view = selectionViewFromOrder(order)
   const selections = []
   let hasMore = false
@@ -1621,7 +1624,7 @@ function searchSelectionsPage(query, order, filters, page = 1) {
 
 function searchRecitationsPage(query, page = 1, filters = null) {
   const q = normalize(query)
-  const selectedReciters = selectedFilterValues(filters, 'reciter')
+  const selectedReciters = selected_filter_values(filters, 'reciter')
   if (selectedReciters.length) {
     const reciters = selectedReciters.map(resolveReciterFilter).filter(Boolean)
     const results = []
@@ -1719,12 +1722,8 @@ function videoCategoryDescription(category) {
   return localized(VIDEO_CATEGORY_DESCRIPTIONS[category.type]) || `tvQuran ${videoCategoryName(category)}.`
 }
 
-function surahName(surah) {
-  return localized(surah.name)
-}
-
 function surahFilterLabel(surah) {
-  return `${surahName(surah)} (${surah.id})`
+  return quran_filter_label(surah, language())
 }
 
 function text(key) {
@@ -1818,53 +1817,24 @@ function surahFilter() {
 
 function hasSearchFilters(filters) {
   return (
-    selectedFilterValues(filters, 'content').length > 0 ||
-    selectedFilterValues(filters, 'category').length > 0 ||
-    selectedFilterValues(filters, 'reciter').length > 0 ||
-    selectedFilterValues(filters, 'surah').length > 0
+    selected_filter_values(filters, 'content').length > 0 ||
+    selected_filter_values(filters, 'category').length > 0 ||
+    selected_filter_values(filters, 'reciter').length > 0 ||
+    selected_filter_values(filters, 'surah').length > 0
   )
 }
 
 function contentAllowed(filters, contentType) {
-  const selected = selectedFilterValues(filters, 'content')
+  const selected = selected_filter_values(filters, 'content')
   if (selected.length) {
     return selected.indexOf(contentType) >= 0
   }
 
-  if (selectedFilterValues(filters, 'category').length) {
+  if (selected_filter_values(filters, 'category').length) {
     return contentType === 'selections'
   }
 
   return true
-}
-
-function selectedFilterValues(filters, id) {
-  if (!filters) {
-    return []
-  }
-
-  let value = filters[id]
-  if (value === undefined && filters.get) {
-    value = filters.get(id)
-  }
-
-  if (value === undefined || value === null) {
-    return []
-  }
-
-  if (!Array.isArray(value)) {
-    value = [value]
-  }
-
-  return value.map(filterValue).filter(Boolean)
-}
-
-function filterValue(value) {
-  if (typeof value === 'object' && value !== null) {
-    return String(value.value ?? value.id ?? '')
-  }
-
-  return String(value)
 }
 
 function categoryIdFromFilter(value) {
@@ -1887,23 +1857,7 @@ function reciterIdFromFilter(value) {
 }
 
 function surahIdFromFilter(value) {
-  const textValue = String(value ?? '').trim()
-  const directId = Number(textValue)
-  if (directId) {
-    return directId
-  }
-
-  const trailingId = Number(textValue.match(/\((\d+)\)$/)?.[1])
-  if (trailingId) {
-    return trailingId
-  }
-
-  return Number(
-    SURAHS.find(
-      (surah) =>
-        surahFilterLabel(surah) === textValue || surahName(surah) === textValue || Object.values(surah.name).indexOf(textValue) >= 0
-    )?.id
-  )
+  return quran_id_from_filter(value, SURAHS, language(), (surah) => Object.values(surah.name))
 }
 
 function selectionMatches(selection, query) {
@@ -1916,8 +1870,8 @@ function selectionMatches(selection, query) {
 }
 
 function selectionMatchesFilters(selection, filters) {
-  const selectedReciters = selectedFilterValues(filters, 'reciter')
-  const selectedSurahIds = selectedFilterValues(filters, 'surah').map(surahIdFromFilter).filter(Boolean)
+  const selectedReciters = selected_filter_values(filters, 'reciter')
+  const selectedSurahIds = selected_filter_values(filters, 'surah').map(surahIdFromFilter).filter(Boolean)
 
   return (
     (!selectedReciters.length || selectedReciters.some((reciter) => normalize(selection.author).indexOf(normalize(reciter)) >= 0)) &&
@@ -1926,9 +1880,9 @@ function selectionMatchesFilters(selection, filters) {
 }
 
 function recitationMatchesFilters(recitation, filters) {
-  const selectedReciterIds = selectedFilterValues(filters, 'reciter').map(reciterIdFromFilter).filter(Boolean)
-  const selectedReciters = selectedFilterValues(filters, 'reciter').map(normalize)
-  const selectedSurahIds = selectedFilterValues(filters, 'surah').map(surahIdFromFilter).filter(Boolean)
+  const selectedReciterIds = selected_filter_values(filters, 'reciter').map(reciterIdFromFilter).filter(Boolean)
+  const selectedReciters = selected_filter_values(filters, 'reciter').map(normalize)
+  const selectedSurahIds = selected_filter_values(filters, 'surah').map(surahIdFromFilter).filter(Boolean)
 
   return (
     ((!selectedReciterIds.length && !selectedReciters.length) ||
@@ -1941,8 +1895,8 @@ function recitationMatchesFilters(recitation, filters) {
 }
 
 function tvVideoMatchesFilters(video, filters) {
-  const selectedReciters = selectedFilterValues(filters, 'reciter').map(normalize)
-  const selectedSurahIds = selectedFilterValues(filters, 'surah').map(surahIdFromFilter).filter(Boolean)
+  const selectedReciters = selected_filter_values(filters, 'reciter').map(normalize)
+  const selectedSurahIds = selected_filter_values(filters, 'surah').map(surahIdFromFilter).filter(Boolean)
   const searchableText = `${video.title} ${video.description}`
 
   return (
@@ -2045,7 +1999,10 @@ function collectionChannelUrl(id, slug) {
 }
 
 function collectionSummary(collections) {
-  const names = dedupeStrings((collections ?? []).map((collection) => collection.title)).slice(0, 6)
+  const names = dedupe_strings(
+    (collections ?? []).map((collection) => collection.title),
+    normalize
+  ).slice(0, 6)
   return names.length ? `${text('collection')}: ${names.join(', ')}` : ''
 }
 
@@ -2248,22 +2205,6 @@ function dedupePlaylists(playlists) {
     }
     seen[playlist.url] = true
     deduped.push(playlist)
-  }
-
-  return deduped
-}
-
-function dedupeStrings(values) {
-  const seen = {}
-  const deduped = []
-
-  for (const value of values) {
-    const key = normalize(value)
-    if (!key || seen[key]) {
-      continue
-    }
-    seen[key] = true
-    deduped.push(value)
   }
 
   return deduped

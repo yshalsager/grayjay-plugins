@@ -1,8 +1,11 @@
 import { content_thumbnails, plugin_icon_url, static_thumbnails } from '@lib/assets.js'
+import { dedupe_strings } from '@lib/collections.js'
+import { selected_filter_values } from '@lib/filters.js'
 import { grayjay_platform } from '@lib/grayjay.js'
 import { get_json } from '@lib/http.js'
 import { audio_source_descriptor, hls_source, hls_source_descriptor, video_source_descriptor } from '@lib/media.js'
 import { array_pager_class } from '@lib/paging.js'
+import { quran_filter_label, quran_id_from_filter, quran_name } from '@lib/quran.js'
 
 const PLATFORM = 'MP3Quran'
 const API_BASE = 'https://www.mp3quran.net/api/v3'
@@ -231,7 +234,7 @@ source.searchSuggestions = function (query) {
     ...state.videos.flatMap((video) => [video.reciter_name, `${video.reciter_name} - ${getVideoTypeName(video.video_type)}`])
   ]
 
-  return dedupeStrings(suggestions)
+  return dedupe_strings(suggestions)
     .filter((name) => normalize(name).indexOf(q) >= 0)
     .slice(0, 10)
 }
@@ -645,9 +648,9 @@ function primaryMoshaf(reciter) {
 function tracksFromReciters(reciters, query, filters) {
   const tracks = []
   const q = normalize(query)
-  const selectedSurahIds = selectedFilterValues(filters, 'surah').map(surahIdFromFilter).filter(Boolean)
-  const selectedRiwayahIds = selectedFilterValues(filters, 'riwayah').map(riwayahIdFromFilter).filter(Boolean)
-  const selectedReciterIds = selectedFilterValues(filters, 'reciter').map(reciterIdFromFilter).filter(Boolean)
+  const selectedSurahIds = selected_filter_values(filters, 'surah').map(surahIdFromFilter).filter(Boolean)
+  const selectedRiwayahIds = selected_filter_values(filters, 'riwayah').map(riwayahIdFromFilter).filter(Boolean)
+  const selectedReciterIds = selected_filter_values(filters, 'reciter').map(reciterIdFromFilter).filter(Boolean)
 
   for (const reciter of reciters) {
     if (selectedReciterIds.length && selectedReciterIds.indexOf(Number(reciter.id)) < 0) {
@@ -678,8 +681,8 @@ function tracksFromReciters(reciters, query, filters) {
 
 function tafsirTracks(query, filters) {
   const q = normalize(query)
-  const selectedSurahIds = selectedFilterValues(filters, 'surah').map(surahIdFromFilter).filter(Boolean)
-  const selectedTafsirIds = selectedFilterValues(filters, 'tafsir-source').map(tafsirIdFromFilter).filter(Boolean)
+  const selectedSurahIds = selected_filter_values(filters, 'surah').map(surahIdFromFilter).filter(Boolean)
+  const selectedTafsirIds = selected_filter_values(filters, 'tafsir-source').map(tafsirIdFromFilter).filter(Boolean)
 
   return (state.tafsirItems ?? [])
     .filter((item) => !selectedTafsirIds.length || selectedTafsirIds.indexOf(Number(item.tafsir_id)) >= 0)
@@ -690,8 +693,8 @@ function tafsirTracks(query, filters) {
 
 function mp3Videos(query, filters) {
   const q = normalize(query)
-  const selectedVideoTypeIds = selectedFilterValues(filters, 'video-type').map(videoTypeIdFromFilter).filter(Boolean)
-  const selectedReciterIds = selectedFilterValues(filters, 'reciter').map(reciterIdFromFilter).filter(Boolean)
+  const selectedVideoTypeIds = selected_filter_values(filters, 'video-type').map(videoTypeIdFromFilter).filter(Boolean)
+  const selectedReciterIds = selected_filter_values(filters, 'reciter').map(reciterIdFromFilter).filter(Boolean)
 
   return (state.videos ?? [])
     .filter((video) => !selectedReciterIds.length || selectedReciterIds.indexOf(Number(video.reciter_id)) >= 0)
@@ -1086,8 +1089,8 @@ function moshafToPlaylistDetails(reciter, moshaf) {
 }
 
 function tafsirPlaylists(filters) {
-  const selectedTafsirIds = selectedFilterValues(filters, 'tafsir-source').map(tafsirIdFromFilter).filter(Boolean)
-  const selectedSurahIds = selectedFilterValues(filters, 'surah').map(surahIdFromFilter).filter(Boolean)
+  const selectedTafsirIds = selected_filter_values(filters, 'tafsir-source').map(tafsirIdFromFilter).filter(Boolean)
+  const selectedSurahIds = selected_filter_values(filters, 'surah').map(surahIdFromFilter).filter(Boolean)
 
   return (state.tafasir ?? [])
     .filter((tafsir) => !selectedTafsirIds.length || selectedTafsirIds.indexOf(Number(tafsir.id)) >= 0)
@@ -1129,8 +1132,8 @@ function tafsirToPlaylistDetails(tafsir) {
 }
 
 function videoTypePlaylists(filters) {
-  const selectedVideoTypeIds = selectedFilterValues(filters, 'video-type').map(videoTypeIdFromFilter).filter(Boolean)
-  const selectedReciterIds = selectedFilterValues(filters, 'reciter').map(reciterIdFromFilter).filter(Boolean)
+  const selectedVideoTypeIds = selected_filter_values(filters, 'video-type').map(videoTypeIdFromFilter).filter(Boolean)
+  const selectedReciterIds = selected_filter_values(filters, 'reciter').map(reciterIdFromFilter).filter(Boolean)
 
   return (state.videoTypes ?? [])
     .filter((videoType) => !selectedVideoTypeIds.length || selectedVideoTypeIds.indexOf(Number(videoType.id)) >= 0)
@@ -1206,9 +1209,9 @@ function getMp3Playlist(url) {
 }
 
 function moshafMatchesFilters(reciter, moshaf, filters) {
-  const selectedReciterIds = selectedFilterValues(filters, 'reciter').map(reciterIdFromFilter).filter(Boolean)
-  const selectedRiwayahIds = selectedFilterValues(filters, 'riwayah').map(riwayahIdFromFilter).filter(Boolean)
-  const selectedSurahIds = selectedFilterValues(filters, 'surah').map(surahIdFromFilter).filter(Boolean)
+  const selectedReciterIds = selected_filter_values(filters, 'reciter').map(reciterIdFromFilter).filter(Boolean)
+  const selectedRiwayahIds = selected_filter_values(filters, 'riwayah').map(riwayahIdFromFilter).filter(Boolean)
+  const selectedSurahIds = selected_filter_values(filters, 'surah').map(surahIdFromFilter).filter(Boolean)
 
   return (
     (!selectedReciterIds.length || selectedReciterIds.indexOf(Number(reciter.id)) >= 0) &&
@@ -1460,86 +1463,46 @@ function mp3VideoMatches(video, query) {
 
 function hasSearchFilters(filters) {
   return (
-    selectedFilterValues(filters, 'content').length > 0 ||
-    selectedFilterValues(filters, 'reciter').length > 0 ||
-    selectedFilterValues(filters, 'surah').length > 0 ||
-    selectedFilterValues(filters, 'riwayah').length > 0 ||
-    selectedFilterValues(filters, 'video-type').length > 0 ||
-    selectedFilterValues(filters, 'tafsir-source').length > 0
+    selected_filter_values(filters, 'content').length > 0 ||
+    selected_filter_values(filters, 'reciter').length > 0 ||
+    selected_filter_values(filters, 'surah').length > 0 ||
+    selected_filter_values(filters, 'riwayah').length > 0 ||
+    selected_filter_values(filters, 'video-type').length > 0 ||
+    selected_filter_values(filters, 'tafsir-source').length > 0
   )
 }
 
 function contentAllowed(filters, contentType) {
-  const selected = selectedFilterValues(filters, 'content')
+  const selected = selected_filter_values(filters, 'content')
   if (selected.length) {
     return selected.indexOf(contentType) >= 0
   }
 
-  if (selectedFilterValues(filters, 'riwayah').length) {
+  if (selected_filter_values(filters, 'riwayah').length) {
     return contentType === 'tracks'
   }
 
-  if (selectedFilterValues(filters, 'reciter').length) {
+  if (selected_filter_values(filters, 'reciter').length) {
     return contentType === 'tracks' || contentType === 'videos'
   }
 
-  if (selectedFilterValues(filters, 'video-type').length) {
+  if (selected_filter_values(filters, 'video-type').length) {
     return contentType === 'videos'
   }
 
-  if (selectedFilterValues(filters, 'tafsir-source').length) {
+  if (selected_filter_values(filters, 'tafsir-source').length) {
     return contentType === 'tafsir'
   }
 
-  if (selectedFilterValues(filters, 'surah').length) {
+  if (selected_filter_values(filters, 'surah').length) {
     return contentType === 'tracks' || contentType === 'tafsir'
   }
 
   return true
 }
 
-function selectedFilterValues(filters, id) {
-  if (!filters) {
-    return []
-  }
-
-  let value = filters[id]
-  if (value === undefined && filters.get) {
-    value = filters.get(id)
-  }
-
-  if (value === undefined || value === null) {
-    return []
-  }
-
-  if (!Array.isArray(value)) {
-    value = [value]
-  }
-
-  return value.map(filterValue).filter(Boolean)
-}
-
-function filterValue(value) {
-  if (typeof value === 'object' && value !== null) {
-    return String(value.value ?? value.id ?? '')
-  }
-
-  return String(value)
-}
-
 function surahIdFromFilter(value) {
-  const text = String(value ?? '').trim()
-  const directId = Number(text)
-  if (directId) {
-    return directId
-  }
-
-  const trailingId = Number(text.match(/\((\d+)\)$/)?.[1])
-  if (trailingId) {
-    return trailingId
-  }
-
-  return Number((state.suwar ?? []).find((surah) => surahFilterLabel(surah) === text || surahName(surah) === text)?.id)
+  return quran_id_from_filter(value, state.suwar)
 }
 
 function riwayahIdFromFilter(value) {
@@ -1599,11 +1562,11 @@ function normalizeMediaUrl(value) {
 }
 
 function surahName(surah) {
-  return String(surah.name ?? '').trim()
+  return quran_name(surah)
 }
 
 function surahFilterLabel(surah) {
-  return `${surahName(surah)} (${surah.id})`
+  return quran_filter_label(surah)
 }
 
 function getVideoTypeName(id) {
@@ -1708,21 +1671,6 @@ function tafsirKey(tafsirId, itemId) {
 
 function videoKey(reciterId, videoId) {
   return `${reciterId}-${videoId}`
-}
-
-function dedupeStrings(values) {
-  const seen = {}
-  const deduped = []
-
-  for (const value of values) {
-    if (!value || seen[value]) {
-      continue
-    }
-    seen[value] = true
-    deduped.push(value)
-  }
-
-  return deduped
 }
 
 function logIfTesting(msg) {

@@ -55,6 +55,15 @@ export function cache_set(state, limits, cacheName, key, value) {
   return value
 }
 
+export function cache_get(state, limits, cacheName, key) {
+  const cacheKey = String(key)
+  const value = state[cacheName]?.[cacheKey]
+  if (value !== undefined) {
+    cache_set(state, limits, cacheName, cacheKey, value)
+  }
+  return value
+}
+
 export function prune_lru_cache(state, limits, cacheName) {
   const limit = limits[cacheName]
   const order = state.cacheOrder?.[cacheName]

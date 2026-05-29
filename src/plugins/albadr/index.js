@@ -1,4 +1,6 @@
 import { plugin_icon_url, static_thumbnails } from '@lib/assets.js'
+import { dedupe_by, dedupe_by_url } from '@lib/collections.js'
+import { selected_filter_values } from '@lib/filters.js'
 import { grayjay_platform } from '@lib/grayjay.js'
 import { extract_first } from '@lib/html.js'
 import { cache_set, get_text, init_lru_caches, query_string } from '@lib/http.js'
@@ -333,7 +335,7 @@ class AlBadrCategoryPager extends VideoPager {
       if (loaded?.items?.[0]) videos.push(itemToVideo(loaded.items[0]))
     }
 
-    super(dedupeByUrl(videos), seriesOffset + DEFAULT_LIMIT < category.series.length, {
+    super(dedupe_by_url(videos), seriesOffset + DEFAULT_LIMIT < category.series.length, {
       categoryId,
       seriesOffset: seriesOffset + DEFAULT_LIMIT
     })
@@ -368,12 +370,12 @@ function homeLatest() {
     if (item) items.push(itemToVideo(item))
   }
 
-  return dedupeByUrl([liveNested(), ...items])
+  return dedupe_by_url([liveNested(), ...items])
 }
 
 function homeSelected() {
   const html = fetchPage(`${BASE_URL}/`)
-  return dedupeByUrl([
+  return dedupe_by_url([
     liveNested(),
     ...parseHomeDetailLinks(html)
       .map((item) => safeLoadDetail(item.slug))
@@ -387,7 +389,7 @@ function seriesGroupVideos(group) {
     const loaded = safeLoadSeries(item.id, 0)
     if (loaded?.items?.[0]) videos.push(itemToVideo(loaded.items[0]))
   }
-  return dedupeByUrl(videos)
+  return dedupe_by_url(videos)
 }
 
 function loadCategory(id) {
@@ -586,7 +588,7 @@ function parseCategorySeries(html, category) {
     }
     series.push(item)
   }
-  return dedupeBy(series, (item) => item.id)
+  return dedupe_by(series, (item) => item.id)
 }
 
 function parseSeriesItems(html, seriesId, offset, seriesTitle) {
@@ -612,7 +614,7 @@ function parseSeriesItems(html, seriesId, offset, seriesTitle) {
     })
   }
 
-  return dedupeBy(items, (item) => item.slug)
+  return dedupe_by(items, (item) => item.slug)
 }
 
 function parseSearchDetailLinks(html) {
@@ -657,7 +659,7 @@ function parseAnchors(html, hrefRegex) {
       title: clean_text(extract_first(`${match[1]} ${match[3]}`, /title=["']([^"']+)["']/i) || match[4])
     })
   }
-  return dedupeBy(links, (item) => item.url)
+  return dedupe_by(links, (item) => item.url)
 }
 
 function extractSection(html, title) {
@@ -711,7 +713,7 @@ function ensureSeriesIndex() {
   }
   allSeries.push(...SPECIAL_SERIES.map((item) => ({ ...item, pageUrl: publicSeriesUrl(item.id), count: 0 })))
 
-  state.seriesIndex = dedupeBy(allSeries, (item) => item.id)
+  state.seriesIndex = dedupe_by(allSeries, (item) => item.id)
   state.seriesById = {}
   for (const item of state.seriesIndex) {
     state.seriesById[item.id] = item
@@ -800,23 +802,8 @@ function contentFilter() {
 }
 
 function selectedContent(filters) {
-  const value = filterValue(selectedFilterValues(filters, 'content')[0])
+  const value = selected_filter_values(filters, 'content')[0]
   return value === 'live' || value === 'audio' ? value : 'all'
-}
-
-function selectedFilterValues(filters, id) {
-  if (!filters) return []
-  if (Array.isArray(filters)) return filters.filter((filter) => filter?.id === id || filter?.group?.id === id)
-  if (typeof filters.get === 'function') {
-    const value = filters.get(id)
-    return Array.isArray(value) ? value : value ? [value] : []
-  }
-  const value = filters[id]
-  return Array.isArray(value) ? value : value ? [value] : []
-}
-
-function filterValue(value) {
-  return String(value?.value ?? value?.id ?? value ?? '')
 }
 
 function cached(cacheName, key, loader) {
@@ -998,22 +985,6 @@ function safeDecode(value) {
   } catch {
     return String(value ?? '')
   }
-}
-
-function dedupeByUrl(items) {
-  return dedupeBy(items, (item) => item.url ?? item.contentUrl)
-}
-
-function dedupeBy(items, key) {
-  const seen = {}
-  const result = []
-  for (const item of items) {
-    const value = key(item)
-    if (!value || seen[value]) continue
-    seen[value] = true
-    result.push(item)
-  }
-  return result
 }
 
 function logIfTesting(message) {
