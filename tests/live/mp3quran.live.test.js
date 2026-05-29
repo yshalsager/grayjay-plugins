@@ -9,7 +9,8 @@ import {
   assert_pager,
   assert_playlist,
   find_by_url_part,
-  first_filter_value
+  first_filter_value,
+  media_sources
 } from '@tests/live/assertions.js'
 import { load_plugin } from '@tests/live/harness/grayjay-runtime.js'
 
@@ -51,6 +52,7 @@ test('mp3quran search capabilities expose localized readable filters', () => {
     capabilities.filters.some((filter) => filter.id === 'riwayah'),
     'expected riwayah filter'
   ).toBe(true)
+  expect(capabilities.sorts, 'expected only real sortable order').toEqual([Type.Order.Chronological])
   expect(first_filter_value(capabilities, 'surah')).toMatch(/\(\d+\)$/)
   expect(first_filter_value(capabilities, 'reciter')).not.toMatch(/^\d+$/)
   expect(first_filter_value(capabilities, 'riwayah')).not.toMatch(/^\d+$/)
@@ -64,6 +66,7 @@ test('mp3quran suggestions and saved state restore work', () => {
 
   const saved_state = source.saveState()
   expect(() => JSON.parse(saved_state), 'expected valid saved state JSON').not.toThrow()
+  expect(Number(JSON.parse(saved_state).catalogFetchedAt), 'expected catalog fetch timestamp').toBeGreaterThan(0)
   source.enable(runtime.config, { language: '0', homeMode: '0' }, saved_state)
   assert_pager(source.getHome(), 'home after saved state restore')
 })
@@ -190,7 +193,7 @@ test('mp3quran playlists cover moshaf, tafsir, and video type contents', () => {
   }
 })
 
-test('mp3quran array pagination and recommendations work', () => {
+test('mp3quran array pagination, direct media URLs, and recommendations work', () => {
   set_settings({})
   const reciter = representative_reciter_name()
   assert_next_page(source.search('', null, Type.Order.Chronological, { content: 'tracks', reciter }), 'reciter track search')
@@ -200,10 +203,22 @@ test('mp3quran array pagination and recommendations work', () => {
     'track search'
   )[0]
   const details = source.getContentDetails(item.url)
+  const direct_url = media_sources(details)[0].url
+  expect(source.isContentDetailsUrl(direct_url), 'expected direct media URL to be recognized').toBe(true)
+  expect(source.getContentDetails(direct_url).url, 'expected direct media URL to resolve to internal track').toBe(details.url)
+
   const recommendations = assert_pager(details.getContentRecommendations(), 'track recommendations')
   expect(
     recommendations.every((recommendation) => recommendation.url !== details.url),
     'recommendations should not include current item'
+  ).toBe(true)
+  expect(
+    recommendations.some((recommendation) => recommendation.url.endsWith('/2')),
+    'expected next surah recommendation'
+  ).toBe(true)
+  expect(
+    recommendations.some((recommendation) => recommendation.url.endsWith('/1') && recommendation.url !== details.url),
+    'expected same surah by another reciter recommendation'
   ).toBe(true)
 })
 

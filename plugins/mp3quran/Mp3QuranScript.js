@@ -152,6 +152,12 @@
 	var QURAN_TEXT_BASE = "https://cdn.jsdelivr.net/gh/fawazahmed0/quran-api@1/editions/ara-quransimple";
 	var DEFAULT_LIMIT = 24;
 	var DEFAULT_ICON = "./Mp3QuranIcon.png";
+	var CACHE_MAX_AGE_HOURS = [
+		0,
+		6,
+		24,
+		168
+	];
 	var LANGUAGE_CODES = [
 		"ar",
 		"eng",
@@ -249,13 +255,16 @@
 		RADIO: /^mp3quran:\/\/radio\/(\d+)$/,
 		LIVE_TV: /^mp3quran:\/\/live-tv\/(\d+)$/,
 		TAFSIR: /^mp3quran:\/\/tafsir\/(\d+)\/(\d+)$/,
-		VIDEO: /^mp3quran:\/\/video\/(\d+)\/(\d+)$/
+		VIDEO: /^mp3quran:\/\/video\/(\d+)\/(\d+)$/,
+		DIRECT_MEDIA: /^https?:\/\/(?:[^/]+\.)?(?:mp3quran\.net|qurango\.net|radiojar\.com|holol\.com)\//i
 	};
 	var _config = {};
 	var _settings = {};
 	var grayjay = grayjay_platform(PLATFORM, () => _config.id);
 	var timingReadsAttempted = false;
+	var catalogLoadedThisRun = false;
 	var state = {
+		catalogFetchedAt: 0,
 		language: "",
 		reciters: [],
 		suwar: [],
@@ -281,6 +290,7 @@
 	source.enable = function(conf, settings, savedState) {
 		_config = conf ?? {};
 		_settings = settings ?? {};
+		catalogLoadedThisRun = false;
 		if (savedState) try {
 			state = JSON.parse(savedState);
 		} catch (e) {
@@ -312,7 +322,6 @@
 		if (homeMode === HOME_MODES.VIDEOS) return new ArrayVideoPager(state.videos.map(mp3VideoToVideo), DEFAULT_LIMIT);
 		return new ArrayVideoPager(state.radios.map(radioToVideo), DEFAULT_LIMIT);
 	};
-	Type.Order.Popularity = "Popularity";
 	source.getSearchCapabilities = () => getSearchCapabilities();
 	source.searchSuggestions = function(query) {
 		ensureCatalog();
@@ -345,7 +354,7 @@
 		if (contentAllowed(filters, "tracks")) results.push(...tracksFromReciters(state.reciters, q, filters));
 		if (contentAllowed(filters, "tafsir")) results.push(...tafsirTracks(q, filters));
 		if (contentAllowed(filters, "videos")) results.push(...mp3Videos(q, filters));
-		return new ArrayVideoPager(results, DEFAULT_LIMIT);
+		return new ArrayVideoPager(sortVideos(results, order), DEFAULT_LIMIT);
 	};
 	source.searchChannels = function(query) {
 		ensureCatalog();
@@ -354,7 +363,7 @@
 	};
 	source.searchPlaylists = function(query, type, order, filters) {
 		ensureCatalog();
-		return new ArrayPlaylistPager(mp3Playlists(query, filters), DEFAULT_LIMIT);
+		return new ArrayPlaylistPager(sortPlaylists(mp3Playlists(query, filters), order), DEFAULT_LIMIT);
 	};
 	source.isChannelUrl = function(url) {
 		return REGEX.ROOT_CHANNEL.test(url) || REGEX.CHANNEL.test(url);
@@ -402,10 +411,12 @@
 		return new ArrayVideoPager(reciterTracks(getReciterFromUrl(url), "", filters), DEFAULT_LIMIT);
 	};
 	source.isContentDetailsUrl = function(url) {
-		return REGEX.TRACK.test(url) || REGEX.RADIO.test(url) || REGEX.LIVE_TV.test(url) || REGEX.TAFSIR.test(url) || REGEX.VIDEO.test(url);
+		return REGEX.TRACK.test(url) || REGEX.RADIO.test(url) || REGEX.LIVE_TV.test(url) || REGEX.TAFSIR.test(url) || REGEX.VIDEO.test(url) || isDirectMediaUrl(url);
 	};
 	source.getContentDetails = function(url) {
 		ensureCatalog();
+		const publicContent = publicContentFromUrl(url);
+		if (publicContent) return publicContent;
 		let match = url.match(REGEX.RADIO);
 		if (match) {
 			const radio = state.radioById[match[1]];
@@ -436,7 +447,7 @@
 		const moshaf = reciter?.moshaf?.find((m) => String(m.id) === match[2]);
 		const surahId = Number(match[3]);
 		if (!reciter || !moshaf || !state.surahById[surahId]) throw new ScriptException("Track not found");
-		return trackToVideo(reciter, moshaf, surahId);
+		return trackToVideo(reciter, moshaf, surahId, true);
 	};
 	source.getContentChapters = function(url) {
 		ensureCatalog();
@@ -457,12 +468,13 @@
 	};
 	function ensureCatalog() {
 		const language = LANGUAGE_CODES[Number(_settings.language ?? 0)] ?? "ar";
-		if (state.language === language && state.reciters?.length && state.suwar?.length && state.riwayat?.length && state.radios?.length && state.liveTv?.length && state.recentReads?.length && Array.isArray(state.tafsirItems) && Array.isArray(state.videos) && Array.isArray(state.videoTypes) && Array.isArray(state.timingReads)) {
+		if (state.language === language && catalogHasRequiredData() && (catalogLoadedThisRun || catalogIsFresh())) {
 			sortCatalog();
 			rebuildIndexes();
 			return;
 		}
 		state.language = language;
+		state.catalogFetchedAt = Date.now();
 		state.reciters = callJson(`${API_BASE}/reciters?language=${language}`).reciters ?? [];
 		state.suwar = callJson(`${API_BASE}/suwar?language=${language}`).suwar ?? [];
 		state.riwayat = callJson(`${API_BASE}/riwayat?language=${language}`).riwayat ?? [];
@@ -475,8 +487,20 @@
 		state.videoTypes = callJson(`${API_BASE}/video_types?language=${language}`).video_types ?? [];
 		state.videos = flattenVideos(callJson(`${API_BASE}/videos?language=${language}`).videos ?? []);
 		state.timingReads = loadTimingReads();
+		catalogLoadedThisRun = true;
 		sortCatalog();
 		rebuildIndexes();
+	}
+	function catalogHasRequiredData() {
+		return state.reciters?.length && state.suwar?.length && state.riwayat?.length && state.radios?.length && state.liveTv?.length && state.recentReads?.length && Array.isArray(state.tafsirItems) && Array.isArray(state.videos) && Array.isArray(state.videoTypes) && Array.isArray(state.timingReads);
+	}
+	function catalogIsFresh() {
+		const maxAge = catalogMaxAgeMs();
+		const fetchedAt = Number(state.catalogFetchedAt ?? 0);
+		return maxAge > 0 && fetchedAt > 0 && Date.now() - fetchedAt < maxAge;
+	}
+	function catalogMaxAgeMs() {
+		return (CACHE_MAX_AGE_HOURS[Number(_settings.catalogCacheMaxAge ?? 2)] ?? 24) * 60 * 60 * 1e3;
 	}
 	function sortCatalog() {
 		state.reciters = sortByName(state.reciters);
@@ -593,12 +617,12 @@
 		const selectedReciterIds = selectedFilterValues(filters, "reciter").map(reciterIdFromFilter).filter(Boolean);
 		return (state.videos ?? []).filter((video) => !selectedReciterIds.length || selectedReciterIds.indexOf(Number(video.reciter_id)) >= 0).filter((video) => !selectedVideoTypeIds.length || selectedVideoTypeIds.indexOf(Number(video.video_type)) >= 0).filter((video) => !q || mp3VideoMatches(video, q)).map(mp3VideoToVideo);
 	}
-	function trackToVideo(reciter, moshaf, surahId) {
+	function trackToVideo(reciter, moshaf, surahId, includeTimedText = false) {
 		const surah = state.surahById[Number(surahId)] ?? {
 			id: surahId,
 			name: `${text("surah")} ${surahId}`
 		};
-		const audioUrl = `${trimSlash(moshaf.server)}/${padSurah(surahId)}.mp3`;
+		const audioUrl = trackMediaUrl(moshaf, surahId);
 		const name = `${surahName(surah)} - ${reciter.name}`;
 		const author = reciterToAuthor(reciter);
 		const details = grayjay.video(`${reciter.id}-${moshaf.id}-${surahId}`, {
@@ -616,11 +640,11 @@
 				url: audioUrl,
 				language: state.language
 			}),
-			subtitles: trackSubtitles(moshaf, surahId),
+			subtitles: includeTimedText ? trackSubtitles(moshaf, surahId) : [],
 			shareUrl: audioUrl
 		});
 		details.getContentRecommendations = function() {
-			return new ArrayVideoPager(reciterTracks(reciter, "", null).filter((video) => video.url !== details.url), DEFAULT_LIMIT);
+			return new ArrayVideoPager(relatedTracks(reciter, moshaf, surahId), DEFAULT_LIMIT);
 		};
 		return details;
 	}
@@ -673,6 +697,24 @@
 		const read = timingReadForMoshaf(moshaf);
 		if (!read) return [];
 		return callJson(`${API_BASE}/ayat_timing?read=${read.id}&sura=${surahId}`) ?? [];
+	}
+	function relatedTracks(reciter, moshaf, surahId) {
+		const recommendations = [];
+		const seen = {};
+		const add = (trackReciter, trackMoshaf, trackSurahId) => {
+			if (!trackReciter || !trackMoshaf || !trackSurahId) return;
+			const url = trackUrl(trackReciter.id, trackMoshaf.id, trackSurahId);
+			if (seen[url] || url === trackUrl(reciter.id, moshaf.id, surahId)) return;
+			seen[url] = true;
+			recommendations.push(trackToVideo(trackReciter, trackMoshaf, trackSurahId));
+		};
+		const surahIds = parseSurahList(moshaf.surah_list);
+		const index = surahIds.indexOf(Number(surahId));
+		add(reciter, moshaf, surahIds[index + 1]);
+		add(reciter, moshaf, surahIds[index - 1]);
+		for (const otherReciter of state.reciters ?? []) for (const otherMoshaf of otherReciter.moshaf ?? []) if (parseSurahList(otherMoshaf.surah_list).indexOf(Number(surahId)) >= 0) add(otherReciter, otherMoshaf, Number(surahId));
+		for (const otherSurahId of surahIds) add(reciter, moshaf, otherSurahId);
+		return recommendations;
 	}
 	function timingReadForMoshaf(moshaf) {
 		if (!Array.isArray(state.timingReads)) state.timingReads = [];
@@ -972,7 +1014,7 @@
 		if (state.tafasir.length) filters.push(tafsirSourceFilter());
 		return {
 			types: [Type.Feed.Mixed],
-			sorts: [Type.Order.Chronological, Type.Order.Popularity],
+			sorts: [Type.Order.Chronological],
 			filters
 		};
 	}
@@ -980,7 +1022,7 @@
 		ensureCatalog();
 		return {
 			types: [Type.Feed.Mixed],
-			sorts: [Type.Order.Chronological, Type.Order.Popularity],
+			sorts: [Type.Order.Chronological],
 			filters: [surahFilter(), riwayahFilter()]
 		};
 	}
@@ -1081,6 +1123,25 @@
 	function callJson(url) {
 		return get_json(url, DEFAULT_HEADERS);
 	}
+	function publicContentFromUrl(url) {
+		if (!isDirectMediaUrl(url)) return null;
+		const normalized = normalizeMediaUrl(url);
+		const radio = (state.radios ?? []).find((item) => normalizeMediaUrl(item.url) === normalized);
+		if (radio) return radioToVideo(radio);
+		const liveTv = (state.liveTv ?? []).find((item) => normalizeMediaUrl(item.url) === normalized);
+		if (liveTv) return liveTvToVideo(liveTv);
+		const tafsir = (state.tafsirItems ?? []).find((item) => normalizeMediaUrl(item.url) === normalized);
+		if (tafsir) return tafsirToVideo(tafsir);
+		const video = (state.videos ?? []).find((item) => normalizeMediaUrl(item.video_url) === normalized);
+		if (video) return mp3VideoToVideo(video);
+		for (const reciter of state.reciters ?? []) for (const moshaf of reciter.moshaf ?? []) for (const surahId of parseSurahList(moshaf.surah_list)) if (normalizeMediaUrl(trackMediaUrl(moshaf, surahId)) === normalized) return trackToVideo(reciter, moshaf, surahId, true);
+		return null;
+	}
+	function isDirectMediaUrl(url) {
+		const value = String(url ?? "").trim();
+		if (!REGEX.DIRECT_MEDIA.test(value)) return false;
+		return /\.(?:mp3|mp4|m3u8)(?:[?#].*)?$/i.test(value) || /\/radio\//i.test(value) || /stream\.radiojar\.com\//i.test(value);
+	}
 	function getReciterFromUrl(url) {
 		const match = url.match(REGEX.CHANNEL);
 		if (!match || !state.reciterById[match[1]]) throw new ScriptException("Reciter not found");
@@ -1098,6 +1159,9 @@
 			moshaf,
 			surahId
 		};
+	}
+	function trackMediaUrl(moshaf, surahId) {
+		return `${trimSlash(moshaf.server)}/${padSurah(surahId)}.mp3`;
 	}
 	function parseSurahList(list) {
 		return String(list ?? "").split(",").map((x) => Number(x.trim())).filter(Boolean);
@@ -1184,6 +1248,9 @@
 	function normalizeFolderUrl(value) {
 		return trimSlash(String(value ?? "").replace(/^http:\/\//, "https://")).toLowerCase();
 	}
+	function normalizeMediaUrl(value) {
+		return normalizeFolderUrl(String(value ?? "").replace(/[?#].*$/, ""));
+	}
 	function surahName(surah) {
 		return String(surah.name ?? "").trim();
 	}
@@ -1199,6 +1266,22 @@
 	function unixDate(value) {
 		const timestamp = Date.parse(value ?? "");
 		return isNaN(timestamp) ? 0 : Math.floor(timestamp / 1e3);
+	}
+	function sortVideos(items, order) {
+		if (order !== Type.Order.Chronological) return items;
+		return stableDateSort(items, (item) => item.uploadDate);
+	}
+	function sortPlaylists(items, order) {
+		if (order !== Type.Order.Chronological) return items;
+		return stableDateSort(items, (item) => item.datetime);
+	}
+	function stableDateSort(items, getValue) {
+		return items.map((item, index) => ({
+			item,
+			index
+		})).sort((a, b) => {
+			return Number(getValue(b.item) ?? 0) - Number(getValue(a.item) ?? 0) || a.index - b.index;
+		}).map(({ item }) => item);
 	}
 	function vttTimestamp(ms) {
 		const value = Math.max(0, Number(ms) || 0);

@@ -7,10 +7,10 @@
   "sourceUrl": "https://raw.githubusercontent.com/yshalsager/grayjay-plugins/master/plugins/mp3quran/Mp3QuranConfig.json",
   "repositoryUrl": "https://github.com/yshalsager/grayjay-plugins",
   "scriptUrl": "./Mp3QuranScript.js",
-  "version": 1,
+  "version": 2,
   "iconUrl": "./Mp3QuranIcon.png",
   "id": "6f5406d8-0e8d-4a81-85ee-554c89d9f460",
-  "scriptSignature": "bqR7F2nW2pS5ieJMnXIgwHEawTd5LFiwQmjkikvrLOYvfMZA6qSg/52TNgR6vr9H6dw00ipWth0EozN13OVd912q+S2Ii98epvDGHw2n3C1JtdPeBrFdIazVzSQAkSt1by71sn+8C8VHAu5Wehf4ZvA3ZrYza8ADYLer6YIolKo16sK+P8i8FLW5JxX9faHY52d50bfU9mGg3IEmCwOk7T2T+6zLFHZVrg5c0XjeoQPTOkLILK2Z/Wu530ZDzhMZCiJVJM6xy4f/VIKsayOM72VQ0rncNWtCDhEOIOGUHHJxPzfK/zuntz9xKxvSpWfYsmFCRr24tqz0BVLR7QQQ+M09UCsp4mnFgfOgaXpQdC/nXjZO42bR0Xu8PLYaorXt+r2qFnyJj/CoDzK4Ir90sghVpDubw65Ue787/eKH5Gv8aCWeZPDGMpStQzZwGGJyKXuDYqBWRTNkY3Qv2sD5aIP7PhvX5535U+JqSm7PUKn+vxLhuo1MkyFyLUPIT/YvBZ3pawuSi0cnN/wzxl8kwZu23mIm69NLmFK6UU9mn+XoqXt9I9ZX3JCqEJVQh0JQNllzgvUPou99nQPIY/AHuWuzFwt1n90sV3hMtZLkNQOeE9NaJIWy2KhvkWlwJ2+VILdBeuXUJiTsAf5LL6pcWbzvlVc0Aw4zmwwCrFzv7rc=",
+  "scriptSignature": "pMEi7lcCVAJ57A/qYxRUf0do9nrFdnekmTdye1gvhEvaiZjUgdANdBUsUQFqmoHePxaUey9YOuqehjDSD081FWPhDkbxeg09Xuo2qm1LBAvmttaaVp84LkSiCP8Ne9vU8t5HLS77vIVgovjJtdXa8/Fc7WJ9/Zz/oMU9orngrEKqozP8Q0u3Bs8HRpyWnNM8gqFdcoUGgbGtJDOHZI1nqLzYEbkw+QWA6q6/BPbFTraYB5pUXqC/plHB2BQLgGf1ztMlnamlLcfo2nRiXpCsHD1pCmYoeW7mWU8+/wcY/RfJ7Cq51rlAG8HixtD49r3ZLhaiMjeuq9lX0FK07vLwqXMVlYO/bdqN1kqPFtr7H1EG6HsJcrWHI4R8Nw1rIAU1Vxyg8SS2Trde2cIk2FpdbyCmiI7h0fM9h/wIYl3XLsAusoaDm9Uic2pebCNE3WkIHjcMSVQhCCHwcZ/YX7TTLiwomsWSpmeu7Iq8ctrBtCghBowZ+OEkSX1T+05ewTsJJWjXgZnWBBsnuEfDWsZuB7BDx5q4KV6W+aQQPWSIZ73NFnqmhCHGwGPDmJdvwN73969wpPt1Bvh/hyDlLooJat2NcGBlvaZgo7Dv2YSiGehmYsCU7XOnQQG7d0NwXk9ETnWnaSHqhJrsXxr8WHSrqCzB2Mt1YPPN1epsJoDgg40=",
   "scriptPublicKey": "MIICIjANBgkqhkiG9w0BAQEFAAOCAg8AMIICCgKCAgEAwi2xI2mEI/H1NQqXhdU2DLze4ik+YxgC5QIq+MXgHWYXW0JCUrLsiSRHhYv22wo0PPj64V/WANZ4AyAmpCthJhlvfVc0CYlOjK52jBBTZCbs/3yU+GrRS+HnZNogA6tu/89Lcyheqvoks8XQ/M60PVgCnwzy1EDS6MODR+47J2y/cBeKqr/agYXerfDyrFoVdVICsWFTFJ/w3MQ+faVt+CDxYiYWJ38ntJjOrF6xiMrO1jgqBp9ND9H/2uBYEECE8GnujqUsod8dSctYkNNTM5MVkgZKUjchuRBAoNRlSTcvaSZi1j1CREjqKJDfq8jt5zwbV79N8wpUGpxmQ4e5K+6HNfnvIe+jA9W5sjFOT/q1ztkYO8MKRsJAiqoJBxvglRu9/lqvNIzJsyLr6afB49DQxoUBNWn2pQIQk/AZe8GA5FRCUFwbDXYa3ly5H57B8ZavXaY864N5yLnylt2LWrj7XqGSOh2vGWkS836m6trthFZdsigCxMB55USDIj5HHtxCQH1oHmmuJFn/uZW28RIIbSN+9vGsf9KvmxZ28cPeJwHalGNBq7Qp7YAEu+SOr5W8Hq4wh1e2JMCQbEqZU8qBNZWaz0HGC2ISkSBrDiWEb+epTzLBeD0pdz2Vy1avGHW4oOM8d/c8hLDwJ+vkLdQ5mddr2VjCoNt8SQBJapECAwEAAQ==",
   "packages": ["Http"],
   "allowEval": false,
@@ -64,11 +64,20 @@
       "type": "Dropdown",
       "default": "0",
       "options": ["Live radios", "Complete recitations", "Live TV", "Recent reads", "Tafsir audio", "Videos"]
+    },
+    {
+      "variable": "catalogCacheMaxAge",
+      "name": "Catalog Cache",
+      "description": "How long saved MP3Quran catalog data can be reused before refreshing.",
+      "type": "Dropdown",
+      "default": "2",
+      "options": ["Every launch", "6 hours", "24 hours", "7 days"]
     }
   ],
   "changelog": {
     "1": [
       "Initial MP3Quran reciters, moshaf playlists, tracks, ayah chapters/subtitles, tafsir playlists/audio, video-type playlists/videos, recent reads, live radio, live TV, reciter/search filters, channels, channel peeks, richer suggestions, localized labels, thumbnails, and recommendations."
-    ]
+    ],
+    "2": ["Add cache freshness, direct media URLs, and richer recommendations."]
   }
 }
