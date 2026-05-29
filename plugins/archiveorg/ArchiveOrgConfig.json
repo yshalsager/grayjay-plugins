@@ -1,0 +1,39 @@
+{
+  "name": "Archive.org",
+  "description": "Search audio and video from Internet Archive, with Archive.org items exposed as playlists when they contain multiple playable files.",
+  "author": "yshalsager",
+  "authorUrl": "https://github.com/yshalsager",
+  "platformUrl": "https://archive.org",
+  "sourceUrl": "https://raw.githubusercontent.com/yshalsager/grayjay-plugins/master/plugins/archiveorg/ArchiveOrgConfig.json",
+  "repositoryUrl": "https://github.com/yshalsager/grayjay-plugins",
+  "scriptUrl": "./ArchiveOrgScript.js",
+  "version": 1,
+  "iconUrl": "https://archive.org/images/glogo.png",
+  "id": "11f3e2ca-f9a8-41e7-a2f5-197cec497409",
+  "packages": ["Http"],
+  "allowEval": false,
+  "allowUrls": ["everywhere"],
+  "settings": [
+    {
+      "variable": "sort",
+      "name": "Sort",
+      "description": "Default ordering for search results.",
+      "type": "Dropdown",
+      "default": "0",
+      "options": ["Relevance", "Date", "Downloads", "Title"]
+    },
+    {
+      "variable": "mediaType",
+      "name": "Media Type",
+      "description": "Default media type used for search results.",
+      "type": "Dropdown",
+      "default": "0",
+      "options": ["Both", "Audio", "Video"]
+    }
+  ],
+  "changelog": {
+    "1": [
+      "Initial general Archive.org audio/video search, Archive.org item playlists, direct file playback, direct details/download URL handling, and media-type/sort settings."
+    ]
+  }
+}
