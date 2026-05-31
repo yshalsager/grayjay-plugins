@@ -8,7 +8,7 @@ import { load_plugin_registry, select_plugins } from './plugin-registry.mjs'
 const usage = `Usage:
   node scripts/grayjay-dev-api.mjs logs [--target android|desktop] [--server-url URL] [--follow] [--index 0]
   node scripts/grayjay-dev-api.mjs http [--target android] [--server-url URL]
-  node scripts/grayjay-dev-api.mjs remote-test --method getContentDetails --args '["url"]' [--server-url URL]
+  node scripts/grayjay-dev-api.mjs remote-test --plugin mp3quran --method getContentDetails --args '["url"]' [--server-url URL] [--dev-url URL]
   node scripts/grayjay-dev-api.mjs load --plugin mp3quran [--target android|desktop] [--dev-url URL] [--server-url URL] [--follow]
 
 Defaults:
@@ -21,6 +21,7 @@ const endpoint_paths = {
     logs: '/plugin/getDevLogs',
     http: '/plugin/getDevHttpExchanges',
     remote_test: '/plugin/remoteTest',
+    update_test: '/plugin/updateTestPlugin',
     load: '/plugin/loadDevPlugin'
   },
   desktop: {
@@ -162,12 +163,31 @@ async function remote_test(values) {
   }
 
   const base = await server_url(target, values['server-url'])
+  if (values.plugin?.length) {
+    const plugins = select_plugins(
+      await load_plugin_registry(),
+      values.plugin.flatMap((value) => value.split(','))
+    )
+    if (plugins.length !== 1) throw new Error('remote-test accepts exactly one --plugin')
+
+    await update_test_plugin(target, base, plugins[0], values['dev-url'])
+    console.error(`Updated ${plugins[0].label} test plugin on ${base}`)
+  }
+
   const result = await get_json(`${endpoint(target, 'remote_test', base)}?method=${encodeURIComponent(values.method)}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(parameters)
   })
   console.log(JSON.stringify(result, null, 2))
+}
+
+async function update_test_plugin(target, base, plugin, devUrl) {
+  if (target !== 'android') {
+    throw new Error('updateTestPlugin is only available on Android DevServer in the inspected Grayjay sources')
+  }
+
+  await post_json(endpoint(target, 'update_test', base), await dev_config(plugin, devUrl.replace(/\/$/, '')))
 }
 
 async function load(values) {
