@@ -1,7 +1,9 @@
 import { plugin_icon_url, static_thumbnails } from '@lib/assets.js'
 import { dedupe_strings } from '@lib/collections.js'
+import { debug_log } from '@lib/debug.js'
 import { selected_filter_values } from '@lib/filters.js'
 import { grayjay_platform } from '@lib/grayjay.js'
+import { define_grayjay_tests, home_first_detail_test } from '@lib/grayjay-tests.js'
 import { extract_first, last_match } from '@lib/html.js'
 import { cache_set, get_text, init_lru_caches } from '@lib/http.js'
 import { audio_source_descriptor, thumbnails } from '@lib/media.js'
@@ -398,7 +400,7 @@ source.enable = function (conf, settings, savedState) {
     try {
       state = JSON.parse(savedState)
     } catch (e) {
-      logIfTesting('Failed to parse tvQuran state: ' + e)
+      debug_log(PLATFORM, 'Failed to parse state', e)
     }
   }
 
@@ -481,7 +483,7 @@ source.searchSuggestions = function (query) {
           .flatMap((reciter) => reciter.collections.map((collection) => collection.title))
       )
     } catch (e) {
-      logIfTesting('Failed to load tvQuran reciter suggestions: ' + e)
+      debug_log(PLATFORM, 'Failed to load reciter suggestions', e)
     }
   }
 
@@ -1443,7 +1445,7 @@ function searchReciterCollectionPlaylists(query, filters) {
       try {
         reciters.push(...reciterSearchResults(query || '').slice(0, RECITATION_SCAN_PER_PAGE))
       } catch (e) {
-        logIfTesting('Failed to load tvQuran playlist reciter search: ' + e)
+        debug_log(PLATFORM, 'Failed to load playlist reciter search', e)
       }
     }
   }
@@ -1460,7 +1462,7 @@ function reciterWithCollections(reciter) {
     const url = reciter.pageUrl || reciterProfileUrl(reciter.id, reciter.slug)
     return parseReciterProfile(callHtml(url), url).reciter
   } catch (e) {
-    logIfTesting('Failed to load tvQuran reciter collections: ' + e)
+    debug_log(PLATFORM, 'Failed to load reciter collections', e)
     return { ...reciter, collections: [] }
   }
 }
@@ -1736,7 +1738,7 @@ function reciterFilterReciters() {
   try {
     firstPage = reciterSearchResults('')
   } catch (e) {
-    logIfTesting('Failed to load tvQuran reciter filter options: ' + e)
+    debug_log(PLATFORM, 'Failed to load reciter filter options', e)
   }
 
   return dedupeById([...cached, ...firstPage]).sort((a, b) => String(a.name ?? '').localeCompare(String(b.name ?? ''), language()))
@@ -2071,7 +2073,7 @@ function categoryChannelMetadata(kind, category, enrich) {
     cacheSet('categoryMetadataCache', cacheKey, metadata)
     return metadata
   } catch (e) {
-    logIfTesting('Failed to load tvQuran category metadata: ' + e)
+    debug_log(PLATFORM, 'Failed to load category metadata', e)
     return fallback
   }
 }
@@ -2216,10 +2218,10 @@ function normalize(value) {
     .trim()
 }
 
-function logIfTesting(msg) {
-  if (typeof IS_TESTING !== 'undefined' && IS_TESTING) {
-    log(msg)
-  }
-}
-
 log('LOADED')
+
+if (__GRAYJAY_DEBUG_TESTS__) {
+  define_grayjay_tests(PLATFORM, {
+    Home_First_Detail: home_first_detail_test('tvQuran home first detail')
+  })
+}

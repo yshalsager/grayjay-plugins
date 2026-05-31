@@ -73,6 +73,9 @@ const grayjay_rebuild = () => {
 
 export default defineConfig({
   plugins: [grayjay_rebuild()],
+  define: {
+    __GRAYJAY_DEBUG_TESTS__: JSON.stringify(process.env.GRAYJAY_DEBUG_TESTS === '1')
+  },
   resolve: {
     alias: vite_aliases
   },

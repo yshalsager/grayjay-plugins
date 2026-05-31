@@ -1,6 +1,8 @@
 import { content_thumbnails, plugin_icon_url } from '@lib/assets.js'
+import { debug_log } from '@lib/debug.js'
 import { selected_filter_values } from '@lib/filters.js'
 import { grayjay_platform } from '@lib/grayjay.js'
+import { define_grayjay_tests, home_first_detail_test } from '@lib/grayjay-tests.js'
 import { cache_set, get_json, get_text, init_lru_caches, query_string } from '@lib/http.js'
 import { audio_source_descriptor } from '@lib/media.js'
 import { apply_pager_state, array_pager_class, empty_pager_class } from '@lib/paging.js'
@@ -83,7 +85,7 @@ source.enable = function (conf, settings, savedState) {
     try {
       state = JSON.parse(savedState)
     } catch (e) {
-      logIfTesting('Failed to parse Mixlr state: ' + e)
+      debug_log(PLATFORM, 'Failed to parse state', e)
     }
   }
 
@@ -361,7 +363,7 @@ function safeEventVideo(slug, eventId) {
   try {
     return eventToVideo(fetchEvent(slug, eventId), null)
   } catch (e) {
-    logIfTesting(`Skipping Mixlr event ${slug}/${eventId}: ${e}`)
+    debug_log(PLATFORM, `Skipping event ${slug}/${eventId}`, e)
     return null
   }
 }
@@ -370,7 +372,7 @@ function safeChannelCurrentVideo(slug) {
   try {
     return channelCurrentVideo(fetchChannel(slug))
   } catch (e) {
-    logIfTesting(`Skipping Mixlr channel ${slug}: ${e}`)
+    debug_log(PLATFORM, `Skipping channel ${slug}`, e)
     return null
   }
 }
@@ -379,7 +381,7 @@ function safeChannel(slug) {
   try {
     return channelToPlatformChannel(fetchChannel(slug))
   } catch (e) {
-    logIfTesting(`Skipping Mixlr channel ${slug}: ${e}`)
+    debug_log(PLATFORM, `Skipping channel ${slug}`, e)
     return null
   }
 }
@@ -821,12 +823,12 @@ function iconUrl() {
   return plugin_icon_url(_config, DEFAULT_ICON)
 }
 
-function logIfTesting(message) {
-  if (typeof IS_TESTING !== 'undefined' && IS_TESTING) {
-    log(message)
-  }
-}
-
 const ArrayVideoPager = array_pager_class(VideoPager)
 const ArrayChannelPager = array_pager_class(ChannelPager)
 const EmptyPlaylistPager = empty_pager_class(PlaylistPager)
+
+if (__GRAYJAY_DEBUG_TESTS__) {
+  define_grayjay_tests(PLATFORM, {
+    Home_First_Detail: home_first_detail_test('Mixlr home first detail')
+  })
+}

@@ -1,7 +1,9 @@
 import { content_thumbnails, plugin_icon_url, static_thumbnails } from '@lib/assets.js'
 import { dedupe_strings } from '@lib/collections.js'
+import { debug_log } from '@lib/debug.js'
 import { selected_filter_values } from '@lib/filters.js'
 import { grayjay_platform } from '@lib/grayjay.js'
+import { define_grayjay_tests, home_first_detail_test } from '@lib/grayjay-tests.js'
 import { get_json } from '@lib/http.js'
 import { audio_source_descriptor, hls_source, hls_source_descriptor, video_source_descriptor } from '@lib/media.js'
 import { array_pager_class } from '@lib/paging.js'
@@ -155,7 +157,7 @@ source.enable = function (conf, settings, savedState) {
     try {
       state = JSON.parse(savedState)
     } catch (e) {
-      logIfTesting('Failed to parse saved MP3Quran state: ' + e)
+      debug_log(PLATFORM, 'Failed to parse saved state', e)
     }
   }
 }
@@ -459,7 +461,7 @@ source.getContentChapters = function (url) {
         type: Type.Chapter.NORMAL
       }))
   } catch (e) {
-    logIfTesting('Failed to load chapters: ' + e)
+    debug_log(PLATFORM, 'Failed to load chapters', e)
     return []
   }
 }
@@ -587,7 +589,7 @@ function loadTimingReads() {
   try {
     return callJson(`${API_BASE}/ayat_timing/reads`) ?? []
   } catch (e) {
-    logIfTesting('Failed to load timing reads: ' + e)
+    debug_log(PLATFORM, 'Failed to load timing reads', e)
     return []
   }
 }
@@ -765,7 +767,7 @@ function trackSubtitles(moshaf, surahId) {
       }
     ]
   } catch (e) {
-    logIfTesting('Failed to build Quran subtitles: ' + e)
+    debug_log(PLATFORM, 'Failed to build Quran subtitles', e)
     return []
   }
 }
@@ -1673,10 +1675,10 @@ function videoKey(reciterId, videoId) {
   return `${reciterId}-${videoId}`
 }
 
-function logIfTesting(msg) {
-  if (typeof IS_TESTING !== 'undefined' && IS_TESTING) {
-    log(msg)
-  }
-}
-
 log('LOADED')
+
+if (__GRAYJAY_DEBUG_TESTS__) {
+  define_grayjay_tests(PLATFORM, {
+    Home_First_Detail: home_first_detail_test('MP3Quran home first detail')
+  })
+}

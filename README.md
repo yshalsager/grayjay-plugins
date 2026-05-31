@@ -93,6 +93,24 @@ Use Grayjay's Android DevServer while serving this repository from your computer
 
 The phone must be able to reach your computer over the LAN, and your firewall must allow inbound connections to port `3000`.
 
+Android DevServer API helpers:
+
+```sh
+pnpm run grayjay:dev-api -- logs --server-url http://PHONE_IP:11337
+pnpm run grayjay:dev-api -- logs --server-url http://PHONE_IP:11337 --follow
+pnpm run grayjay:dev-api -- http --server-url http://PHONE_IP:11337
+pnpm run grayjay:dev-api -- remote-test --server-url http://PHONE_IP:11337 --method getContentDetails --args '["CONTENT_URL"]'
+pnpm run grayjay:dev-api -- load --plugin mp3quran --server-url http://PHONE_IP:11337 --dev-url http://COMPUTER_IP:3000 --follow
+```
+
+To expose optional plugin smoke tests in Grayjay's `TestSystem` tab, build with:
+
+```sh
+pnpm run build:debug-tests -- --plugin mp3quran
+```
+
+Rebuild normally before signing or release builds.
+
 ### Desktop
 
 Use Grayjay Desktop's Developer Portal while serving this repository from your computer.
@@ -188,6 +206,13 @@ url="https%3A%2F%2Farchive.org%2Fdetails%2F$identifier"
 curl -sS "$base/details/VideoLoad?url=$url"
 curl -sS "$base/details/SourceAuto"
 curl -sS "$base/Developer/GetDevLogs?index=0"
+```
+
+The helper script can also read Desktop developer logs:
+
+```sh
+pnpm run grayjay:dev-api -- logs --target desktop
+pnpm run grayjay:dev-api -- load --target desktop --plugin archiveorg --follow
 ```
 
 `VideoLoad` asks the enabled plugin for content details and stores that item as Desktop's current video. `SourceAuto` asks Desktop to choose the source it would hand to the player. For audio-only Archive items it should return `audioIndex: 0` and a direct `audio/*` URL; for video items it should return `videoIndex: 0` and a direct `video/*` URL.

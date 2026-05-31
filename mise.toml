@@ -11,6 +11,10 @@ run = "pnpm run dev"
 description = "Validate plugin scripts and configs"
 run = "pnpm run validate"
 
+[tasks.build-debug-tests]
+description = "Build plugins with optional Grayjay TestSystem smoke tests"
+run = "pnpm run build:debug-tests --"
+
 [tasks.format]
 description = "Format project files"
 run = "pnpm run format"
@@ -70,6 +74,10 @@ printf "Grayjay Desktop server URL:\nhttp://127.0.0.1:11338\n"
 [tasks.grayjay-load-dev-plugin]
 description = "Load a local dev plugin into Grayjay Desktop server mode"
 run = "node scripts/load-grayjay-dev-plugin.mjs"
+
+[tasks.grayjay-dev-api]
+description = "Call Grayjay developer API helper"
+run = "pnpm run grayjay:dev-api --"
 
 [tasks.bump]
 description = "Bump plugin config versions"

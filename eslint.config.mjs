@@ -30,6 +30,7 @@ const grayjay_plugin_globals = readonly([
   'ScriptException',
   'Type',
   'VideoPager',
+  '__GRAYJAY_DEBUG_TESTS__',
   'IS_TESTING',
   'bridge',
   'log',
@@ -98,6 +99,23 @@ export default [
     },
     rules: {
       'no-unused-vars': ['warn', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }]
+    }
+  },
+  {
+    files: ['src/lib/debug.js'],
+    languageOptions: {
+      globals: {
+        IS_TESTING: 'readonly',
+        log: 'readonly'
+      }
+    }
+  },
+  {
+    files: ['src/lib/grayjay-tests.js'],
+    languageOptions: {
+      globals: {
+        globalThis: 'readonly'
+      }
     }
   }
 ]

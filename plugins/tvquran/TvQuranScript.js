@@ -51,6 +51,37 @@
 		return result;
 	}
 
+	var REDACTED = "[redacted]";
+	var SENSITIVE_KEY = /authorization|cookie|token|secret|password|signature/i;
+	function is_testing() {
+		return typeof IS_TESTING !== "undefined" && IS_TESTING;
+	}
+	function debug_string(value, maxLength = 1200) {
+		if (value === void 0) return "";
+		const seen = [];
+		let text;
+		try {
+			if (typeof value === "string") text = value;
+			else if (value && typeof value === "object" && typeof value.message === "string") text = value.stack || `${value.name || "Error"}: ${value.message}`;
+			else text = JSON.stringify(value, (key, item) => {
+				if (SENSITIVE_KEY.test(key)) return REDACTED;
+				if (item && typeof item === "object") {
+					if (seen.indexOf(item) >= 0) return "[circular]";
+					seen.push(item);
+				}
+				return item;
+			});
+		} catch {
+			text = String(value);
+		}
+		return text.length > maxLength ? `${text.slice(0, maxLength)}...` : text;
+	}
+	function debug_log(scope, message, data) {
+		if (!is_testing()) return;
+		const text = `[${scope}] ${message}${data === void 0 ? "" : ` ${debug_string(data)}`}`;
+		if (typeof log === "function") log(text);
+	}
+
 	function selected_filter_values(filters, id) {
 		if (!filters) return [];
 		if (Array.isArray(filters)) return filters.filter((filter) => filter?.id === id || filter?.group?.id === id).map(filter_value).filter(Boolean);
@@ -122,13 +153,14 @@
 		return result;
 	}
 
-	function get_response(url, headers = {}, useAuth = false) {
-		const response = http.GET(url, headers, useAuth);
-		if (!response.isOk) throw new ScriptException(`Request failed with code ${response.code}: ${url}`);
+	var BODY_PREVIEW_LENGTH = 500;
+	function get_response(url, headers = {}, useAuth = false, debugContext = null) {
+		const response = request("GET", url, "", headers, useAuth, debugContext);
+		if (!response.isOk) throw request_error(response, url);
 		return response;
 	}
-	function get_text(url, headers = {}, useAuth = false) {
-		return get_response(url, headers, useAuth).body;
+	function get_text(url, headers = {}, useAuth = false, debugContext = null) {
+		return get_response(url, headers, useAuth, debugContext).body;
 	}
 	function init_lru_caches(state, limits) {
 		state.cacheOrder = state.cacheOrder ?? {};
@@ -160,6 +192,56 @@
 			const key = order.shift();
 			if (key) delete state[cacheName][key];
 		}
+	}
+	function request(method, url, body, headers, useAuth, debugContext = null) {
+		const start = Date.now();
+		try {
+			const response = method === "POST" ? http.POST(url, body, headers, useAuth) : http.GET(url, headers, useAuth);
+			log_response(method, url, response, Date.now() - start, debugContext);
+			return response;
+		} catch (e) {
+			debug_log(debug_scope(debugContext), "HTTP exception", {
+				method,
+				url,
+				ms: Date.now() - start,
+				error: String(e)
+			});
+			throw e;
+		}
+	}
+	function log_response(method, url, response, ms, debugContext) {
+		const details = {
+			method,
+			url,
+			code: response?.code,
+			ms,
+			bytes: body_length(response)
+		};
+		if (response?.isOk) {
+			debug_log(debug_scope(debugContext), "HTTP OK", details);
+			return;
+		}
+		debug_log(debug_scope(debugContext), "HTTP failure", {
+			...details,
+			preview: body_preview(response)
+		});
+	}
+	function request_error(response, url) {
+		return new ScriptException(`Request failed with code ${response.code}: ${url}`);
+	}
+	function debug_scope(debugContext) {
+		if (!debugContext) return "http";
+		if (typeof debugContext === "string") return debugContext;
+		return debugContext.scope || "http";
+	}
+	function body_length(response) {
+		const body = response?.body;
+		if (typeof body === "string") return body.length;
+		return body?.length ?? body?.byteLength ?? 0;
+	}
+	function body_preview(response) {
+		const body = response?.body;
+		return typeof body === "string" ? debug_string(body, BODY_PREVIEW_LENGTH) : "";
 	}
 
 	function apply_pager_state(target, next) {
@@ -1522,7 +1604,7 @@
 		if (savedState) try {
 			state = JSON.parse(savedState);
 		} catch (e) {
-			logIfTesting("Failed to parse tvQuran state: " + e);
+			debug_log(PLATFORM, "Failed to parse state", e);
 		}
 		const currentLanguage = language();
 		if (state.language !== currentLanguage) {
@@ -1586,7 +1668,7 @@
 			suggestions.push(...reciters.map((reciter) => reciter.name));
 			suggestions.push(...reciters.filter((reciter) => reciter.collections?.length).flatMap((reciter) => reciter.collections.map((collection) => collection.title)));
 		} catch (e) {
-			logIfTesting("Failed to load tvQuran reciter suggestions: " + e);
+			debug_log(PLATFORM, "Failed to load reciter suggestions", e);
 		}
 		return dedupe_strings(suggestions, normalize).slice(0, DEFAULT_LIMIT);
 	};
@@ -2243,7 +2325,7 @@
 			if (q || cached.length < RECITATION_SCAN_PER_PAGE) try {
 				reciters.push(...reciterSearchResults(query || "").slice(0, RECITATION_SCAN_PER_PAGE));
 			} catch (e) {
-				logIfTesting("Failed to load tvQuran playlist reciter search: " + e);
+				debug_log(PLATFORM, "Failed to load playlist reciter search", e);
 			}
 		}
 		return dedupeById(reciters).flatMap(reciterCollectionPlaylists);
@@ -2254,7 +2336,7 @@
 			const url = reciter.pageUrl || reciterProfileUrl(reciter.id, reciter.slug);
 			return parseReciterProfile(callHtml(url), url).reciter;
 		} catch (e) {
-			logIfTesting("Failed to load tvQuran reciter collections: " + e);
+			debug_log(PLATFORM, "Failed to load reciter collections", e);
 			return {
 				...reciter,
 				collections: []
@@ -2460,7 +2542,7 @@
 		try {
 			firstPage = reciterSearchResults("");
 		} catch (e) {
-			logIfTesting("Failed to load tvQuran reciter filter options: " + e);
+			debug_log(PLATFORM, "Failed to load reciter filter options", e);
 		}
 		return dedupeById([...cached, ...firstPage]).sort((a, b) => String(a.name ?? "").localeCompare(String(b.name ?? ""), language()));
 	}
@@ -2702,7 +2784,7 @@
 			cacheSet("categoryMetadataCache", cacheKey, metadata);
 			return metadata;
 		} catch (e) {
-			logIfTesting("Failed to load tvQuran category metadata: " + e);
+			debug_log(PLATFORM, "Failed to load category metadata", e);
 			return fallback;
 		}
 	}
@@ -2798,9 +2880,6 @@
 	}
 	function normalize(value) {
 		return String(value ?? "").toLowerCase().trim();
-	}
-	function logIfTesting(msg) {
-		if (typeof IS_TESTING !== "undefined" && IS_TESTING) log(msg);
 	}
 	log("LOADED");
 

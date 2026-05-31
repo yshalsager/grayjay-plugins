@@ -1,7 +1,9 @@
 import { plugin_icon_url, static_thumbnails } from '@lib/assets.js'
 import { dedupe_by, dedupe_by_url } from '@lib/collections.js'
+import { debug_log } from '@lib/debug.js'
 import { selected_filter_values } from '@lib/filters.js'
 import { grayjay_platform } from '@lib/grayjay.js'
+import { define_grayjay_tests, home_first_detail_test } from '@lib/grayjay-tests.js'
 import { extract_first } from '@lib/html.js'
 import { cache_set, get_text, init_lru_caches, query_string } from '@lib/http.js'
 import { audio_source_descriptor } from '@lib/media.js'
@@ -98,7 +100,7 @@ source.enable = function (conf, settings, savedState) {
       state.seriesIndex = Array.isArray(saved.seriesIndex) ? saved.seriesIndex : []
       state.seriesById = saved.seriesById ?? {}
     } catch (e) {
-      logIfTesting('Failed to parse AlBadr state: ' + e)
+      debug_log(PLATFORM, 'Failed to parse state', e)
     }
   }
 
@@ -467,7 +469,7 @@ function detailItem(slug, fallbackTitle) {
     const html = fetchPage(`${BASE_URL}/detail/${slug}`)
     return parseDetail(html, slug, fallbackTitle)
   } catch (e) {
-    logIfTesting(`Skipping AlBadr detail ${slug}: ${e}`)
+    debug_log(PLATFORM, `Skipping detail ${slug}`, e)
     return null
   }
 }
@@ -829,7 +831,7 @@ function safeLoadSeries(id, offset) {
   try {
     return loadSeries(id, offset)
   } catch (e) {
-    logIfTesting(`Skipping AlBadr series ${id}: ${e}`)
+    debug_log(PLATFORM, `Skipping series ${id}`, e)
     return null
   }
 }
@@ -838,7 +840,7 @@ function safeLoadDetail(slug) {
   try {
     return loadDetail(slug)
   } catch (e) {
-    logIfTesting(`Skipping AlBadr detail ${slug}: ${e}`)
+    debug_log(PLATFORM, `Skipping detail ${slug}`, e)
     return null
   }
 }
@@ -987,12 +989,12 @@ function safeDecode(value) {
   }
 }
 
-function logIfTesting(message) {
-  if (typeof IS_TESTING !== 'undefined' && IS_TESTING) {
-    log(message)
-  }
-}
-
 const ArrayVideoPager = array_pager_class(VideoPager)
 const ArrayChannelPager = array_pager_class(ChannelPager)
 const ArrayPlaylistPager = array_pager_class(PlaylistPager)
+
+if (__GRAYJAY_DEBUG_TESTS__) {
+  define_grayjay_tests(PLATFORM, {
+    Home_First_Detail: home_first_detail_test('AlBadr home first detail')
+  })
+}
