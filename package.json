@@ -28,6 +28,7 @@
     "test:live:saleh-af": "null",
     "test:live:drosq8": "null",
     "test:live:drosuae": "null",
+    "test:live:alqasim": "null",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint": "eslint .",

@@ -1,0 +1,20 @@
+{
+  "name": "AlQasim",
+  "description": "Audio lessons, sermons, recitations, and videos from AlQasim.",
+  "author": "yshalsager",
+  "authorUrl": "https://github.com/yshalsager",
+  "platformUrl": "https://a-alqasim.com",
+  "sourceUrl": "https://raw.githubusercontent.com/yshalsager/grayjay-plugins/master/plugins/alqasim/AlQasimConfig.json",
+  "repositoryUrl": "https://github.com/yshalsager/grayjay-plugins",
+  "scriptUrl": "./AlQasimScript.js",
+  "version": 1,
+  "iconUrl": "https://a-alqasim.com/favicon.ico",
+  "id": "3057aaaf-61ba-4d42-9f4b-6120b5e4ad1e",
+  "packages": ["Http"],
+  "allowEval": false,
+  "allowUrls": ["a-alqasim.com", "files.a-alqasim.com", "www.youtube.com", "youtube.com", "youtu.be", "i.ytimg.com"],
+  "settings": [],
+  "changelog": {
+    "1": ["Initial AlQasim audio, video, search, category channels, playlists, and playback."]
+  }
+}
