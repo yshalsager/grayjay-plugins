@@ -19,6 +19,7 @@
     "test:live:archiveorg": "vitest run tests/live/archiveorg.live.test.js",
     "test:live:mixlr": "vitest run tests/live/mixlr.live.test.js",
     "test:live:albadr": "vitest run tests/live/albadr.live.test.js",
+    "test:live:qurancom": "vitest run tests/live/qurancom.live.test.js",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint": "eslint .",

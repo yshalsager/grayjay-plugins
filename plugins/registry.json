@@ -23,5 +23,10 @@
     "value": "albadr",
     "label": "AlBadr",
     "stem": "AlBadr"
+  },
+  {
+    "value": "qurancom",
+    "label": "Quran.com",
+    "stem": "QuranCom"
   }
 ]

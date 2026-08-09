@@ -1,0 +1,47 @@
+{
+  "name": "Quran.com",
+  "description": "Browse Quran.com reciters, full-surah timed recitations, chapters, subtitles, and reciter playlists.",
+  "author": "yshalsager",
+  "authorUrl": "https://github.com/yshalsager",
+  "platformUrl": "https://quran.com",
+  "sourceUrl": "https://raw.githubusercontent.com/yshalsager/grayjay-plugins/master/plugins/qurancom/QuranComConfig.json",
+  "repositoryUrl": "https://github.com/yshalsager/grayjay-plugins",
+  "scriptUrl": "./QuranComScript.js",
+  "version": 1,
+  "iconUrl": "https://quran.com/favicon.ico",
+  "id": "b93c6a58-b713-432f-b7a9-016146733a25",
+  "packages": ["Http"],
+  "allowEval": false,
+  "allowUrls": ["quran.com", ".quran.com", "audio.qurancdn.com", "download.quranicaudio.com"],
+  "settings": [
+    {
+      "variable": "language",
+      "name": "Catalog Language",
+      "description": "Language used for reciter and surah names.",
+      "type": "Dropdown",
+      "default": "0",
+      "options": ["Arabic", "English"]
+    },
+    {
+      "variable": "defaultReciter",
+      "name": "Default Reciter",
+      "description": "Reciter used for home shortcuts and public Quran.com URLs.",
+      "type": "Dropdown",
+      "default": "0",
+      "options": ["Catalog first reciter", "AbdulBaset AbdulSamad - Mujawwad", "AbdulBaset AbdulSamad - Murattal"]
+    },
+    {
+      "variable": "subtitles",
+      "name": "Generated Subtitles",
+      "description": "Enable generated Quran text subtitles for timed surah recitations.",
+      "type": "Dropdown",
+      "default": "0",
+      "options": ["Enabled", "Disabled"]
+    }
+  ],
+  "changelog": {
+    "1": [
+      "Initial Quran.com full-surah timed recitations, reciter channels, reciter playlists, chapters, subtitles, direct URLs, filters, and recommendations."
+    ]
+  }
+}
