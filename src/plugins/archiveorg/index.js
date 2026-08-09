@@ -1,7 +1,9 @@
 import { plugin_icon_url } from '@lib/assets.js'
 import { dedupe_strings } from '@lib/collections.js'
+import { debug_log } from '@lib/debug.js'
 import { selected_filter_values } from '@lib/filters.js'
 import { grayjay_platform } from '@lib/grayjay.js'
+import { define_grayjay_tests, search_first_detail_test } from '@lib/grayjay-tests.js'
 import { get_json, query_string } from '@lib/http.js'
 import { audio_sources_descriptor, thumbnails, video_source_descriptor } from '@lib/media.js'
 import { apply_pager_state, array_pager_class, empty_pager_class } from '@lib/paging.js'
@@ -57,7 +59,7 @@ source.enable = function (conf, settings, savedState) {
       state = JSON.parse(savedState)
       state.itemCache ??= {}
     } catch (e) {
-      logIfTesting('Failed to parse Archive.org state: ' + e)
+      debug_log(PLATFORM, 'Failed to parse state', e)
     }
   }
 }
@@ -385,7 +387,7 @@ function itemsToPlaylists(items, media) {
         playlists.push(itemToPlaylist(item, media))
       }
     } catch (e) {
-      logIfTesting('Failed to map Archive.org playlist: ' + e)
+      debug_log(PLATFORM, 'Failed to map playlist', e)
     }
   }
 
@@ -1061,8 +1063,8 @@ function escapeSearch(value) {
   return cleanText(value).replace(/["()]/g, ' ')
 }
 
-function logIfTesting(msg) {
-  if (typeof IS_TESTING !== 'undefined' && IS_TESTING) {
-    log(msg)
-  }
+if (__GRAYJAY_DEBUG_TESTS__) {
+  define_grayjay_tests(PLATFORM, {
+    Search_First_Detail: search_first_detail_test('Archive.org search first detail', 'quran audio')
+  })
 }

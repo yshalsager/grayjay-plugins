@@ -49,6 +49,37 @@
 		return result;
 	}
 
+	var REDACTED = "[redacted]";
+	var SENSITIVE_KEY = /authorization|cookie|token|secret|password|signature/i;
+	function is_testing() {
+		return typeof IS_TESTING !== "undefined" && IS_TESTING;
+	}
+	function debug_string(value, maxLength = 1200) {
+		if (value === void 0) return "";
+		const seen = [];
+		let text;
+		try {
+			if (typeof value === "string") text = value;
+			else if (value && typeof value === "object" && typeof value.message === "string") text = value.stack || `${value.name || "Error"}: ${value.message}`;
+			else text = JSON.stringify(value, (key, item) => {
+				if (SENSITIVE_KEY.test(key)) return REDACTED;
+				if (item && typeof item === "object") {
+					if (seen.indexOf(item) >= 0) return "[circular]";
+					seen.push(item);
+				}
+				return item;
+			});
+		} catch {
+			text = String(value);
+		}
+		return text.length > maxLength ? `${text.slice(0, maxLength)}...` : text;
+	}
+	function debug_log(scope, message, data) {
+		if (!is_testing()) return;
+		const text = `[${scope}] ${message}${data === void 0 ? "" : ` ${debug_string(data)}`}`;
+		if (typeof log === "function") log(text);
+	}
+
 	function selected_filter_values(filters, id) {
 		if (!filters) return [];
 		if (Array.isArray(filters)) return filters.filter((filter) => filter?.id === id || filter?.group?.id === id).map(filter_value).filter(Boolean);
@@ -112,37 +143,6 @@
 				});
 			}
 		};
-	}
-
-	var REDACTED = "[redacted]";
-	var SENSITIVE_KEY = /authorization|cookie|token|secret|password|signature/i;
-	function is_testing() {
-		return typeof IS_TESTING !== "undefined" && IS_TESTING;
-	}
-	function debug_string(value, maxLength = 1200) {
-		if (value === void 0) return "";
-		const seen = [];
-		let text;
-		try {
-			if (typeof value === "string") text = value;
-			else if (value && typeof value === "object" && typeof value.message === "string") text = value.stack || `${value.name || "Error"}: ${value.message}`;
-			else text = JSON.stringify(value, (key, item) => {
-				if (SENSITIVE_KEY.test(key)) return REDACTED;
-				if (item && typeof item === "object") {
-					if (seen.indexOf(item) >= 0) return "[circular]";
-					seen.push(item);
-				}
-				return item;
-			});
-		} catch {
-			text = String(value);
-		}
-		return text.length > maxLength ? `${text.slice(0, maxLength)}...` : text;
-	}
-	function debug_log(scope, message, data) {
-		if (!is_testing()) return;
-		const text = `[${scope}] ${message}${data === void 0 ? "" : ` ${debug_string(data)}`}`;
-		if (typeof log === "function") log(text);
 	}
 
 	var BODY_PREVIEW_LENGTH = 500;
@@ -332,7 +332,7 @@
 			state = JSON.parse(savedState);
 			state.itemCache ??= {};
 		} catch (e) {
-			logIfTesting("Failed to parse Archive.org state: " + e);
+			debug_log(PLATFORM, "Failed to parse state", e);
 		}
 	};
 	source.saveState = function() {
@@ -571,7 +571,7 @@
 			const item = getItem(summary.identifier, summary);
 			if (firstPlayableFile(item, media)) playlists.push(itemToPlaylist(item, media));
 		} catch (e) {
-			logIfTesting("Failed to map Archive.org playlist: " + e);
+			debug_log(PLATFORM, "Failed to map playlist", e);
 		}
 		return playlists;
 	}
@@ -1024,9 +1024,6 @@
 	}
 	function escapeSearch(value) {
 		return cleanText(value).replace(/["()]/g, " ");
-	}
-	function logIfTesting(msg) {
-		if (typeof IS_TESTING !== "undefined" && IS_TESTING) log(msg);
 	}
 
 })();
