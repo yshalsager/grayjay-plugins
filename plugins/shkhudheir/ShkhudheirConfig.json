@@ -1,0 +1,20 @@
+{
+  "name": "Shkhudheir",
+  "description": "Lessons and fatawa audio from Shkhudheir.",
+  "author": "yshalsager",
+  "authorUrl": "https://github.com/yshalsager",
+  "platformUrl": "https://shkhudheir.com",
+  "sourceUrl": "https://raw.githubusercontent.com/yshalsager/grayjay-plugins/master/plugins/shkhudheir/ShkhudheirConfig.json",
+  "repositoryUrl": "https://github.com/yshalsager/grayjay-plugins",
+  "scriptUrl": "./ShkhudheirScript.js",
+  "version": 1,
+  "iconUrl": "https://shkhudheir.com/favicon.ico",
+  "id": "fc289d40-64a2-442c-99ba-9f5e8dcaacbe",
+  "packages": ["Http"],
+  "allowEval": false,
+  "allowUrls": ["shkhudheir.com"],
+  "settings": [],
+  "changelog": {
+    "1": ["Initial Shkhudheir lessons, fatawa, series playlists, and playback."]
+  }
+}

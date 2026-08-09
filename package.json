@@ -30,6 +30,7 @@
     "test:live:drosuae": "null",
     "test:live:alqasim": "null",
     "test:live:binothaimeen": "null",
+    "test:live:shkhudheir": "null",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint": "eslint .",
