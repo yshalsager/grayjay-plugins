@@ -1,0 +1,28 @@
+{
+  "name": "Baheth",
+  "description": "Searchable Islamic lectures and transcripts from Baheth.",
+  "author": "yshalsager",
+  "authorUrl": "https://github.com/yshalsager",
+  "platformUrl": "https://baheth.ieasybooks.com",
+  "sourceUrl": "https://raw.githubusercontent.com/yshalsager/grayjay-plugins/master/plugins/baheth/BahethConfig.json",
+  "repositoryUrl": "https://github.com/yshalsager/grayjay-plugins",
+  "scriptUrl": "./BahethScript.js",
+  "version": 1,
+  "iconUrl": "https://baheth.ieasybooks.com/favicon.png",
+  "id": "54c72620-902f-4908-b90f-41db417ae590",
+  "packages": ["Http"],
+  "allowEval": false,
+  "allowUrls": [
+    "baheth.ieasybooks.com",
+    "baheth-audios.ieasybooks.com",
+    "img.youtube.com",
+    "www.youtube.com",
+    "youtube.com",
+    "youtu.be",
+    "www.youtube-nocookie.com"
+  ],
+  "settings": [],
+  "changelog": {
+    "1": ["Initial Baheth transcript search, speaker channels, playlists, direct WebM audio playback, subtitles, and chapters."]
+  }
+}
