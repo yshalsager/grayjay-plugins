@@ -4,7 +4,7 @@ import { debug_log } from '@lib/debug.js'
 import { selected_filter_values } from '@lib/filters.js'
 import { grayjay_platform } from '@lib/grayjay.js'
 import { define_grayjay_tests, home_first_detail_test } from '@lib/grayjay-tests.js'
-import { extract_first } from '@lib/html.js'
+import { external_embed_html, extract_first } from '@lib/html.js'
 import { cache_set, get_text, init_lru_caches, query_string } from '@lib/http.js'
 import { audio_source_descriptor } from '@lib/media.js'
 import { apply_pager_state, array_pager_class } from '@lib/paging.js'
@@ -299,7 +299,7 @@ source.isContentDetailsUrl = function (url) {
 
 source.getContentDetails = function (url) {
   if (REGEX.INTERNAL_LIVE.test(String(url ?? '')) || REGEX.WEB_STREAMING.test(String(url ?? ''))) {
-    return liveNested()
+    return liveWebDetails()
   }
 
   const media = mediaPartsFromUrl(url)
@@ -535,6 +535,7 @@ function directMediaToVideo(media) {
 }
 
 function liveNested() {
+  const description = liveDescription()
   const nested = grayjay.nested('live-mixlr', {
     name: 'البث المباشر',
     author: rootAuthor(),
@@ -542,7 +543,7 @@ function liveNested() {
     url: LIVE_URL,
     contentUrl: MIXLR_CHANNEL_URL,
     contentName: 'البث المباشر لموقع البدر على Mixlr',
-    contentDescription: `قناة Mixlr المتداخلة لبث دروس الشيخ عبد الرزاق البدر المباشر.\nصفحة البث: ${BASE_URL}/streaming\nرابط التضمين: ${MIXLR_EMBED_URL}`,
+    contentDescription: description,
     contentProvider: 'Mixlr',
     contentThumbnails: staticThumbnails()
   })
@@ -555,6 +556,29 @@ function liveNested() {
   }
 
   return nested
+}
+
+function liveWebDetails() {
+  const description = liveDescription()
+  return grayjay.web('live-mixlr', {
+    name: 'البث المباشر',
+    thumbnails: staticThumbnails(),
+    author: rootAuthor(),
+    datetime: 0,
+    url: LIVE_URL,
+    html: external_embed_html({
+      language: 'ar',
+      title: 'البث المباشر',
+      description,
+      embedUrl: MIXLR_EMBED_URL,
+      linkUrl: MIXLR_CHANNEL_URL,
+      linkLabel: 'Mixlr'
+    })
+  })
+}
+
+function liveDescription() {
+  return `قناة Mixlr المتداخلة لبث دروس الشيخ عبد الرزاق البدر المباشر.\nصفحة البث: ${BASE_URL}/streaming\nرابط التضمين: ${MIXLR_EMBED_URL}`
 }
 
 function parseHomeSeriesLinks(html) {

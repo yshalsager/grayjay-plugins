@@ -86,6 +86,12 @@
 					...value
 				});
 			},
+			web(id, value) {
+				return new PlatformWebDetails({
+					id: platform_id(id),
+					...value
+				});
+			},
 			channel(id, value) {
 				return new PlatformChannel({
 					id: platform_id(id),
@@ -108,19 +114,111 @@
 		};
 	}
 
-	function get_response(url, headers = {}, useAuth = false) {
-		const response = http.GET(url, headers, useAuth);
-		if (!response.isOk) throw new ScriptException(`Request failed with code ${response.code}: ${url}`);
+	var REDACTED = "[redacted]";
+	var SENSITIVE_KEY = /authorization|cookie|token|secret|password|signature/i;
+	function is_testing() {
+		return typeof IS_TESTING !== "undefined" && IS_TESTING;
+	}
+	function debug_string(value, maxLength = 1200) {
+		if (value === void 0) return "";
+		const seen = [];
+		let text;
+		try {
+			if (typeof value === "string") text = value;
+			else if (value && typeof value === "object" && typeof value.message === "string") text = value.stack || `${value.name || "Error"}: ${value.message}`;
+			else text = JSON.stringify(value, (key, item) => {
+				if (SENSITIVE_KEY.test(key)) return REDACTED;
+				if (item && typeof item === "object") {
+					if (seen.indexOf(item) >= 0) return "[circular]";
+					seen.push(item);
+				}
+				return item;
+			});
+		} catch {
+			text = String(value);
+		}
+		return text.length > maxLength ? `${text.slice(0, maxLength)}...` : text;
+	}
+	function debug_log(scope, message, data) {
+		if (!is_testing()) return;
+		const text = `[${scope}] ${message}${data === void 0 ? "" : ` ${debug_string(data)}`}`;
+		if (typeof log === "function") log(text);
+	}
+
+	var BODY_PREVIEW_LENGTH = 500;
+	function get_response(url, headers = {}, useAuth = false, debugContext = null) {
+		const response = request("GET", url, "", headers, useAuth, debugContext);
+		if (!response.isOk) throw request_error(response, url);
 		return response;
 	}
-	function get_text(url, headers = {}, useAuth = false) {
-		return get_response(url, headers, useAuth).body;
+	function get_text(url, headers = {}, useAuth = false, debugContext = null) {
+		return get_response(url, headers, useAuth, debugContext).body;
 	}
-	function get_json(url, headers = {}, useAuth = false) {
-		return JSON.parse(get_text(url, headers, useAuth));
+	function get_json(url, headers = {}, useAuth = false, debugContext = null) {
+		const text = get_text(url, headers, useAuth, debugContext);
+		try {
+			return JSON.parse(text);
+		} catch (e) {
+			debug_log(debug_scope(debugContext), "JSON parse failed", {
+				url,
+				error: String(e),
+				preview: debug_string(text, BODY_PREVIEW_LENGTH)
+			});
+			throw e;
+		}
 	}
 	function query_string(params) {
 		return params.filter((item) => item[1] !== null && item[1] !== void 0).map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`).join("&");
+	}
+	function request(method, url, body, headers, useAuth, debugContext = null) {
+		const start = Date.now();
+		try {
+			const response = method === "POST" ? http.POST(url, body, headers, useAuth) : http.GET(url, headers, useAuth);
+			log_response(method, url, response, Date.now() - start, debugContext);
+			return response;
+		} catch (e) {
+			debug_log(debug_scope(debugContext), "HTTP exception", {
+				method,
+				url,
+				ms: Date.now() - start,
+				error: String(e)
+			});
+			throw e;
+		}
+	}
+	function log_response(method, url, response, ms, debugContext) {
+		const details = {
+			method,
+			url,
+			code: response?.code,
+			ms,
+			bytes: body_length(response)
+		};
+		if (response?.isOk) {
+			debug_log(debug_scope(debugContext), "HTTP OK", details);
+			return;
+		}
+		debug_log(debug_scope(debugContext), "HTTP failure", {
+			...details,
+			preview: body_preview(response)
+		});
+	}
+	function request_error(response, url) {
+		return new ScriptException(`Request failed with code ${response.code}: ${url}`);
+	}
+	function debug_scope(debugContext) {
+		if (!debugContext) return "http";
+		if (typeof debugContext === "string") return debugContext;
+		return debugContext.scope || "http";
+	}
+	function body_length(response) {
+		const body = response?.body;
+		if (typeof body === "string") return body.length;
+		return body?.length ?? body?.byteLength ?? 0;
+	}
+	function body_preview(response) {
+		const body = response?.body;
+		return typeof body === "string" ? debug_string(body, BODY_PREVIEW_LENGTH) : "";
 	}
 
 	function apply_pager_state(target, next) {

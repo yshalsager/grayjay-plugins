@@ -107,6 +107,12 @@
 					...value
 				});
 			},
+			web(id, value) {
+				return new PlatformWebDetails({
+					id: platform_id(id),
+					...value
+				});
+			},
 			channel(id, value) {
 				return new PlatformChannel({
 					id: platform_id(id),

@@ -4,7 +4,7 @@ import { debug_log } from '@lib/debug.js'
 import { selected_filter_values } from '@lib/filters.js'
 import { grayjay_platform } from '@lib/grayjay.js'
 import { define_grayjay_tests, home_first_detail_test } from '@lib/grayjay-tests.js'
-import { extract_first, last_match } from '@lib/html.js'
+import { external_embed_html, extract_first, last_match } from '@lib/html.js'
 import { cache_set, get_text, init_lru_caches } from '@lib/http.js'
 import { audio_source_descriptor, thumbnails } from '@lib/media.js'
 import { apply_pager_state, array_pager_class } from '@lib/paging.js'
@@ -1169,6 +1169,25 @@ function tvVideoToNested(video) {
   return nested
 }
 
+function tvVideoToWebDetails(video) {
+  const contentUrl = video.contentUrl || video.pageUrl
+  return grayjay.web(`video-${video.id}`, {
+    name: video.title,
+    thumbnails: video.thumbnail ? thumbnails(video.thumbnail) : staticThumbnails(),
+    author: grayjay.author('tvquran-videos', 'tvQuran', videoCategoryChannelUrl(video.videoType), iconUrl()),
+    datetime: 0,
+    url: tvVideoUrl(video.id),
+    html: external_embed_html({
+      language: language(),
+      title: video.title,
+      description: video.description,
+      embedUrl: video.youtubeId ? `https://www.youtube.com/embed/${video.youtubeId}` : '',
+      linkUrl: contentUrl,
+      linkLabel: text('source')
+    })
+  })
+}
+
 function getRecitationDetails(id) {
   if (!id) {
     throw new ScriptException('Recitation not found')
@@ -1218,7 +1237,7 @@ function getTvVideoDetails(id) {
     contentUrl: youtubeId ? youtubeUrl(youtubeId) : canonical
   }
 
-  return tvVideoToNested(video)
+  return tvVideoToWebDetails(video)
 }
 
 function getCategoryFromUrl(url) {

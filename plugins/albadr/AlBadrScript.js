@@ -122,6 +122,12 @@
 					...value
 				});
 			},
+			web(id, value) {
+				return new PlatformWebDetails({
+					id: platform_id(id),
+					...value
+				});
+			},
 			channel(id, value) {
 				return new PlatformChannel({
 					id: platform_id(id),
@@ -147,6 +153,22 @@
 	function extract_first(value, regex) {
 		const match = String(value ?? "").match(regex);
 		return match ? match[1] : null;
+	}
+	function escape_html(value) {
+		return String(value ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+	}
+	function external_embed_html({ language = "en", title = "", description = "", embedUrl = "", linkUrl = "", linkLabel = "Source" }) {
+		return [
+			"<!doctype html>",
+			`<html lang="${escape_html(language)}">`,
+			"<head><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"></head>",
+			"<body>",
+			title ? `<h1>${escape_html(title)}</h1>` : "",
+			description ? `<p>${escape_html(description)}</p>` : "",
+			embedUrl ? `<iframe width="100%" height="315" src="${escape_html(embedUrl)}" title="${escape_html(title)}" frameborder="0" allowfullscreen></iframe>` : "",
+			linkUrl ? `<p><a href="${escape_html(linkUrl)}">${escape_html(linkLabel)}</a></p>` : "",
+			"</body></html>"
+		].filter(Boolean).join("");
 	}
 
 	var BODY_PREVIEW_LENGTH = 500;
@@ -565,7 +587,7 @@
 		return Boolean(contentPartsFromUrl(url) || mediaPartsFromUrl(url) || REGEX.INTERNAL_LIVE.test(String(url ?? "")) || REGEX.WEB_STREAMING.test(String(url ?? "")));
 	};
 	source.getContentDetails = function(url) {
-		if (REGEX.INTERNAL_LIVE.test(String(url ?? "")) || REGEX.WEB_STREAMING.test(String(url ?? ""))) return liveNested();
+		if (REGEX.INTERNAL_LIVE.test(String(url ?? "")) || REGEX.WEB_STREAMING.test(String(url ?? ""))) return liveWebDetails();
 		const media = mediaPartsFromUrl(url);
 		if (media) return directMediaToVideo(media);
 		const parts = contentPartsFromUrl(url);
@@ -749,6 +771,7 @@
 		});
 	}
 	function liveNested() {
+		const description = liveDescription();
 		const nested = grayjay.nested("live-mixlr", {
 			name: "البث المباشر",
 			author: rootAuthor(),
@@ -756,7 +779,7 @@
 			url: LIVE_URL,
 			contentUrl: MIXLR_CHANNEL_URL,
 			contentName: "البث المباشر لموقع البدر على Mixlr",
-			contentDescription: `قناة Mixlr المتداخلة لبث دروس الشيخ عبد الرزاق البدر المباشر.\nصفحة البث: ${BASE_URL}/streaming\nرابط التضمين: ${MIXLR_EMBED_URL}`,
+			contentDescription: description,
 			contentProvider: "Mixlr",
 			contentThumbnails: staticThumbnails()
 		});
@@ -764,6 +787,27 @@
 			return new ArrayVideoPager(homeLatest().filter((item) => item.url !== nested.url), DEFAULT_LIMIT);
 		};
 		return nested;
+	}
+	function liveWebDetails() {
+		const description = liveDescription();
+		return grayjay.web("live-mixlr", {
+			name: "البث المباشر",
+			thumbnails: staticThumbnails(),
+			author: rootAuthor(),
+			datetime: 0,
+			url: LIVE_URL,
+			html: external_embed_html({
+				language: "ar",
+				title: "البث المباشر",
+				description,
+				embedUrl: MIXLR_EMBED_URL,
+				linkUrl: MIXLR_CHANNEL_URL,
+				linkLabel: "Mixlr"
+			})
+		});
+	}
+	function liveDescription() {
+		return `قناة Mixlr المتداخلة لبث دروس الشيخ عبد الرزاق البدر المباشر.\nصفحة البث: ${BASE_URL}/streaming\nرابط التضمين: ${MIXLR_EMBED_URL}`;
 	}
 	function parseHomeSeriesLinks(html) {
 		return parseAnchors(extractSection(html, "جديد الدروس") || html, /\/sub\/\d+/).slice(0, 8);

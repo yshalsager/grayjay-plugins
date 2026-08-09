@@ -83,13 +83,20 @@ test('tvquran search covers selections, recitations, videos, prayer videos, and 
 
   for (const [label, item] of [
     ['selection', selection],
-    ['recitation', recitation],
+    ['recitation', recitation]
+  ]) {
+    const details = assert_details(source.getContentDetails(item.url), `${label} details`)
+    assert_has_media(details, `${label} details`)
+  }
+
+  for (const [label, item] of [
     ['video', video],
     ['prayer video', prayer_video],
     ['live video', live_video]
   ]) {
+    assert_has_media(item, `${label} feed item`)
     const details = assert_details(source.getContentDetails(item.url), `${label} details`)
-    assert_has_media(details, `${label} details`)
+    expect(details.html, `${label} details should expose web html`).toContain('youtube.com/embed')
   }
 
   await assert_first_media_reachable(source.getContentDetails(selection.url), 'selection details')
@@ -252,9 +259,7 @@ test('tvquran recommendations work for audio and nested video items', () => {
     'recitation recommendations should not include current item'
   ).toBe(true)
 
-  const nested = source.getContentDetails(
-    assert_pager(source.search('', null, Type.Order.Chronological, { content: 'videos' }), 'video search')[0].url
-  )
+  const nested = assert_pager(source.search('', null, Type.Order.Chronological, { content: 'videos' }), 'video search')[0]
   expect(/^https:\/\/www\.youtube\.com\/watch\?v=/.test(nested.contentUrl), 'expected nested YouTube content URL').toBe(true)
   const recommendations = assert_pager(nested.getContentRecommendations(), 'nested video recommendations')
   expect(

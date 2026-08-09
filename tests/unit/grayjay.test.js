@@ -24,7 +24,8 @@ describe('grayjay helpers', () => {
       'PlatformNestedMediaContent',
       'PlatformChannel',
       'PlatformPlaylist',
-      'PlatformPlaylistDetails'
+      'PlatformPlaylistDetails',
+      'PlatformWebDetails'
     ]) {
       globalThis[name] = class {
         constructor(value) {
@@ -45,6 +46,7 @@ describe('grayjay helpers', () => {
     expect(grayjay.feed_video('fv', { name: 'Feed video' })).toMatchObject({ id: { value: 'fv' }, name: 'Feed video' })
     expect(grayjay.video('v', { name: 'Video' })).toMatchObject({ id: { value: 'v' }, name: 'Video' })
     expect(grayjay.nested('n', { name: 'Nested' })).toMatchObject({ id: { value: 'n' }, name: 'Nested' })
+    expect(grayjay.web('w', { name: 'Web' })).toMatchObject({ id: { value: 'w' }, name: 'Web' })
     expect(grayjay.channel('c', { name: 'Channel' })).toMatchObject({ id: { value: 'c' }, subscribers: 0, name: 'Channel' })
     expect(grayjay.playlist('p', { name: 'Playlist' })).toMatchObject({ id: { value: 'p' }, name: 'Playlist' })
     expect(grayjay.playlist_details('pd', { name: 'Playlist details' })).toMatchObject({ id: { value: 'pd' }, name: 'Playlist details' })

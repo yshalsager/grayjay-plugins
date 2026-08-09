@@ -20,6 +20,10 @@ export function grayjay_platform(platform, get_config_id) {
       return new PlatformNestedMediaContent({ id: platform_id(id), ...value })
     },
 
+    web(id, value) {
+      return new PlatformWebDetails({ id: platform_id(id), ...value })
+    },
+
     channel(id, value) {
       return new PlatformChannel({ id: platform_id(id), subscribers: 0, ...value })
     },

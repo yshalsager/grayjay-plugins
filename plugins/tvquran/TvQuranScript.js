@@ -119,6 +119,12 @@
 					...value
 				});
 			},
+			web(id, value) {
+				return new PlatformWebDetails({
+					id: platform_id(id),
+					...value
+				});
+			},
 			channel(id, value) {
 				return new PlatformChannel({
 					id: platform_id(id),
@@ -151,6 +157,22 @@
 		regex.lastIndex = 0;
 		while ((match = regex.exec(String(value ?? ""))) !== null) result = match[1];
 		return result;
+	}
+	function escape_html(value) {
+		return String(value ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+	}
+	function external_embed_html({ language = "en", title = "", description = "", embedUrl = "", linkUrl = "", linkLabel = "Source" }) {
+		return [
+			"<!doctype html>",
+			`<html lang="${escape_html(language)}">`,
+			"<head><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"></head>",
+			"<body>",
+			title ? `<h1>${escape_html(title)}</h1>` : "",
+			description ? `<p>${escape_html(description)}</p>` : "",
+			embedUrl ? `<iframe width="100%" height="315" src="${escape_html(embedUrl)}" title="${escape_html(title)}" frameborder="0" allowfullscreen></iframe>` : "",
+			linkUrl ? `<p><a href="${escape_html(linkUrl)}">${escape_html(linkLabel)}</a></p>` : "",
+			"</body></html>"
+		].filter(Boolean).join("");
 	}
 
 	var BODY_PREVIEW_LENGTH = 500;
@@ -2138,6 +2160,24 @@
 		};
 		return nested;
 	}
+	function tvVideoToWebDetails(video) {
+		const contentUrl = video.contentUrl || video.pageUrl;
+		return grayjay.web(`video-${video.id}`, {
+			name: video.title,
+			thumbnails: video.thumbnail ? thumbnails(video.thumbnail) : staticThumbnails(),
+			author: grayjay.author("tvquran-videos", "tvQuran", videoCategoryChannelUrl(video.videoType), iconUrl()),
+			datetime: 0,
+			url: tvVideoUrl(video.id),
+			html: external_embed_html({
+				language: language(),
+				title: video.title,
+				description: video.description,
+				embedUrl: video.youtubeId ? `https://www.youtube.com/embed/${video.youtubeId}` : "",
+				linkUrl: contentUrl,
+				linkLabel: text("source")
+			})
+		});
+	}
 	function getRecitationDetails(id) {
 		if (!id) throw new ScriptException("Recitation not found");
 		if (state.recitationCache[id]) return recitationToVideo(state.recitationCache[id]);
@@ -2150,7 +2190,7 @@
 		const html = callHtml(`${BASE_URL}/${language()}/video/${id}`);
 		const canonical = extractFirst(html, /<link[^>]*rel=["']canonical["'][^>]*href=["']([^"']+)["']/) ?? `${BASE_URL}/${language()}/video/${id}`;
 		const youtubeId = extractYoutubeId(html);
-		return tvVideoToNested({
+		return tvVideoToWebDetails({
 			id: String(id),
 			title: cleanText(extractFirst(html, /<div class=["']l-box["'][\s\S]*?<h2[^>]*>([\s\S]*?)<\/h2>/) ?? extractFirst(html, /data-title=["']([^"']+)["']/) ?? `Video ${id}`),
 			thumbnail: youtubeThumbnail(youtubeId) ?? iconUrl(),
