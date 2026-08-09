@@ -1,0 +1,20 @@
+{
+  "name": "BinBaz",
+  "description": "BinBaz Grayjay plugin.",
+  "author": "yshalsager",
+  "authorUrl": "https://github.com/yshalsager",
+  "platformUrl": "https://binbaz.org.sa",
+  "sourceUrl": "https://raw.githubusercontent.com/yshalsager/grayjay-plugins/master/plugins/binbaz/BinBazConfig.json",
+  "repositoryUrl": "https://github.com/yshalsager/grayjay-plugins",
+  "scriptUrl": "./BinBazScript.js",
+  "version": 1,
+  "iconUrl": "https://binbaz.org.sa/favicon.ico",
+  "id": "e0c5416c-7e04-4acf-8ddb-1fd7977dbbf9",
+  "packages": ["Http"],
+  "allowEval": false,
+  "allowUrls": ["binbaz.org.sa", "files.zadapps.info", "www.youtube.com", "youtube.com", "img.youtube.com"],
+  "settings": [],
+  "changelog": {
+    "1": ["Initial BinBaz plugin with fatwa audio, audio series, section channels, and YouTube-backed videos."]
+  }
+}
