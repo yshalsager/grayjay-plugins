@@ -34,6 +34,7 @@
     "test:live:alfiqh": "null",
     "test:live:alukah": "null",
     "test:live:baheth": "null",
+    "test:live:islamhouse": "null",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint": "eslint .",

@@ -1,0 +1,20 @@
+{
+  "name": "IslamHouse",
+  "description": "IslamHouse audio and video media.",
+  "author": "yshalsager",
+  "authorUrl": "https://github.com/yshalsager",
+  "platformUrl": "https://islamhouse.com",
+  "sourceUrl": "https://raw.githubusercontent.com/yshalsager/grayjay-plugins/master/plugins/islamhouse/IslamHouseConfig.json",
+  "repositoryUrl": "https://github.com/yshalsager/grayjay-plugins",
+  "scriptUrl": "./IslamHouseScript.js",
+  "version": 1,
+  "iconUrl": "https://islamhouse.com/favicon.ico",
+  "id": "0c2463c4-f73b-4dfd-9aeb-600acd47b890",
+  "packages": ["Http"],
+  "allowEval": false,
+  "allowUrls": ["islamhouse.com", "api3.islamhouse.com", "d1.islamhouse.com", "ih-download.islamenc.com"],
+  "settings": [],
+  "changelog": {
+    "1": ["Initial IslamHouse API audio/video feeds, search, item playlists, author channels, and direct MP3/MP4 playback."]
+  }
+}
