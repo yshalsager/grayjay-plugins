@@ -21,6 +21,7 @@
     "test:live:albadr": "vitest run tests/live/albadr.live.test.js",
     "test:live:qurancom": "vitest run tests/live/qurancom.live.test.js",
     "test:live:midad": "vitest run tests/live/midad.live.test.js",
+    "test:live:quranicaudio": "vitest run tests/live/quranicaudio.live.test.js",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint": "eslint .",

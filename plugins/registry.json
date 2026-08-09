@@ -33,5 +33,10 @@
     "value": "midad",
     "label": "Midad",
     "stem": "Midad"
+  },
+  {
+    "value": "quranicaudio",
+    "label": "QuranicAudio",
+    "stem": "QuranicAudio"
   }
 ]

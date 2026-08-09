@@ -1,0 +1,20 @@
+{
+  "name": "QuranicAudio",
+  "description": "QuranicAudio full-surah Quran MP3 recitations with qari channels and playlists.",
+  "author": "yshalsager",
+  "authorUrl": "https://github.com/yshalsager",
+  "platformUrl": "https://quranicaudio.com",
+  "sourceUrl": "https://raw.githubusercontent.com/yshalsager/grayjay-plugins/master/plugins/quranicaudio/QuranicAudioConfig.json",
+  "repositoryUrl": "https://github.com/yshalsager/grayjay-plugins",
+  "scriptUrl": "./QuranicAudioScript.js",
+  "version": 1,
+  "iconUrl": "https://quranicaudio.com/favicon.ico",
+  "id": "1af2482a-bb36-4dc5-ba55-6dfaeaeda808",
+  "packages": ["Http"],
+  "allowEval": false,
+  "allowUrls": ["quranicaudio.com", "download.quranicaudio.com"],
+  "settings": [],
+  "changelog": {
+    "1": ["Initial QuranicAudio full-surah source with qari channels, section filters, playlists, direct MP3 URLs, and recommendations."]
+  }
+}
