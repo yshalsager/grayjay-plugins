@@ -1,0 +1,20 @@
+{
+  "name": "Jeman",
+  "description": "Jeman Grayjay plugin.",
+  "author": "yshalsager",
+  "authorUrl": "https://github.com/yshalsager",
+  "platformUrl": "https://j-eman.net",
+  "sourceUrl": "https://raw.githubusercontent.com/yshalsager/grayjay-plugins/master/plugins/jeman/JemanConfig.json",
+  "repositoryUrl": "https://github.com/yshalsager/grayjay-plugins",
+  "scriptUrl": "./JemanScript.js",
+  "version": 1,
+  "iconUrl": "https://j-eman.net/favicon.ico",
+  "id": "2aad60bc-dc42-499a-8cca-d78acb4d6773",
+  "packages": ["Http"],
+  "allowEval": false,
+  "allowUrls": ["j-eman.net", "apis.j-eman.net", "i.ytimg.com", "www.youtube.com", "youtube.com", "youtu.be", "mixlr.com"],
+  "settings": [],
+  "changelog": {
+    "1": ["Initial Jeman plugin with API audio feeds, category playlists, direct MP3 playback, and YouTube clips."]
+  }
+}
