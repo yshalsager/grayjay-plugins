@@ -46,6 +46,19 @@ run = 'printf "%s\n" "$(cat "$HOME/Library/Application Support/Grayjay/port")"'
 [tasks.grayjay-desktop-dev]
 description = "Open Grayjay Desktop Developer Portal"
 run = '''
+if [ "$(uname)" = "Darwin" ]; then
+  open -a "Grayjay"
+else
+  "${GRAYJAY_DESKTOP_BIN:-Grayjay}" >/dev/null 2>&1 &
+fi
+
+port_file="$HOME/Library/Application Support/Grayjay/port"
+i=0
+while [ ! -s "$port_file" ] && [ "$i" -lt 10 ]; do
+  i=$((i + 1))
+  sleep 0.5
+done
+
 port="$(mise run grayjay-desktop-port)"
 printf "Developer Portal:\nhttp://127.0.0.1:%s/Developer/Index\n\n" "$port"
 printf "Plugin config URLs:\n"
