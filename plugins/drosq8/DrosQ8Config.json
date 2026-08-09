@@ -1,0 +1,20 @@
+{
+  "name": "DrosQ8",
+  "description": "Audio lessons and lectures from DrosQ8.",
+  "author": "yshalsager",
+  "authorUrl": "https://github.com/yshalsager",
+  "platformUrl": "https://www.drosq8.com",
+  "sourceUrl": "https://raw.githubusercontent.com/yshalsager/grayjay-plugins/master/plugins/drosq8/DrosQ8Config.json",
+  "repositoryUrl": "https://github.com/yshalsager/grayjay-plugins",
+  "scriptUrl": "./DrosQ8Script.js",
+  "version": 1,
+  "iconUrl": "https://www.drosq8.com/favicon.ico",
+  "id": "883acc38-ea0a-43be-860d-becd6be4b8e0",
+  "packages": ["Http"],
+  "allowEval": false,
+  "allowUrls": ["www.drosq8.com", "drosq8.com"],
+  "settings": [],
+  "changelog": {
+    "1": ["Initial DrosQ8 audio search, categories, playlists, and playback."]
+  }
+}
