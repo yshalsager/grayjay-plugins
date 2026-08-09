@@ -23,6 +23,7 @@
     "test:live:midad": "vitest run tests/live/midad.live.test.js",
     "test:live:quranicaudio": "vitest run tests/live/quranicaudio.live.test.js",
     "test:live:binbaz": "null",
+    "test:live:tilawatalharamain": "null",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint": "eslint .",

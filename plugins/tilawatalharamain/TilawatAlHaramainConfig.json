@@ -1,0 +1,31 @@
+{
+  "name": "Tilawat Al Haramain",
+  "description": "Tilawat Al Haramain Grayjay plugin.",
+  "author": "yshalsager",
+  "authorUrl": "https://github.com/yshalsager",
+  "platformUrl": "https://tilawatalharamain.com",
+  "sourceUrl": "https://raw.githubusercontent.com/yshalsager/grayjay-plugins/master/plugins/tilawatalharamain/TilawatAlHaramainConfig.json",
+  "repositoryUrl": "https://github.com/yshalsager/grayjay-plugins",
+  "scriptUrl": "./TilawatAlHaramainScript.js",
+  "version": 1,
+  "iconUrl": "https://tilawatalharamain.com/favicon.ico",
+  "id": "669ad0de-35fc-4829-9aa9-1e1c027052d6",
+  "packages": ["Http"],
+  "allowEval": false,
+  "allowUrls": [
+    "tilawatalharamain.com",
+    "media.altilawat.com",
+    "tilawatalharamain1.com",
+    "haramain.smart-fingers.com",
+    "archive.org",
+    "ia600901.us.archive.org",
+    "ia601403.us.archive.org",
+    "www.youtube.com",
+    "youtube.com",
+    "img.youtube.com"
+  ],
+  "settings": [],
+  "changelog": {
+    "1": ["Initial Tilawat Al Haramain plugin with sections, category playlists, direct audio, and YouTube nested media."]
+  }
+}
