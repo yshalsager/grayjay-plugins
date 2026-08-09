@@ -40,6 +40,11 @@
     "stem": "QuranicAudio"
   },
   {
+    "value": "everyayah",
+    "label": "EveryAyah",
+    "stem": "EveryAyah"
+  },
+  {
     "value": "binbaz",
     "label": "BinBaz",
     "stem": "BinBaz"

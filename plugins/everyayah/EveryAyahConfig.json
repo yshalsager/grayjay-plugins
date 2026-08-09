@@ -1,0 +1,20 @@
+{
+  "name": "EveryAyah",
+  "description": "EveryAyah verse-by-verse Quran MP3 recitations with reciter channels and surah playlists.",
+  "author": "yshalsager",
+  "authorUrl": "https://github.com/yshalsager",
+  "platformUrl": "https://everyayah.com",
+  "sourceUrl": "https://raw.githubusercontent.com/yshalsager/grayjay-plugins/master/plugins/everyayah/EveryAyahConfig.json",
+  "repositoryUrl": "https://github.com/yshalsager/grayjay-plugins",
+  "scriptUrl": "./EveryAyahScript.js",
+  "version": 1,
+  "iconUrl": "https://everyayah.com/favicon.ico",
+  "id": "50886d24-c0ec-4cbc-8148-b0a448880475",
+  "packages": ["Http"],
+  "allowEval": false,
+  "allowUrls": ["everyayah.com", "www.versebyversequran.com"],
+  "settings": [],
+  "changelog": {
+    "1": ["Initial EveryAyah verse-by-verse Quran audio source."]
+  }
+}

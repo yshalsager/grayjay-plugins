@@ -14,6 +14,7 @@
 | Quran.com           | [quran.com](https://quran.com)                         | [Install](https://raw.githubusercontent.com/yshalsager/grayjay-plugins/master/plugins/qurancom/QuranComConfig.json)                   |
 | Midad               | [midad.com](https://midad.com)                         | [Install](https://raw.githubusercontent.com/yshalsager/grayjay-plugins/master/plugins/midad/MidadConfig.json)                         |
 | QuranicAudio        | [quranicaudio.com](https://quranicaudio.com)           | [Install](https://raw.githubusercontent.com/yshalsager/grayjay-plugins/master/plugins/quranicaudio/QuranicAudioConfig.json)           |
+| EveryAyah           | [everyayah.com](https://everyayah.com)                 | [Install](https://raw.githubusercontent.com/yshalsager/grayjay-plugins/master/plugins/everyayah/EveryAyahConfig.json)                 |
 | BinBaz              | [binbaz.org.sa](https://binbaz.org.sa)                 | [Install](https://raw.githubusercontent.com/yshalsager/grayjay-plugins/master/plugins/binbaz/BinBazConfig.json)                       |
 | Tilawat Al Haramain | [tilawatalharamain.com](https://tilawatalharamain.com) | [Install](https://raw.githubusercontent.com/yshalsager/grayjay-plugins/master/plugins/tilawatalharamain/TilawatAlHaramainConfig.json) |
 | Jeman               | [j-eman.net](https://j-eman.net)                       | [Install](https://raw.githubusercontent.com/yshalsager/grayjay-plugins/master/plugins/jeman/JemanConfig.json)                         |
@@ -42,7 +43,7 @@
 
 ## Quran Playback Granularity
 
-Quran playback plugins should expose surahs as the playable content unit, not individual ayahs. MP3Quran, Quran.com, and QuranicAudio provide full-surah media and are suitable for normal playback. Verse-by-verse-only sources such as EveryAyah and AlQuran.cloud are not active install targets because their public APIs do not provide continuous surah audio without client-side concatenation/transcoding.
+MP3Quran, Quran.com, and QuranicAudio expose continuous full-surah media. EveryAyah exposes each ayah as a playable item and groups those items into reciter surah playlists; it does not synthesize continuous surah files.
 
 ## MP3Quran Ayah Text
 

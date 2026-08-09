@@ -22,6 +22,7 @@
     "test:live:qurancom": "vitest run tests/live/qurancom.live.test.js",
     "test:live:midad": "vitest run tests/live/midad.live.test.js",
     "test:live:quranicaudio": "vitest run tests/live/quranicaudio.live.test.js",
+    "test:live:everyayah": "vitest run tests/live/everyayah.live.test.js",
     "test:live:binbaz": "vitest run tests/live/binbaz.live.test.js",
     "test:live:tilawatalharamain": "vitest run tests/live/tilawatalharamain.live.test.js",
     "test:live:jeman": "vitest run tests/live/jeman.live.test.js",
