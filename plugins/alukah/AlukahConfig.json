@@ -1,0 +1,20 @@
+{
+  "name": "Alukah",
+  "description": "Audio library, audio books, and radio from Alukah.",
+  "author": "yshalsager",
+  "authorUrl": "https://github.com/yshalsager",
+  "platformUrl": "https://www.alukah.net",
+  "sourceUrl": "https://raw.githubusercontent.com/yshalsager/grayjay-plugins/master/plugins/alukah/AlukahConfig.json",
+  "repositoryUrl": "https://github.com/yshalsager/grayjay-plugins",
+  "scriptUrl": "./AlukahScript.js",
+  "version": 1,
+  "iconUrl": "https://www.alukah.net/favicon.ico",
+  "id": "bf857270-c0b5-42a5-941f-034e78fcdedf",
+  "packages": ["Http"],
+  "allowEval": false,
+  "allowUrls": ["www.alukah.net", "alukah.net", "dl.alukah.net", "radio.alukah.net", "s3.dualstack.eu-central-1.amazonaws.com"],
+  "settings": [],
+  "changelog": {
+    "1": ["Initial Alukah audio library, audio books, radio, search, playlists, and playback."]
+  }
+}

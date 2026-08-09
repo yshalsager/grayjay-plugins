@@ -32,6 +32,7 @@
     "test:live:binothaimeen": "null",
     "test:live:shkhudheir": "null",
     "test:live:alfiqh": "null",
+    "test:live:alukah": "null",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint": "eslint .",
