@@ -21,6 +21,7 @@ function live_fixture() {
 test('mixlr exposes useful live capabilities and a non-empty home feed', () => {
   const capabilities = source.getSearchCapabilities()
 
+  expect(capabilities.sorts).toEqual([runtime.Type.Order.Chronological])
   expect(capabilities.filters.some((filter) => filter.id === 'content')).toBe(true)
   expect(capabilities.filters.some((filter) => filter.id === 'category')).toBe(true)
   expect(source.searchSuggestions('rad')).toContain('radio')

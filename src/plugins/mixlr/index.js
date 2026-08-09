@@ -111,7 +111,7 @@ source.getHome = function () {
 
 source.getSearchCapabilities = () => ({
   types: [Type.Feed.Mixed],
-  sorts: [Type.Order.Chronological, Type.Order.Popularity],
+  sorts: [Type.Order.Chronological],
   filters: [contentFilter(), categoryFilter(), statusFilter()]
 })
 
