@@ -38,5 +38,80 @@
     "value": "quranicaudio",
     "label": "QuranicAudio",
     "stem": "QuranicAudio"
+  },
+  {
+    "value": "binbaz",
+    "label": "BinBaz",
+    "stem": "BinBaz"
+  },
+  {
+    "value": "tilawatalharamain",
+    "label": "Tilawat Al Haramain",
+    "stem": "TilawatAlHaramain"
+  },
+  {
+    "value": "jeman",
+    "label": "Jeman",
+    "stem": "Jeman"
+  },
+  {
+    "value": "saleh-af",
+    "label": "Saleh Al Sheikh",
+    "stem": "SalehAf"
+  },
+  {
+    "value": "drosq8",
+    "label": "DrosQ8",
+    "stem": "DrosQ8"
+  },
+  {
+    "value": "drosuae",
+    "label": "DrosUAE",
+    "stem": "DrosUAE"
+  },
+  {
+    "value": "alqasim",
+    "label": "AlQasim",
+    "stem": "AlQasim"
+  },
+  {
+    "value": "binothaimeen",
+    "label": "BinOthaimeen",
+    "stem": "BinOthaimeen"
+  },
+  {
+    "value": "shkhudheir",
+    "label": "Shkhudheir",
+    "stem": "Shkhudheir"
+  },
+  {
+    "value": "alfiqh",
+    "label": "AlFiqh",
+    "stem": "AlFiqh"
+  },
+  {
+    "value": "alukah",
+    "label": "Alukah",
+    "stem": "Alukah"
+  },
+  {
+    "value": "baheth",
+    "label": "Baheth",
+    "stem": "Baheth"
+  },
+  {
+    "value": "islamhouse",
+    "label": "IslamHouse",
+    "stem": "IslamHouse"
+  },
+  {
+    "value": "islamweb-audio",
+    "label": "IslamWeb Audio",
+    "stem": "IslamWebAudio"
+  },
+  {
+    "value": "sunnahwadeha",
+    "label": "Sunnah Wadeha",
+    "stem": "SunnahWadeha"
   }
 ]

@@ -1,34 +1,34 @@
 # Grayjay Plugins
 
-[![Install MP3Quran](https://img.shields.io/badge/Install-MP3Quran-2ea44f)](https://raw.githubusercontent.com/yshalsager/grayjay-plugins/master/plugins/mp3quran/Mp3QuranConfig.json)
-[![Install tvQuran](https://img.shields.io/badge/Install-tvQuran-2ea44f)](https://raw.githubusercontent.com/yshalsager/grayjay-plugins/master/plugins/tvquran/TvQuranConfig.json)
-[![Install Archive.org](https://img.shields.io/badge/Install-Archive.org-2ea44f)](https://raw.githubusercontent.com/yshalsager/grayjay-plugins/master/plugins/archiveorg/ArchiveOrgConfig.json)
-[![Install Mixlr](https://img.shields.io/badge/Install-Mixlr-2ea44f)](https://raw.githubusercontent.com/yshalsager/grayjay-plugins/master/plugins/mixlr/MixlrConfig.json)
-[![Install AlBadr](https://img.shields.io/badge/Install-AlBadr-2ea44f)](https://raw.githubusercontent.com/yshalsager/grayjay-plugins/master/plugins/albadr/AlBadrConfig.json)
+[Grayjay](https://grayjay.app/) plugins in one repository. Install an active plugin by opening its config URL in Grayjay.
 
-[Grayjay](https://grayjay.app/) plugins in one repository. Current sources:
+## Active Plugins
 
-- `plugins/mp3quran`: [MP3Quran.net](https://mp3quran.net) reciters, moshaf playlists, surah tracks with ayah chapters/subtitles, tafsir audio/playlists, reminder video playlists, recent reads, live Quran radio streams, and live TV using the public v3 API.
-- `plugins/tvquran`: [tvQuran.com](https://tvquran.com) Arabic/English/German recitation selections, category/collection playlists, reciter channels, direct collection links, richer category/video channel metadata, reciter/surah/category filters, direct MP3 links, recommendations, and nested YouTube video/live/prayer-recitation links from the public site pages.
-- `plugins/archiveorg`: [Internet Archive](https://archive.org) search-only audio/video plugin with Archive.org item playlists, direct playable file details, and direct `/details` or `/download` URL handling.
-- `plugins/mixlr`: [Mixlr](https://mixlr.com) public live audio channels/events, popular/category/search live feeds, channel search, direct channel/event URL handling, live MP3 playback, channel peeks, and recommendations.
-- `plugins/albadr`: [AlBadr](https://www.al-badr.net) Sheikh Abdul Razzaq al-Badr lessons with latest/selected home feeds, category channels, series playlists, direct MP3 lesson playback, search, recommendations, and nested Mixlr live content.
-
-Plugin icons come from the original source sites:
-
-- MP3Quran: `https://www.mp3quran.net/img/logo2.png`
-- tvQuran: `https://tvquran.com/bundles/tvquran/img/favicon/apple-touch-icon-144x144-precomposed.png`
-- Archive.org: `https://archive.org/images/glogo.png`
-- Mixlr: `https://mixlr.com/favicon.ico`
-- AlBadr: `https://www.al-badr.net/assets/images/logo-albadr.png` vendored as `plugins/albadr/AlBadrIcon.png`
-
-Install URLs need to point at hosted raw config files after publishing this repo. The config files currently target this GitHub raw layout:
-
-- `https://raw.githubusercontent.com/yshalsager/grayjay-plugins/master/plugins/mp3quran/Mp3QuranConfig.json`
-- `https://raw.githubusercontent.com/yshalsager/grayjay-plugins/master/plugins/tvquran/TvQuranConfig.json`
-- `https://raw.githubusercontent.com/yshalsager/grayjay-plugins/master/plugins/archiveorg/ArchiveOrgConfig.json`
-- `https://raw.githubusercontent.com/yshalsager/grayjay-plugins/master/plugins/mixlr/MixlrConfig.json`
-- `https://raw.githubusercontent.com/yshalsager/grayjay-plugins/master/plugins/albadr/AlBadrConfig.json`
+| Plugin              | Source                                                 | Config                                                                                                                                |
+| ------------------- | ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------- |
+| MP3Quran            | [mp3quran.net](https://mp3quran.net)                   | [Install](https://raw.githubusercontent.com/yshalsager/grayjay-plugins/master/plugins/mp3quran/Mp3QuranConfig.json)                   |
+| tvQuran             | [tvquran.com](https://tvquran.com)                     | [Install](https://raw.githubusercontent.com/yshalsager/grayjay-plugins/master/plugins/tvquran/TvQuranConfig.json)                     |
+| Archive.org         | [archive.org](https://archive.org)                     | [Install](https://raw.githubusercontent.com/yshalsager/grayjay-plugins/master/plugins/archiveorg/ArchiveOrgConfig.json)               |
+| Mixlr               | [mixlr.com](https://mixlr.com)                         | [Install](https://raw.githubusercontent.com/yshalsager/grayjay-plugins/master/plugins/mixlr/MixlrConfig.json)                         |
+| AlBadr              | [al-badr.net](https://www.al-badr.net)                 | [Install](https://raw.githubusercontent.com/yshalsager/grayjay-plugins/master/plugins/albadr/AlBadrConfig.json)                       |
+| Quran.com           | [quran.com](https://quran.com)                         | [Install](https://raw.githubusercontent.com/yshalsager/grayjay-plugins/master/plugins/qurancom/QuranComConfig.json)                   |
+| Midad               | [midad.com](https://midad.com)                         | [Install](https://raw.githubusercontent.com/yshalsager/grayjay-plugins/master/plugins/midad/MidadConfig.json)                         |
+| QuranicAudio        | [quranicaudio.com](https://quranicaudio.com)           | [Install](https://raw.githubusercontent.com/yshalsager/grayjay-plugins/master/plugins/quranicaudio/QuranicAudioConfig.json)           |
+| BinBaz              | [binbaz.org.sa](https://binbaz.org.sa)                 | [Install](https://raw.githubusercontent.com/yshalsager/grayjay-plugins/master/plugins/binbaz/BinBazConfig.json)                       |
+| Tilawat Al Haramain | [tilawatalharamain.com](https://tilawatalharamain.com) | [Install](https://raw.githubusercontent.com/yshalsager/grayjay-plugins/master/plugins/tilawatalharamain/TilawatAlHaramainConfig.json) |
+| Jeman               | [j-eman.net](https://j-eman.net)                       | [Install](https://raw.githubusercontent.com/yshalsager/grayjay-plugins/master/plugins/jeman/JemanConfig.json)                         |
+| Saleh Al Sheikh     | [saleh.af.org.sa](https://saleh.af.org.sa)             | [Install](https://raw.githubusercontent.com/yshalsager/grayjay-plugins/master/plugins/saleh-af/SalehAfConfig.json)                    |
+| DrosQ8              | [drosq8.com](https://www.drosq8.com)                   | [Install](https://raw.githubusercontent.com/yshalsager/grayjay-plugins/master/plugins/drosq8/DrosQ8Config.json)                       |
+| DrosUAE             | [drosuae.com](https://drosuae.com)                     | [Install](https://raw.githubusercontent.com/yshalsager/grayjay-plugins/master/plugins/drosuae/DrosUAEConfig.json)                     |
+| AlQasim             | [a-alqasim.com](https://a-alqasim.com)                 | [Install](https://raw.githubusercontent.com/yshalsager/grayjay-plugins/master/plugins/alqasim/AlQasimConfig.json)                     |
+| BinOthaimeen        | [binothaimeen.net](https://binothaimeen.net)           | [Install](https://raw.githubusercontent.com/yshalsager/grayjay-plugins/master/plugins/binothaimeen/BinOthaimeenConfig.json)           |
+| Shkhudheir          | [shkhudheir.com](https://shkhudheir.com)               | [Install](https://raw.githubusercontent.com/yshalsager/grayjay-plugins/master/plugins/shkhudheir/ShkhudheirConfig.json)               |
+| AlFiqh              | [alfiqh.net](https://alfiqh.net)                       | [Install](https://raw.githubusercontent.com/yshalsager/grayjay-plugins/master/plugins/alfiqh/AlFiqhConfig.json)                       |
+| Alukah              | [alukah.net](https://www.alukah.net)                   | [Install](https://raw.githubusercontent.com/yshalsager/grayjay-plugins/master/plugins/alukah/AlukahConfig.json)                       |
+| Baheth              | [baheth.ieasybooks.com](https://baheth.ieasybooks.com) | [Install](https://raw.githubusercontent.com/yshalsager/grayjay-plugins/master/plugins/baheth/BahethConfig.json)                       |
+| IslamHouse          | [islamhouse.com](https://islamhouse.com)               | [Install](https://raw.githubusercontent.com/yshalsager/grayjay-plugins/master/plugins/islamhouse/IslamHouseConfig.json)               |
+| IslamWeb Audio      | [audio.islamweb.net](https://audio.islamweb.net)       | [Install](https://raw.githubusercontent.com/yshalsager/grayjay-plugins/master/plugins/islamweb-audio/IslamWebAudioConfig.json)        |
+| Sunnah Wadeha       | [sunnahwadeha.com](https://sunnahwadeha.com)           | [Install](https://raw.githubusercontent.com/yshalsager/grayjay-plugins/master/plugins/sunnahwadeha/SunnahWadehaConfig.json)           |
 
 ## Playlist Support
 
@@ -38,6 +38,11 @@ Install URLs need to point at hosted raw config files after publishing this repo
 - Archive.org exposes items as playlists, with each playable audio/video file represented as a playlist entry. It does not provide a home feed; use search to discover items.
 - Mixlr is live-only in v1; it intentionally does not expose playlists until recordings or collections are implemented as concrete playable lists.
 - AlBadr exposes each `/sub/{id}` lesson series as a playlist, category channels expose their series through channel playlists, and the site live page is represented as nested Mixlr content.
+- Quran.com exposes each reciter as a timed full-surah playlist containing that reciter's surahs. Older ayah-style Quran.com URLs are accepted for compatibility but resolve to the full surah item.
+
+## Quran Playback Granularity
+
+Quran playback plugins should expose surahs as the playable content unit, not individual ayahs. MP3Quran, Quran.com, and QuranicAudio provide full-surah media and are suitable for normal playback. Verse-by-verse-only sources such as EveryAyah and AlQuran.cloud are not active install targets because their public APIs do not provide continuous surah audio without client-side concatenation/transcoding.
 
 ## MP3Quran Ayah Text
 
@@ -78,13 +83,7 @@ Use Grayjay's Android DevServer while serving this repository from your computer
 
 5. Load a plugin using your computer LAN IP, not `localhost`:
 
-   ```text
-   http://COMPUTER_IP:3000/plugins/mp3quran/Mp3QuranConfig.json
-   http://COMPUTER_IP:3000/plugins/tvquran/TvQuranConfig.json
-   http://COMPUTER_IP:3000/plugins/archiveorg/ArchiveOrgConfig.json
-   http://COMPUTER_IP:3000/plugins/mixlr/MixlrConfig.json
-   http://COMPUTER_IP:3000/plugins/albadr/AlBadrConfig.json
-   ```
+   Replace the raw GitHub origin in any config link from the [active plugin table](#active-plugins) with `http://COMPUTER_IP:3000`.
 
 6. In the DevServer UI:
    - Click `Load Plugin` to test individual methods.
@@ -208,13 +207,7 @@ Use Grayjay Desktop's Developer Portal while serving this repository from your c
 
 5. Load a plugin using the local config URL:
 
-   ```text
-   http://127.0.0.1:3000/plugins/mp3quran/Mp3QuranConfig.json
-   http://127.0.0.1:3000/plugins/tvquran/TvQuranConfig.json
-   http://127.0.0.1:3000/plugins/archiveorg/ArchiveOrgConfig.json
-   http://127.0.0.1:3000/plugins/mixlr/MixlrConfig.json
-   http://127.0.0.1:3000/plugins/albadr/AlBadrConfig.json
-   ```
+   Replace the raw GitHub origin in any config link from the [active plugin table](#active-plugins) with `http://127.0.0.1:3000`.
 
 6. In the Developer Portal:
    - Click `Load Plugin` to test individual methods.
@@ -392,7 +385,7 @@ pnpm run sign -- --plugin all --key ~/.ssh/ysh --yes --no-input
 pnpm run sign-bump -- --plugin all --message "Release notes" --key ~/.ssh/ysh --yes --no-input
 ```
 
-Use `--dry-run` to preview without writing files. `--plugin` accepts `mp3quran`, `tvquran`, `archiveorg`, `mixlr`, `albadr`, or `all`, and can be repeated or comma-separated.
+Use `--dry-run` to preview without writing files. `--plugin` accepts any registry value from the [active plugin table](#active-plugins), or `all`, and can be repeated or comma-separated.
 
 ## Sources
 
@@ -402,6 +395,10 @@ Use `--dry-run` to preview without writing files. `--plugin` accepts `mp3quran`,
 - [tvQuran website](https://tvquran.com)
 - [Quran text repository](https://github.com/fawazahmed0/quran-api)
 - [Quran text CDN pattern](https://cdn.jsdelivr.net/gh/fawazahmed0/quran-api@1/editions/ara-quransimple/{surah}.min.json)
+- [Quran.com](https://quran.com)
+- [Quran.com Content API docs](https://api-docs.quran.com/docs/category/content-apis-4.0.0/)
+- [Quran.com recitations API docs](https://api-docs.quran.foundation/docs/content_apis_versioned/4.0.0/recitations/)
+- [Quran.com chapter-reciter audio docs](https://api-docs.quran.com/docs/content_apis_versioned/4.0.0/chapter-reciter-audio-file/)
 - [Internet Archive metadata API](https://archive.org/developers/md-read.html)
 - [Internet Archive files, formats, and derivatives guide](https://help.archive.org/help/files-formats-and-derivatives-a-basic-guide/)
 - [Internet Archive search API](https://doc-tools.readthedocs.io/en/ia-test-gsod/item-search-apis.html)
