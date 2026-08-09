@@ -15,6 +15,7 @@ describe('plugin registry', () => {
       'midad',
       'quranicaudio',
       'everyayah',
+      'alquran-cloud',
       'binbaz',
       'tilawatalharamain',
       'jeman',

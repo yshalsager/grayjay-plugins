@@ -45,6 +45,11 @@
     "stem": "EveryAyah"
   },
   {
+    "value": "alquran-cloud",
+    "label": "AlQuran.cloud",
+    "stem": "AlQuranCloud"
+  },
+  {
     "value": "binbaz",
     "label": "BinBaz",
     "stem": "BinBaz"

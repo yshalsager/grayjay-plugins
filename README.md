@@ -15,6 +15,7 @@
 | Midad               | [midad.com](https://midad.com)                         | [Install](https://raw.githubusercontent.com/yshalsager/grayjay-plugins/master/plugins/midad/MidadConfig.json)                         |
 | QuranicAudio        | [quranicaudio.com](https://quranicaudio.com)           | [Install](https://raw.githubusercontent.com/yshalsager/grayjay-plugins/master/plugins/quranicaudio/QuranicAudioConfig.json)           |
 | EveryAyah           | [everyayah.com](https://everyayah.com)                 | [Install](https://raw.githubusercontent.com/yshalsager/grayjay-plugins/master/plugins/everyayah/EveryAyahConfig.json)                 |
+| AlQuran.cloud       | [alquran.cloud](https://alquran.cloud)                 | [Install](https://raw.githubusercontent.com/yshalsager/grayjay-plugins/master/plugins/alquran-cloud/AlQuranCloudConfig.json)          |
 | BinBaz              | [binbaz.org.sa](https://binbaz.org.sa)                 | [Install](https://raw.githubusercontent.com/yshalsager/grayjay-plugins/master/plugins/binbaz/BinBazConfig.json)                       |
 | Tilawat Al Haramain | [tilawatalharamain.com](https://tilawatalharamain.com) | [Install](https://raw.githubusercontent.com/yshalsager/grayjay-plugins/master/plugins/tilawatalharamain/TilawatAlHaramainConfig.json) |
 | Jeman               | [j-eman.net](https://j-eman.net)                       | [Install](https://raw.githubusercontent.com/yshalsager/grayjay-plugins/master/plugins/jeman/JemanConfig.json)                         |
@@ -43,7 +44,7 @@
 
 ## Quran Playback Granularity
 
-MP3Quran, Quran.com, and QuranicAudio expose continuous full-surah media. EveryAyah exposes each ayah as a playable item and groups those items into reciter surah playlists; it does not synthesize continuous surah files.
+MP3Quran, Quran.com, and QuranicAudio expose continuous full-surah media. EveryAyah and AlQuran.cloud expose each ayah as a playable item and group those items into reciter/edition surah playlists; they do not synthesize continuous surah files.
 
 ## MP3Quran Ayah Text
 

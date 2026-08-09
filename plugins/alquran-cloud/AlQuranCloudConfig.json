@@ -1,0 +1,47 @@
+{
+  "name": "AlQuran.cloud",
+  "description": "AlQuran.cloud multilingual ayah audio editions with edition channels and surah playlists.",
+  "author": "yshalsager",
+  "authorUrl": "https://github.com/yshalsager",
+  "platformUrl": "https://alquran.cloud",
+  "sourceUrl": "https://raw.githubusercontent.com/yshalsager/grayjay-plugins/master/plugins/alquran-cloud/AlQuranCloudConfig.json",
+  "repositoryUrl": "https://github.com/yshalsager/grayjay-plugins",
+  "scriptUrl": "./AlQuranCloudScript.js",
+  "version": 1,
+  "iconUrl": "https://alquran.cloud/favicon.ico",
+  "id": "211fb05d-4cf8-432d-a3ac-251714f37579",
+  "packages": ["Http"],
+  "allowEval": false,
+  "allowUrls": ["alquran.cloud", "api.alquran.cloud", "cdn.islamic.network"],
+  "settings": [
+    {
+      "variable": "language",
+      "name": "Catalog Language",
+      "description": "Default language shown on Home and broad browsing.",
+      "type": "Dropdown",
+      "default": "0",
+      "options": ["All languages", "Arabic", "English", "Urdu", "French", "Russian", "Chinese", "Persian"]
+    },
+    {
+      "variable": "editionType",
+      "name": "Edition Type",
+      "description": "Default audio edition type shown on Home and broad browsing.",
+      "type": "Dropdown",
+      "default": "0",
+      "options": ["All types", "Verse by verse", "Translation"]
+    },
+    {
+      "variable": "defaultEdition",
+      "name": "Default Edition",
+      "description": "Edition used first on Home and direct API URL fallbacks.",
+      "type": "Dropdown",
+      "default": "0",
+      "options": ["Catalog first edition", "Mishary Alafasy", "Abdurrahmaan As-Sudais", "English Walk"]
+    }
+  ],
+  "changelog": {
+    "1": [
+      "Initial AlQuran.cloud ayah audio, multilingual editions, channels, surah playlists, direct CDN URLs, filters, settings, and recommendations."
+    ]
+  }
+}
