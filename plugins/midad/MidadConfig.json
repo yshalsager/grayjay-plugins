@@ -1,0 +1,20 @@
+{
+  "name": "Midad",
+  "description": "Midad lessons, recitations, audiobooks, videos, YouTube entries, scholars, and mushaf playlists.",
+  "author": "yshalsager",
+  "authorUrl": "https://github.com/yshalsager",
+  "platformUrl": "https://midad.com",
+  "sourceUrl": "https://raw.githubusercontent.com/yshalsager/grayjay-plugins/master/plugins/midad/MidadConfig.json",
+  "repositoryUrl": "https://github.com/yshalsager/grayjay-plugins",
+  "scriptUrl": "./MidadScript.js",
+  "version": 1,
+  "iconUrl": "https://midad.com/favicon.ico",
+  "id": "d75401b7-7811-42d9-a483-a7159fb1dafc",
+  "packages": ["Http"],
+  "allowEval": false,
+  "allowUrls": ["midad.com", "www.midad.com", "fra1.digitaloceanspaces.com", "www.youtube.com", "youtube.com", "youtu.be", "i.ytimg.com"],
+  "settings": [],
+  "changelog": {
+    "1": ["Initial Midad source implementation."]
+  }
+}

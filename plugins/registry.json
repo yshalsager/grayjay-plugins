@@ -28,5 +28,10 @@
     "value": "qurancom",
     "label": "Quran.com",
     "stem": "QuranCom"
+  },
+  {
+    "value": "midad",
+    "label": "Midad",
+    "stem": "Midad"
   }
 ]
