@@ -1,0 +1,25 @@
+{
+  "name": "IslamWeb Audio",
+  "description": "IslamWeb Quran and lecture audio.",
+  "author": "yshalsager",
+  "authorUrl": "https://github.com/yshalsager",
+  "platformUrl": "https://audio.islamweb.net",
+  "sourceUrl": "https://raw.githubusercontent.com/yshalsager/grayjay-plugins/master/plugins/islamweb-audio/IslamWebAudioConfig.json",
+  "repositoryUrl": "https://github.com/yshalsager/grayjay-plugins",
+  "scriptUrl": "./IslamWebAudioScript.js",
+  "version": 1,
+  "iconUrl": "https://audio.islamweb.net/favicon.ico",
+  "id": "a2f7f9d9-bc29-46e3-89bd-5bc0eac73074",
+  "packages": ["Http"],
+  "allowEval": false,
+  "allowUrls": [
+    "audio.islamweb.net",
+    "www.islamweb.net",
+    "quran-fjamfcbbeybteyat.z01.azurefd.net",
+    "lecture-h9afefaff7fjc2h3.z01.azurefd.net"
+  ],
+  "settings": [],
+  "changelog": {
+    "1": ["Initial IslamWeb Audio Quran reader channels, scholar channels, lecture series playlists, AJAX search, and MP3 playback."]
+  }
+}

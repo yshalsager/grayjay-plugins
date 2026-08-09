@@ -35,6 +35,7 @@
     "test:live:alukah": "null",
     "test:live:baheth": "null",
     "test:live:islamhouse": "null",
+    "test:live:islamweb-audio": "null",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint": "eslint .",
