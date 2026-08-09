@@ -11,7 +11,8 @@ const grayjay_platform_globals = readonly([
   'PlatformPlaylist',
   'PlatformPlaylistDetails',
   'PlatformVideo',
-  'PlatformVideoDetails'
+  'PlatformVideoDetails',
+  'PlatformWebDetails'
 ])
 
 const grayjay_media_globals = readonly([
@@ -62,7 +63,7 @@ export default [
       }
     },
     rules: {
-      'no-unused-vars': ['warn', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }]
+      'no-unused-vars': ['warn', { argsIgnorePattern: '^_', varsIgnorePattern: '^_', caughtErrorsIgnorePattern: '^_' }]
     }
   },
   {
@@ -71,7 +72,7 @@ export default [
       globals: grayjay_plugin_globals
     },
     rules: {
-      'no-unused-vars': ['warn', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }]
+      'no-unused-vars': ['warn', { argsIgnorePattern: '^_', varsIgnorePattern: '^_', caughtErrorsIgnorePattern: '^_' }]
     }
   },
   {
@@ -80,7 +81,7 @@ export default [
       globals: grayjay_platform_globals
     },
     rules: {
-      'no-unused-vars': ['warn', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }]
+      'no-unused-vars': ['warn', { argsIgnorePattern: '^_', varsIgnorePattern: '^_', caughtErrorsIgnorePattern: '^_' }]
     }
   },
   {
@@ -89,7 +90,7 @@ export default [
       globals: grayjay_media_globals
     },
     rules: {
-      'no-unused-vars': ['warn', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }]
+      'no-unused-vars': ['warn', { argsIgnorePattern: '^_', varsIgnorePattern: '^_', caughtErrorsIgnorePattern: '^_' }]
     }
   },
   {
