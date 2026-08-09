@@ -31,7 +31,7 @@ const endpoint_paths = {
   }
 }
 
-async function get_json(url, options = {}) {
+export async function get_json(url, options = {}) {
   const response = await fetch(url, options)
   const text = await response.text()
   if (!response.ok) {
@@ -41,7 +41,7 @@ async function get_json(url, options = {}) {
   return text ? JSON.parse(text) : null
 }
 
-async function post_json(url, body) {
+export async function post_json(url, body) {
   const response = await fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -74,7 +74,7 @@ async function desktop_server_url() {
   return `http://127.0.0.1:${port}`
 }
 
-async function server_url(target, value) {
+export async function server_url(target, value) {
   if (value) return value.replace(/\/$/, '')
   if (target === 'desktop') return desktop_server_url()
   return 'http://127.0.0.1:11337'
@@ -174,20 +174,24 @@ async function remote_test(values) {
     console.error(`Updated ${plugins[0].label} test plugin on ${base}`)
   }
 
-  const result = await get_json(`${endpoint(target, 'remote_test', base)}?method=${encodeURIComponent(values.method)}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(parameters)
-  })
+  const result = await call_remote_test(base, values.method, parameters)
   console.log(JSON.stringify(result, null, 2))
 }
 
-async function update_test_plugin(target, base, plugin, devUrl) {
+export async function update_test_plugin(target, base, plugin, devUrl) {
   if (target !== 'android') {
     throw new Error('updateTestPlugin is only available on Android DevServer in the inspected Grayjay sources')
   }
 
   await post_json(endpoint(target, 'update_test', base), await dev_config(plugin, devUrl.replace(/\/$/, '')))
+}
+
+export async function call_remote_test(base, method, parameters) {
+  return get_json(`${endpoint('android', 'remote_test', base)}?method=${encodeURIComponent(method)}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(parameters)
+  })
 }
 
 async function load(values) {
@@ -212,7 +216,7 @@ async function load(values) {
   }
 }
 
-async function dev_config(plugin, dev_base) {
+export async function dev_config(plugin, dev_base) {
   const config = JSON.parse(await readFile(plugin.config_path, 'utf8'))
   const source_url = `${dev_base}/${plugin.config_path}`
   const script_url = new URL(config.scriptUrl, source_url)

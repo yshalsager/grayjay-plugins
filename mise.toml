@@ -92,6 +92,40 @@ run = "node scripts/load-grayjay-dev-plugin.mjs"
 description = "Call Grayjay developer API helper"
 run = "pnpm run grayjay:dev-api --"
 
+[tasks.grayjay-avd-install]
+description = "Install Grayjay APK on a running Android emulator"
+run = '''
+serial="${ANDROID_SERIAL:-emulator-5554}"
+apk="${GRAYJAY_APK:-tmp/app-arm64-v8a-release.apk}"
+adb -s "$serial" install -r -d "$apk"
+'''
+
+[tasks.grayjay-avd-launch]
+description = "Launch Grayjay on a running Android emulator"
+run = '''
+serial="${ANDROID_SERIAL:-emulator-5554}"
+adb -s "$serial" shell monkey -p com.futo.platformplayer -c android.intent.category.LAUNCHER 1
+'''
+
+[tasks.grayjay-avd-forward]
+description = "Forward host port 11337 to Grayjay DevServer on a running Android emulator"
+run = '''
+serial="${ANDROID_SERIAL:-emulator-5554}"
+adb -s "$serial" get-state >/dev/null
+adb -s "$serial" forward tcp:11337 tcp:11337
+adb -s "$serial" forward --list | grep -F "$serial tcp:11337 tcp:11337"
+printf "Grayjay Android DevServer:\nhttp://127.0.0.1:11337/dev\n"
+open "http://127.0.0.1:11337/dev"
+'''
+
+[tasks.grayjay-avd-smoke]
+description = "Run Android remote smoke tests against Grayjay on an emulator"
+run = '''
+pnpm run grayjay:android-smoke -- \
+  --server-url "${GRAYJAY_SERVER_URL:-http://127.0.0.1:11337}" \
+  --dev-url "${GRAYJAY_DEV_URL:-http://10.0.2.2:3000}"
+'''
+
 [tasks.bump]
 description = "Bump plugin config versions"
 run = "pnpm run bump"

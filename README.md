@@ -47,7 +47,7 @@ Android clients that support plugin subtitle sources can use the generated WebVT
 
 ## Development
 
-### Android
+### Android Phone
 
 Use Grayjay's Android DevServer while serving this repository from your computer on the same network.
 
@@ -65,7 +65,7 @@ Use Grayjay's Android DevServer while serving this repository from your computer
 
    ```sh
    cd <repo>
-   pnpm run dev
+   mise run dev
    ```
 
    The dev server rebuilds plugin scripts when `src/**` or `plugins/registry.json` changes, then serves the generated files from `plugins/**`.
@@ -101,6 +101,66 @@ pnpm run grayjay:dev-api -- logs --server-url http://PHONE_IP:11337 --follow
 pnpm run grayjay:dev-api -- http --server-url http://PHONE_IP:11337
 pnpm run grayjay:dev-api -- remote-test --server-url http://PHONE_IP:11337 --method getContentDetails --args '["CONTENT_URL"]'
 pnpm run grayjay:dev-api -- load --plugin mp3quran --server-url http://PHONE_IP:11337 --dev-url http://COMPUTER_IP:3000 --follow
+```
+
+Run the Android smoke suite for the released Quran plugins with:
+
+```sh
+pnpm run grayjay:android-smoke -- --server-url http://PHONE_IP:11337 --dev-url http://COMPUTER_IP:3000
+```
+
+This loads MP3Quran, tvQuran, AlBadr, and Archive.org as Android test plugins and verifies search capabilities, home/search feeds, filters, content details, chapters where supported, channels, channel search, and URL recognition. Android `remoteTest` currently cannot serialize playlist detail objects because Grayjay's Gson path sees duplicate inherited `contentType` fields on playlist classes, so playlist checks assert URL recognition plus that known platform serializer limitation for `getPlaylist` and `searchPlaylists`.
+
+### Android Emulator / AVD
+
+For a running AVD, install the ABI-matching Grayjay APK, start Grayjay once, enable developer mode in the app, then start Grayjay's DevServer from `Developer Settings`.
+
+The default emulator serial used by the mise tasks is `emulator-5554`. Override it with `ANDROID_SERIAL` when needed:
+
+```sh
+ANDROID_SERIAL=emulator-5556 mise run grayjay-avd-forward
+```
+
+Install and launch Grayjay:
+
+```sh
+mise run grayjay-avd-install
+mise run grayjay-avd-launch
+```
+
+`grayjay-avd-install` defaults to `tmp/app-arm64-v8a-release.apk`. Override the APK path with:
+
+```sh
+GRAYJAY_APK=tmp/app-universal-release.apk mise run grayjay-avd-install
+```
+
+Forward the emulator DevServer port to the host:
+
+```sh
+mise run grayjay-avd-forward
+```
+
+Serve plugin configs/scripts from the host:
+
+```sh
+mise run dev
+```
+
+Run the Android smoke suite against the AVD:
+
+```sh
+mise run grayjay-avd-smoke
+```
+
+The AVD smoke task uses:
+
+- `--server-url http://127.0.0.1:11337`, because `adb forward` exposes Grayjay's emulator DevServer on the host loopback.
+- `--dev-url http://10.0.2.2:3000`, because Android Emulator reaches the host machine through `10.0.2.2`.
+
+For a non-default dev server or forwarded port:
+
+```sh
+GRAYJAY_SERVER_URL=http://127.0.0.1:11338 GRAYJAY_DEV_URL=http://10.0.2.2:3001 mise run grayjay-avd-smoke
 ```
 
 To expose optional plugin smoke tests in Grayjay's `TestSystem` tab, build with:
