@@ -299,7 +299,8 @@
 		"MPEG4",
 		"h.264",
 		"512Kb MPEG4",
-		"Ogg Video"
+		"Ogg Video",
+		"WebM"
 	];
 	var SKIPPED_FORMATS = [
 		"Metadata",
@@ -494,6 +495,7 @@
 			["fl[]", "title"],
 			["fl[]", "creator"],
 			["fl[]", "mediatype"],
+			["fl[]", "format"],
 			["fl[]", "downloads"],
 			["fl[]", "publicdate"],
 			["fl[]", "date"]
@@ -561,7 +563,7 @@
 		return score;
 	}
 	function itemsToVideos(items, media) {
-		return (items ?? []).map((summary) => summaryToVideo(summary, media)).filter(Boolean);
+		return (items ?? []).filter((summary) => hasPlayableSummaryFormat(summary, media)).map((summary) => summaryToVideo(summary, media)).filter(Boolean);
 	}
 	function itemsToPlaylists(items, media) {
 		const playlists = [];
@@ -624,6 +626,16 @@
 		if (isSkippedFile(file)) return false;
 		const kind = fileKind(file);
 		return kind && (media === MEDIA.BOTH || media === kind);
+	}
+	function hasPlayableSummaryFormat(summary, media = MEDIA.BOTH) {
+		const formats = Array.isArray(summary?.format) ? summary.format : summary?.format ? [summary.format] : [];
+		if (!formats.length) return true;
+		const text = formats.join(" ");
+		const hasAudio = PLAYABLE_AUDIO_FORMATS.some((value) => text.indexOf(value) >= 0);
+		const hasVideo = PLAYABLE_VIDEO_FORMATS.some((value) => text.indexOf(value) >= 0);
+		if (media === MEDIA.AUDIO) return hasAudio;
+		if (media === MEDIA.VIDEO) return hasVideo;
+		return hasAudio || hasVideo;
 	}
 	function isSkippedFile(file) {
 		const name = String(file.name ?? "");

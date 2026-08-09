@@ -30,7 +30,7 @@ const DEFAULT_HEADERS = {
   Accept: 'application/json'
 }
 const PLAYABLE_AUDIO_FORMATS = ['VBR MP3', 'MP3', '64Kbps MP3', 'Ogg Vorbis', 'FLAC']
-const PLAYABLE_VIDEO_FORMATS = ['MPEG4', 'h.264', '512Kb MPEG4', 'Ogg Video']
+const PLAYABLE_VIDEO_FORMATS = ['MPEG4', 'h.264', '512Kb MPEG4', 'Ogg Video', 'WebM']
 const SKIPPED_FORMATS = ['Metadata', 'Item Tile', 'Archive BitTorrent', 'JPEG Thumb', 'PNG', 'JSON', 'Text', 'PDF', 'Abbyy GZ']
 const REGEX = {
   CREATOR: /^archiveorg:\/\/creator\/(.+)$/,
@@ -268,6 +268,7 @@ function searchArchive(query, media, order, pageNumber, creator = null) {
     ['fl[]', 'title'],
     ['fl[]', 'creator'],
     ['fl[]', 'mediatype'],
+    ['fl[]', 'format'],
     ['fl[]', 'downloads'],
     ['fl[]', 'publicdate'],
     ['fl[]', 'date']
@@ -368,7 +369,10 @@ function searchScore(item, query, terms) {
 }
 
 function itemsToVideos(items, media) {
-  return (items ?? []).map((summary) => summaryToVideo(summary, media)).filter(Boolean)
+  return (items ?? [])
+    .filter((summary) => hasPlayableSummaryFormat(summary, media))
+    .map((summary) => summaryToVideo(summary, media))
+    .filter(Boolean)
 }
 
 function itemsToPlaylists(items, media) {
@@ -482,6 +486,18 @@ function isPlayableFile(file, media = MEDIA.BOTH) {
 
   const kind = fileKind(file)
   return kind && (media === MEDIA.BOTH || media === kind)
+}
+
+function hasPlayableSummaryFormat(summary, media = MEDIA.BOTH) {
+  const formats = Array.isArray(summary?.format) ? summary.format : summary?.format ? [summary.format] : []
+  if (!formats.length) return true
+
+  const text = formats.join(' ')
+  const hasAudio = PLAYABLE_AUDIO_FORMATS.some((value) => text.indexOf(value) >= 0)
+  const hasVideo = PLAYABLE_VIDEO_FORMATS.some((value) => text.indexOf(value) >= 0)
+  if (media === MEDIA.AUDIO) return hasAudio
+  if (media === MEDIA.VIDEO) return hasVideo
+  return hasAudio || hasVideo
 }
 
 function isSkippedFile(file) {

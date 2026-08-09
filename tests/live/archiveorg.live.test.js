@@ -86,6 +86,15 @@ test('archiveorg public Quran video details prefer MP4 video when available', ()
   expect(videoSources[0].url).toMatch(/^https:\/\/archive\.org\/download\/.*\.mp4$/)
 })
 
+test('archiveorg search keeps WebM-only Quran videos playable', () => {
+  const results = assert_pager(source.search('53320240325', null, null, { content: 'video' }), 'WebM video search')
+  const item = results.find((result) => result.url === 'archiveorg://item/53320240325/video')
+  expect(item).toBeTruthy()
+
+  const details = assert_details(source.getContentDetails(item.url), 'WebM video details')
+  expect(assert_has_media(details, 'WebM video details')[0]).toMatchObject({ container: 'video/webm', codec: 'vp9' })
+})
+
 test('archiveorg public Quran MP3-only details expose the original MP3 source', () => {
   const details = assert_details(
     source.getContentDetails('https://archive.org/details/21_20201019_20201019'),
