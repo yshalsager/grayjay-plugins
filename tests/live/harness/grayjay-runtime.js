@@ -47,6 +47,7 @@ class ObjectModel {
 class PlatformVideo extends ObjectModel {}
 class PlatformVideoDetails extends ObjectModel {}
 class PlatformNestedMediaContent extends ObjectModel {}
+class PlatformWebDetails extends ObjectModel {}
 class PlatformChannel extends ObjectModel {}
 class PlatformPlaylist extends ObjectModel {}
 class PlatformPlaylistDetails extends ObjectModel {}
@@ -84,20 +85,23 @@ class PlaylistPager extends Pager {}
 
 class ScriptException extends Error {}
 
-const Type = {
-  Feed: {
-    Mixed: 'Mixed'
-  },
-  Order: {
-    Chronological: 'Chronological',
-    Popularity: 'Popularity'
-  },
-  Chapter: {
-    NORMAL: 'NORMAL'
+function runtime_type() {
+  return {
+    Feed: { Mixed: 'Mixed' },
+    Order: { Chronological: 'Chronological' },
+    Chapter: { NORMAL: 'NORMAL' }
   }
 }
 
 const curl_get = (url, headers = {}) => {
+  return curl_request('GET', url, '', headers)
+}
+
+const curl_post = (url, body = '', headers = {}) => {
+  return curl_request('POST', url, body, headers)
+}
+
+const curl_request = (method, url, body = '', headers = {}) => {
   const marker = '\n__GRAYJAY_LIVE_TEST_HTTP_CODE__'
   const args = [
     '-L',
@@ -110,8 +114,16 @@ const curl_get = (url, headers = {}) => {
     'grayjay-live-tests'
   ]
 
+  if (method !== 'GET') {
+    args.push('-X', method)
+  }
+
   for (const [name, value] of Object.entries(headers ?? {})) {
     args.push('-H', `${name}: ${value}`)
+  }
+
+  if (method !== 'GET') {
+    args.push('--data-raw', body)
   }
 
   args.push(url)
@@ -153,6 +165,7 @@ export async function load_plugin(name, settings = {}) {
   const script = await readFile(script_path, 'utf8')
   const source = {}
   const logs = []
+  const Type = runtime_type()
   const context = {
     AudioUrlSource,
     ChannelPager,
@@ -166,6 +179,7 @@ export async function load_plugin(name, settings = {}) {
     PlatformPlaylistDetails,
     PlatformVideo,
     PlatformVideoDetails,
+    PlatformWebDetails,
     PlaylistPager,
     ScriptException,
     Thumbnail,
@@ -180,7 +194,8 @@ export async function load_plugin(name, settings = {}) {
     },
     console,
     http: {
-      GET: curl_get
+      GET: curl_get,
+      POST: curl_post
     },
     log: (message) => logs.push(String(message)),
     source
