@@ -1,0 +1,20 @@
+{
+  "name": "Saleh Al Sheikh",
+  "description": "Saleh Al Sheikh Grayjay plugin.",
+  "author": "yshalsager",
+  "authorUrl": "https://github.com/yshalsager",
+  "platformUrl": "https://saleh.af.org.sa",
+  "sourceUrl": "https://raw.githubusercontent.com/yshalsager/grayjay-plugins/master/plugins/saleh-af/SalehAfConfig.json",
+  "repositoryUrl": "https://github.com/yshalsager/grayjay-plugins",
+  "scriptUrl": "./SalehAfScript.js",
+  "version": 1,
+  "iconUrl": "https://saleh.af.org.sa/favicon.ico",
+  "id": "9e22df92-fdb3-4893-9cda-11cdbff4427e",
+  "packages": ["Http"],
+  "allowEval": false,
+  "allowUrls": ["saleh.af.org.sa"],
+  "settings": [],
+  "changelog": {
+    "1": ["Initial Saleh Al Sheikh audio plugin with fatwa, lecture, and khutbah sections."]
+  }
+}

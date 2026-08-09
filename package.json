@@ -25,6 +25,7 @@
     "test:live:binbaz": "null",
     "test:live:tilawatalharamain": "null",
     "test:live:jeman": "null",
+    "test:live:saleh-af": "null",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint": "eslint .",
