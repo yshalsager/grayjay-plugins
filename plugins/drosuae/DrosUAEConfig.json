@@ -1,0 +1,20 @@
+{
+  "name": "DrosUAE",
+  "description": "Audio lessons and recitations from DrosUAE.",
+  "author": "yshalsager",
+  "authorUrl": "https://github.com/yshalsager",
+  "platformUrl": "https://drosuae.com",
+  "sourceUrl": "https://raw.githubusercontent.com/yshalsager/grayjay-plugins/master/plugins/drosuae/DrosUAEConfig.json",
+  "repositoryUrl": "https://github.com/yshalsager/grayjay-plugins",
+  "scriptUrl": "./DrosUAEScript.js",
+  "version": 1,
+  "iconUrl": "https://drosuae.com/favicon.ico",
+  "id": "b21fd82c-abf0-4c5d-a90f-b6dc21b4698e",
+  "packages": ["Http"],
+  "allowEval": false,
+  "allowUrls": ["drosuae.com", "files.drosuae.com", "files.kalelm.com"],
+  "settings": [],
+  "changelog": {
+    "1": ["Initial DrosUAE audio search, section channels, playlists, and playback."]
+  }
+}
