@@ -1,0 +1,26 @@
+{
+  "name": "BinOthaimeen",
+  "description": "Audio lessons and fatwa library from Bin Othaimeen.",
+  "author": "yshalsager",
+  "authorUrl": "https://github.com/yshalsager",
+  "platformUrl": "https://binothaimeen.net",
+  "sourceUrl": "https://raw.githubusercontent.com/yshalsager/grayjay-plugins/master/plugins/binothaimeen/BinOthaimeenConfig.json",
+  "repositoryUrl": "https://github.com/yshalsager/grayjay-plugins",
+  "scriptUrl": "./BinOthaimeenScript.js",
+  "version": 1,
+  "iconUrl": "https://binothaimeen.net/favicon.ico",
+  "id": "75f6e06f-9a34-4645-8d83-ea81ed7f8c42",
+  "packages": ["Http"],
+  "allowEval": false,
+  "allowUrls": [
+    "binothaimeen.net",
+    "shekh.binothaimeen.net",
+    "shekhapi.binothaimeen.net",
+    "shekhcp.binothaimeen.net",
+    "sounds.binothaimeen.net"
+  ],
+  "settings": [],
+  "changelog": {
+    "1": ["Initial BinOthaimeen audio library search, channels, playlists, and playback."]
+  }
+}
