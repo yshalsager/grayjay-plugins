@@ -1,0 +1,20 @@
+{
+  "name": "AlFiqh",
+  "description": "Audio series and lessons from AlFiqh.",
+  "author": "yshalsager",
+  "authorUrl": "https://github.com/yshalsager",
+  "platformUrl": "https://alfiqh.net",
+  "sourceUrl": "https://raw.githubusercontent.com/yshalsager/grayjay-plugins/master/plugins/alfiqh/AlFiqhConfig.json",
+  "repositoryUrl": "https://github.com/yshalsager/grayjay-plugins",
+  "scriptUrl": "./AlFiqhScript.js",
+  "version": 1,
+  "iconUrl": "https://alfiqh.net/wp-content/uploads/2020/04/cropped-alfiqh.net_-1.jpg",
+  "id": "4ee0965b-301f-4b4f-8ab0-e448030e0e77",
+  "packages": ["Http"],
+  "allowEval": false,
+  "allowUrls": ["alfiqh.net", "www.alfiqh.net", "archive.org", ".archive.org", "ca.archive.org", ".ca.archive.org"],
+  "settings": [],
+  "changelog": {
+    "1": ["Initial AlFiqh audio tracks, post playlists, speaker/topic channels, search, and playback."]
+  }
+}
