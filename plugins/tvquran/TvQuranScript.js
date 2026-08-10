@@ -1700,8 +1700,8 @@
 	};
 	source.searchChannels = function(query) {
 		const q = normalize(query);
-		const categoryChannels = CATEGORIES.filter((category) => !q || normalize(categoryName(category)).indexOf(q) >= 0).map(categoryToChannel);
-		const videoChannels = VIDEO_CATEGORIES.filter((category) => !q || normalize(videoCategoryName(category)).indexOf(q) >= 0).map(videoCategoryToChannel);
+		const categoryChannels = CATEGORIES.filter((category) => !q || normalize(categoryName(category)).indexOf(q) >= 0).map((category) => categoryToChannel(category));
+		const videoChannels = VIDEO_CATEGORIES.filter((category) => !q || normalize(videoCategoryName(category)).indexOf(q) >= 0).map((category) => videoCategoryToChannel(category));
 		return new TvQuranChannelPager(query, 1, [...categoryChannels, ...videoChannels]);
 	};
 	source.searchPlaylists = function(query, type, order, filters) {
@@ -2285,7 +2285,7 @@
 	function tvQuranPlaylists(query, order, filters) {
 		const q = normalize(query);
 		const playlists = [];
-		if (contentAllowed(filters, "selections")) playlists.push(...CATEGORIES.filter((category) => categoryMatchesFilters(category, filters)).map(categoryToPlaylist));
+		if (contentAllowed(filters, "selections")) playlists.push(...CATEGORIES.filter((category) => categoryMatchesFilters(category, filters)).map((category) => categoryToPlaylist(category)));
 		if (contentAllowed(filters, "recitations")) playlists.push(...searchReciterCollectionPlaylists(query, filters));
 		return dedupePlaylists(playlists).filter((playlist) => playlistMatches(playlist, q));
 	}

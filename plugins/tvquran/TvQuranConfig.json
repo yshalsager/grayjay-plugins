@@ -7,10 +7,10 @@
   "sourceUrl": "https://raw.githubusercontent.com/yshalsager/grayjay-plugins/master/plugins/tvquran/TvQuranConfig.json",
   "repositoryUrl": "https://github.com/yshalsager/grayjay-plugins",
   "scriptUrl": "./TvQuranScript.js",
-  "version": 2,
+  "version": 3,
   "iconUrl": "./TvQuranIcon.png",
   "id": "a0fb03cb-937e-47a6-ad2a-dde53da9b1c9",
-  "scriptSignature": "FG1vhqx48qkoaRpZTSQSmmmP1YPS8E8wkkXMlHgFoD7kP9FAstWTF1rSQS0fTZA9f/q9I7ERceLFtAA389V1CVFxYMzLFM132o8SOwe2jzLfPMYVTqmFsrPxeKQ0U5oe2NFXS2U9IkLyvuYJ3wReJjbTkYvweG3bCwW8a5biTGllP0T9UaVBfufFxdBQd8Ysc/88OWyA0RBtqnaSJNaLZFbzx8QhENkv525G7LKD9by36VZwtODs2SGs36+vNmfBSxBDfXRXKJf5HqzP87KqtMxQpinQLZK5tB/UMa937zCmViDUWeRTfa5BzUA5Ng431uPWGYMQ4PEYgPy+buaths+jFoTLf3/5iqsFscGAodd6xOpXDGDVMFQUCSkCqerVmmUYUdGiUf82l9d7Pbd8UhhXEvweMwrRl6E2B9Mrlw2Y3reRdMePQA87kBi/8eLuZET27rzRJ4xztbYlKjiwbqB6JROy1Ci22+D+fUKSimIwEVC5oLxu12BF5JqpR/WNnZTHnBvWMSvKjJaCvG3UMoJuHSJ4RnBnmwwahqheR+SVDaLjuVGYjt9N+za4gIm9/FUqpXd1oOyNmuASStKfFZF+yfdknjbBigQI3rQPxMW3JI9Ne9HxpSyDSVgRP6Gy20vzMkBZ0LqWGgoacVLTK4Ob/CMSdSPFXAS48OQwQZ4=",
+  "scriptSignature": "E+peJdMhVaUJHfR+Um6wFhwbMdl5VTDANJ/gqL/KKqVrrMUuUkO0bp9bjpjLRuqijAXH7rRMn4JsSB/ptIM6tDtMkqiV+2DfBLef/iUhtJnpmv2Po2Ffxi8M0ZEeh6zxFEfHq/KdlCGb/djoIDFWJoIt3pmUKc+rZDqj8txdjZG29Z/XIXjfxYUOIZp9H1HPP/dQOzF5tI8CFRezcCeGP1JFkWFtXd7GbwWB8Q/WCixITFE3EZhEkF82SZCkhhe0+TFpAMijj4FoDD3Xf6SNoh6RhOhYBvFU/GMqh2Xb1iZUFxqNlfO04RYwh7SAdaVmg1lPSPAId429iUbmuEpLSQWjL95KBImFbR+zIr+v/VNbPETx/kLERHxdc5prnu16Xyq1Lw/DsC2wk+U7UtR98lZDG2re8WTSqJl/LCiiolOR5I6+cOgDgjhlibokc6hb910M6+F4PqsTkIb3TF0eVYgJDsGskeySUB3MnY2Lrna2TodDgJVa/7OL87zpVSBKkauECfjZDf1eZrkqY52samHCGeYnlc8ZzTb6FstMvvey3TRVu+F6dCsku2CtfFzgOj7x3md9Asl6xOU6QIBxssvi6QKaG693RavVQYwmTxWQPrbHQvOvaR8xq8Rk803UQ8Z8s2DC4pPshl98qlvHB5TlrPO3ujZc+nur1aKbLF4=",
   "scriptPublicKey": "MIICIjANBgkqhkiG9w0BAQEFAAOCAg8AMIICCgKCAgEAwi2xI2mEI/H1NQqXhdU2DLze4ik+YxgC5QIq+MXgHWYXW0JCUrLsiSRHhYv22wo0PPj64V/WANZ4AyAmpCthJhlvfVc0CYlOjK52jBBTZCbs/3yU+GrRS+HnZNogA6tu/89Lcyheqvoks8XQ/M60PVgCnwzy1EDS6MODR+47J2y/cBeKqr/agYXerfDyrFoVdVICsWFTFJ/w3MQ+faVt+CDxYiYWJ38ntJjOrF6xiMrO1jgqBp9ND9H/2uBYEECE8GnujqUsod8dSctYkNNTM5MVkgZKUjchuRBAoNRlSTcvaSZi1j1CREjqKJDfq8jt5zwbV79N8wpUGpxmQ4e5K+6HNfnvIe+jA9W5sjFOT/q1ztkYO8MKRsJAiqoJBxvglRu9/lqvNIzJsyLr6afB49DQxoUBNWn2pQIQk/AZe8GA5FRCUFwbDXYa3ly5H57B8ZavXaY864N5yLnylt2LWrj7XqGSOh2vGWkS836m6trthFZdsigCxMB55USDIj5HHtxCQH1oHmmuJFn/uZW28RIIbSN+9vGsf9KvmxZ28cPeJwHalGNBq7Qp7YAEu+SOr5W8Hq4wh1e2JMCQbEqZU8qBNZWaz0HGC2ISkSBrDiWEb+epTzLBeD0pdz2Vy1avGHW4oOM8d/c8hLDwJ+vkLdQ5mddr2VjCoNt8SQBJapECAwEAAQ==",
   "packages": ["Http"],
   "allowEval": false,
@@ -79,6 +79,7 @@
     "1": [
       "Initial tvQuran category selections, category/collection playlists, Arabic/English/German site language support, reciter channels, moshaf/collection metadata, direct MP3 playback, reciter recitations home mode, nested YouTube video/live/prayer-recitation content, selection sorting and sort direction, direct collection URL support, paginated search, reciter/surah/category search filters, paged channel search, channel peeks, richer suggestions, audio/video recommendations, richer category/video channel metadata, bounded caches, and config-relative fallback thumbnail support."
     ],
-    "2": ["Fix tvQuran category pagination"]
+    "2": ["Fix tvQuran category pagination"],
+    "3": ["Fix category callbacks receiving array indices as enrichment flags."]
   }
 }
