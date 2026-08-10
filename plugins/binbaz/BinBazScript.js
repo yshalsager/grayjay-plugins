@@ -53,17 +53,6 @@
 	function dedupe_by_url(items) {
 		return dedupe_by(items, (item) => item.url ?? item.contentUrl);
 	}
-	function dedupe_strings(values, key = (value) => value) {
-		const seen = {};
-		const result = [];
-		for (const value of values) {
-			const dedupeKey = key(value);
-			if (!dedupeKey || seen[dedupeKey]) continue;
-			seen[dedupeKey] = true;
-			result.push(value);
-		}
-		return result;
-	}
 
 	function selected_filter_values(filters, id) {
 		if (!filters) return [];
@@ -545,7 +534,7 @@
 			});
 		}
 		return {
-			items: dedupeEntries(items),
+			items: dedupe_by_url(items),
 			nextUrl: nextUrl(html)
 		};
 	}
@@ -564,7 +553,7 @@
 			});
 		}
 		return {
-			items: dedupeEntries(items),
+			items: dedupe_by_url(items),
 			nextUrl: nextUrl(html)
 		};
 	}
@@ -794,9 +783,6 @@
 	function sectionFromUrl(url) {
 		const parsed = parseInternalUrl(url);
 		return parsed?.type === "section" ? sectionById(parsed.id) : sectionByUrl(url);
-	}
-	function dedupeEntries(items) {
-		return dedupe_strings(items.map((item) => item.url)).map((url) => items.find((item) => item.url === url));
 	}
 	function sectionInternalUrl(id) {
 		return `binbaz://section/${encodeURIComponent(id)}`;

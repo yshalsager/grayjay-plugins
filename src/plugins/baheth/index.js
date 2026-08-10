@@ -257,7 +257,7 @@ function parseSpeakers(html) {
     if (!title || title === 'المُتحدّثون') continue
     items.push({ slug, title, shareUrl: absoluteUrl(href), image: imageFromHtml(tag) })
   }
-  return dedupeChannels(items.map(speakerItemToChannel))
+  return dedupe_by_url(items.map(speakerItemToChannel))
 }
 
 function mediaItemToFeed(item) {
@@ -634,15 +634,6 @@ function parseInternalUrl(url) {
 
 function iconUrl() {
   return plugin_icon_url(_config, DEFAULT_ICON)
-}
-
-function dedupeChannels(channels) {
-  const seen = {}
-  return channels.filter((channel) => {
-    if (!channel.url || seen[channel.url]) return false
-    seen[channel.url] = true
-    return true
-  })
 }
 
 class BahethSearchPager extends VideoPager {

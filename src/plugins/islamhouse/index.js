@@ -1,4 +1,5 @@
 import { content_thumbnails, plugin_icon_url, static_thumbnails } from '@lib/assets.js'
+import { dedupe_by_url } from '@lib/collections.js'
 import { selected_filter_values } from '@lib/filters.js'
 import { grayjay_platform } from '@lib/grayjay.js'
 import { cache_get, cache_set, get_json, init_lru_caches, post_json } from '@lib/http.js'
@@ -90,7 +91,7 @@ source.searchChannelContents = function (url, query, type, order, filters) {
 
 source.searchChannels = function (query) {
   const needle = normalize_search_text(query)
-  const channels = dedupeAuthors(
+  const channels = dedupe_by_url(
     [...fetchItems('audios', DEFAULT_LANG, DEFAULT_LANG, 1, 10).data, ...fetchItems('videos', DEFAULT_LANG, DEFAULT_LANG, 1, 10).data]
       .flatMap((item) => item.prepared_by ?? [])
       .map(authorChannel)
@@ -402,15 +403,6 @@ function selectedContent(filters) {
 function selectedTypes(filters) {
   const content = selectedContent(filters)
   return content === 'audios' || content === 'videos' ? [content] : ['audios', 'videos']
-}
-
-function dedupeAuthors(authors) {
-  const seen = {}
-  return authors.filter((author) => {
-    if (!author?.url || seen[author.url]) return false
-    seen[author.url] = true
-    return true
-  })
 }
 
 function iconUrl() {

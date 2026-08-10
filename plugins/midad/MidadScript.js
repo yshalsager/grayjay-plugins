@@ -54,6 +54,33 @@
 		return thumbnails(url || plugin_icon_url(config, default_icon));
 	}
 
+	function dedupe_by(items, key) {
+		const seen = {};
+		const result = [];
+		for (const item of items) {
+			const value = key(item);
+			if (!value || seen[value]) continue;
+			seen[value] = true;
+			result.push(item);
+		}
+		return result;
+	}
+	function dedupe_by_url(items) {
+		return dedupe_by(items, (item) => item.url ?? item.contentUrl);
+	}
+
+	function selected_filter_values(filters, id) {
+		if (!filters) return [];
+		if (Array.isArray(filters)) return filters.filter((filter) => filter?.id === id || filter?.group?.id === id).map(filter_value).filter(Boolean);
+		let value = filters[id];
+		if (value === void 0 && typeof filters.get === "function") value = filters.get(id);
+		if (value === void 0 || value === null) return [];
+		return (Array.isArray(value) ? value : [value]).map(filter_value).filter(Boolean);
+	}
+	function filter_value(value) {
+		return String(value?.value ?? value?.id ?? value ?? "");
+	}
+
 	function grayjay_platform(platform, get_config_id) {
 		const platform_id = (id) => new PlatformID(platform, String(id), get_config_id());
 		return {
@@ -386,7 +413,7 @@
 		items.push(...loadFeed("lessons", 1, order).items.slice(0, HOME_LIMIT));
 		items.push(...loadFeed("audiobooks", 1, order).items.slice(0, HOME_LIMIT));
 		items.push(...loadYoutubeFeed(1).items.slice(0, HOME_LIMIT));
-		return new ArrayVideoPager(dedupeByUrl(items), DEFAULT_LIMIT);
+		return new ArrayVideoPager(dedupe_by_url(items), DEFAULT_LIMIT);
 	}
 	source.getSearchCapabilities = () => ({
 		types: [Type.Feed.Mixed],
@@ -417,7 +444,7 @@
 	};
 	source.searchChannels = function(query) {
 		if (!normalize(query)) return new ArrayChannelPager([rootChannel(), ...SECTIONS.map(sectionChannel)], DEFAULT_LIMIT);
-		return new ArrayChannelPager(dedupeByUrl(searchHits(String(query), 1).items.filter((hit) => hit.type === "scholar").map((hit) => hitToChannel(hit)).filter(Boolean)), DEFAULT_LIMIT);
+		return new ArrayChannelPager(dedupe_by_url(searchHits(String(query), 1).items.filter((hit) => hit.type === "scholar").map((hit) => hitToChannel(hit)).filter(Boolean)), DEFAULT_LIMIT);
 	};
 	source.isChannelUrl = function(url) {
 		return Boolean(isRootUrl(url) || sectionFromUrl(url) || channelPartsFromUrl(url));
@@ -619,7 +646,7 @@
 		const loaded = searchHits(query, page);
 		const searchItems = loaded.items.filter((hit) => hit.type === "collection").map(hitToPlaylist).filter(Boolean);
 		const fallbackItems = page === 1 ? searchCollectionList(query, order || Type.Order.Chronological) : [];
-		const items = dedupeByUrl([...searchItems, ...fallbackItems]);
+		const items = dedupe_by_url([...searchItems, ...fallbackItems]);
 		if (order === Type.Order.Popularity) items.sort((a, b) => Number(b.videoCount || 0) - Number(a.videoCount || 0));
 		if (order === Type.Order.Chronological) items.sort((a, b) => Number(b.datetime || 0) - Number(a.datetime || 0));
 		return {
@@ -879,19 +906,9 @@
 	}
 	function selectedSection(filters) {
 		if (!filters) return "all";
-		const raw = typeof filters === "string" ? filters : filters.section ?? selectedFilterValues(filters, "section")[0];
+		const raw = typeof filters === "string" ? filters : filters.section ?? selected_filter_values(filters, "section")[0];
 		const value = String(raw?.value ?? raw?.id ?? raw ?? "all");
 		return sectionDefinition(value)?.id ?? (value === "all" ? "all" : "all");
-	}
-	function selectedFilterValues(filters, id) {
-		if (!filters) return [];
-		if (Array.isArray(filters)) return filters.filter((filter) => filter?.id === id || filter?.group?.id === id);
-		if (typeof filters.get === "function") {
-			const value = filters.get(id);
-			return Array.isArray(value) ? value : value ? [value] : [];
-		}
-		const value = filters[id];
-		return Array.isArray(value) ? value : value ? [value] : [];
 	}
 	function scholarPlaylistQuery(name) {
 		const words = cleanTitle(name).split(/\s+/).filter(Boolean);
@@ -1042,20 +1059,6 @@
 	}
 	function staticThumbnails() {
 		return static_thumbnails(_config, DEFAULT_ICON);
-	}
-	function dedupeByUrl(items) {
-		return dedupeBy(items, (item) => item?.url ?? item?.contentUrl);
-	}
-	function dedupeBy(items, key) {
-		const seen = {};
-		const result = [];
-		for (const item of items) {
-			const value = key(item);
-			if (!value || seen[value]) continue;
-			seen[value] = true;
-			result.push(item);
-		}
-		return result;
 	}
 	function normalize(value) {
 		return normalize_search_text(value);

@@ -1,5 +1,5 @@
 import { plugin_icon_url, static_thumbnails } from '@lib/assets.js'
-import { dedupe_by_url, dedupe_strings } from '@lib/collections.js'
+import { dedupe_by_url } from '@lib/collections.js'
 import { selected_filter_values } from '@lib/filters.js'
 import { grayjay_platform } from '@lib/grayjay.js'
 import { extract_first } from '@lib/html.js'
@@ -252,7 +252,7 @@ function parseEntries(html, kind) {
     items.push({ type, title, description, url })
   }
 
-  return { items: dedupeEntries(items), nextUrl: nextUrl(html) }
+  return { items: dedupe_by_url(items), nextUrl: nextUrl(html) }
 }
 
 function parseVideoEntries(html) {
@@ -264,7 +264,7 @@ function parseVideoEntries(html) {
     if (!title || /youtube-play/.test(match[2])) continue
     items.push({ type: 'video', title, description: '', url: normalizePublicUrl(match[1]) })
   }
-  return { items: dedupeEntries(items), nextUrl: nextUrl(html) }
+  return { items: dedupe_by_url(items), nextUrl: nextUrl(html) }
 }
 
 function parseAudioDetail(html, pageUrl, kind) {
@@ -549,11 +549,6 @@ function sectionByUrl(url) {
 function sectionFromUrl(url) {
   const parsed = parseInternalUrl(url)
   return parsed?.type === 'section' ? sectionById(parsed.id) : sectionByUrl(url)
-}
-
-function dedupeEntries(items) {
-  const urls = dedupe_strings(items.map((item) => item.url))
-  return urls.map((url) => items.find((item) => item.url === url))
 }
 
 function sectionInternalUrl(id) {

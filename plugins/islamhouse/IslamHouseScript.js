@@ -54,6 +54,21 @@
 		return thumbnails(url || plugin_icon_url(config, default_icon));
 	}
 
+	function dedupe_by(items, key) {
+		const seen = {};
+		const result = [];
+		for (const item of items) {
+			const value = key(item);
+			if (!value || seen[value]) continue;
+			seen[value] = true;
+			result.push(item);
+		}
+		return result;
+	}
+	function dedupe_by_url(items) {
+		return dedupe_by(items, (item) => item.url ?? item.contentUrl);
+	}
+
 	function selected_filter_values(filters, id) {
 		if (!filters) return [];
 		if (Array.isArray(filters)) return filters.filter((filter) => filter?.id === id || filter?.group?.id === id).map(filter_value).filter(Boolean);
@@ -389,7 +404,7 @@
 	};
 	source.searchChannels = function(query) {
 		const needle = normalize_search_text(query);
-		return new ArrayChannelPager(dedupeAuthors([...fetchItems("audios", DEFAULT_LANG, DEFAULT_LANG, 1, 10).data, ...fetchItems("videos", DEFAULT_LANG, DEFAULT_LANG, 1, 10).data].flatMap((item) => item.prepared_by ?? []).map(authorChannel)).filter((channel) => !needle || normalize_search_text(channel.name).includes(needle)), DEFAULT_LIMIT);
+		return new ArrayChannelPager(dedupe_by_url([...fetchItems("audios", DEFAULT_LANG, DEFAULT_LANG, 1, 10).data, ...fetchItems("videos", DEFAULT_LANG, DEFAULT_LANG, 1, 10).data].flatMap((item) => item.prepared_by ?? []).map(authorChannel)).filter((channel) => !needle || normalize_search_text(channel.name).includes(needle)), DEFAULT_LIMIT);
 	};
 	source.isPlaylistUrl = function(url) {
 		return parseInternalUrl(url)?.type === "playlist" || Boolean(publicItemId(url));
@@ -694,14 +709,6 @@
 	function selectedTypes(filters) {
 		const content = selectedContent(filters);
 		return content === "audios" || content === "videos" ? [content] : ["audios", "videos"];
-	}
-	function dedupeAuthors(authors) {
-		const seen = {};
-		return authors.filter((author) => {
-			if (!author?.url || seen[author.url]) return false;
-			seen[author.url] = true;
-			return true;
-		});
 	}
 	function iconUrl() {
 		return plugin_icon_url(_config, DEFAULT_ICON);

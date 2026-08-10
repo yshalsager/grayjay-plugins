@@ -66,16 +66,19 @@
 		return thumbnails(url || plugin_icon_url(config, default_icon));
 	}
 
-	function dedupe_strings(values, key = (value) => value) {
+	function dedupe_by(items, key) {
 		const seen = {};
 		const result = [];
-		for (const value of values) {
-			const dedupeKey = key(value);
-			if (!dedupeKey || seen[dedupeKey]) continue;
-			seen[dedupeKey] = true;
-			result.push(value);
+		for (const item of items) {
+			const value = key(item);
+			if (!value || seen[value]) continue;
+			seen[value] = true;
+			result.push(item);
 		}
 		return result;
+	}
+	function dedupe_strings(values, key = (value) => value) {
+		return dedupe_by(values, key);
 	}
 
 	var REDACTED = "[redacted]";

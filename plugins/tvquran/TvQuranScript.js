@@ -39,16 +39,22 @@
 		return thumbnails(plugin_icon_url(config, default_icon));
 	}
 
-	function dedupe_strings(values, key = (value) => value) {
+	function dedupe_by(items, key) {
 		const seen = {};
 		const result = [];
-		for (const value of values) {
-			const dedupeKey = key(value);
-			if (!dedupeKey || seen[dedupeKey]) continue;
-			seen[dedupeKey] = true;
-			result.push(value);
+		for (const item of items) {
+			const value = key(item);
+			if (!value || seen[value]) continue;
+			seen[value] = true;
+			result.push(item);
 		}
 		return result;
+	}
+	function dedupe_by_url(items) {
+		return dedupe_by(items, (item) => item.url ?? item.contentUrl);
+	}
+	function dedupe_strings(values, key = (value) => value) {
+		return dedupe_by(values, key);
 	}
 
 	var REDACTED = "[redacted]";
@@ -1794,7 +1800,7 @@
 		constructor(url, context) {
 			const html = callHtml(url);
 			const videos = parseSelections(html).map(selectionToVideo);
-			const hasMore = Boolean(context.categoryId) && pageHasMore(html);
+			const hasMore = Boolean(context.categoryId) && hasLoadMore(html);
 			super(videos, hasMore, context);
 		}
 		nextPage() {
@@ -1805,7 +1811,7 @@
 			const html = callHtml(categoryUrl(this.context.categoryId, this.context.page, this.context.view));
 			const videos = parseSelections(html).map(selectionToVideo);
 			this.results = videos;
-			this.hasMore = pageHasMore(html);
+			this.hasMore = hasLoadMore(html);
 			this.context.page += 1;
 			return this;
 		}
@@ -1848,7 +1854,7 @@
 		constructor(query, page = 1, categories = []) {
 			const html = callHtml(reciterSearchUrl(query, page));
 			const reciterChannels = parseReciterCards(html).map(reciterToChannel);
-			const channels = dedupeChannels([...categories, ...reciterChannels]);
+			const channels = dedupe_by_url([...categories, ...reciterChannels]);
 			super(channels, hasLoadMore(html), {
 				query,
 				page: page + 1
@@ -1863,7 +1869,7 @@
 		constructor(videoType, page = 1) {
 			const html = callHtml(videoCategoryUrl(videoType, page));
 			const videos = parseTvVideos(html, videoType).map(tvVideoToNested);
-			super(videos, pageHasMore(html), {
+			super(videos, hasLoadMore(html), {
 				videoType,
 				page: page + 1
 			});
@@ -1878,7 +1884,7 @@
 			const pageResult = reciterSearchPage("", page);
 			const videos = [];
 			for (const reciter of pageResult.reciters.slice(0, RECITATION_SCAN_PER_PAGE)) videos.push(...reciterContentVideos(reciter, "", null).slice(0, 3));
-			super(dedupeVideos(videos), pageResult.hasMore, { page: page + 1 });
+			super(dedupe_by(videos, (video) => video.url || video.name), pageResult.hasMore, { page: page + 1 });
 		}
 		nextPage() {
 			const next = new TvQuranReciterHomePager(this.context.page);
@@ -1891,16 +1897,16 @@
 		let match;
 		while ((match = articleRegex.exec(html)) !== null) {
 			const article = match[0];
-			const shareId = extractFirst(article, /\/[a-z]{2}\/selection\/(\d+)/) ?? match[1];
-			const audioUrl = absolutize(extractFirst(article, /data-file=["']([^"']+)["']/) ?? extractFirst(article, /href=["']([^"']+\.mp3)["']/));
+			const shareId = extract_first(article, /\/[a-z]{2}\/selection\/(\d+)/) ?? match[1];
+			const audioUrl = absolutize(extract_first(article, /data-file=["']([^"']+)["']/) ?? extract_first(article, /href=["']([^"']+\.mp3)["']/));
 			if (!audioUrl || !/\/[a-z]{2}\/selection\//.test(article)) continue;
-			const title = cleanText(extractFirst(article, /<h3[^>]*>([\s\S]*?)<\/h3>/) ?? `Selection ${shareId}`);
-			const h4 = extractFirst(article, /<h4[^>]*>([\s\S]*?)<\/h4>/) ?? "";
-			const author = cleanText(extractFirst(h4, /<a[^>]*title=["']([^"']+)["'][^>]*>/) ?? extractFirst(h4, /<a[^>]*>([\s\S]*?)<\/a>/) ?? "tvQuran");
-			const authorUrl = absolutize(extractFirst(h4, /<a[^>]*href=["']([^"']+)["']/)) ?? BASE_URL;
-			const category = cleanText(lastMatch(h4, /<a[^>]*>([\s\S]*?)<\/a>/g) ?? "tvQuran");
-			const thumbnail = absolutize(extractFirst(article, /<img[^>]*src=["']([^"']+)["']/)) ?? iconUrl();
-			const views = Number((extractFirst(article, /fa-play[\s\S]*?<span[^>]*>([\d\s]+)<\/span>/) ?? "0").replace(/\s+/g, "")) || 0;
+			const title = clean_text(extract_first(article, /<h3[^>]*>([\s\S]*?)<\/h3>/) ?? `Selection ${shareId}`);
+			const h4 = extract_first(article, /<h4[^>]*>([\s\S]*?)<\/h4>/) ?? "";
+			const author = clean_text(extract_first(h4, /<a[^>]*title=["']([^"']+)["'][^>]*>/) ?? extract_first(h4, /<a[^>]*>([\s\S]*?)<\/a>/) ?? "tvQuran");
+			const authorUrl = absolutize(extract_first(h4, /<a[^>]*href=["']([^"']+)["']/)) ?? BASE_URL;
+			const category = clean_text(last_match(h4, /<a[^>]*>([\s\S]*?)<\/a>/g) ?? "tvQuran");
+			const thumbnail = absolutize(extract_first(article, /<img[^>]*src=["']([^"']+)["']/)) ?? iconUrl();
+			const views = Number((extract_first(article, /fa-play[\s\S]*?<span[^>]*>([\d\s]+)<\/span>/) ?? "0").replace(/\s+/g, "")) || 0;
 			const selection = {
 				id: shareId,
 				playerId: match[1],
@@ -1911,12 +1917,12 @@
 				thumbnail,
 				audioUrl,
 				views,
-				pageUrl: absolutize(extractFirst(article, /data-url=["']([^"']*\/[a-z]{2}\/selection\/\d+)["']/)) ?? `${BASE_URL}/${language()}/selection/${shareId}`
+				pageUrl: absolutize(extract_first(article, /data-url=["']([^"']*\/[a-z]{2}\/selection\/\d+)["']/)) ?? `${BASE_URL}/${language()}/selection/${shareId}`
 			};
 			selections.push(selection);
 			cacheSet("selectionCache", shareId, selection);
 		}
-		return dedupeById(selections);
+		return dedupe_by(selections, (item) => item.id);
 	}
 	function parseReciterCards(html) {
 		const reciters = [];
@@ -1927,24 +1933,24 @@
 			const reciter = {
 				id: String(match[2]),
 				slug: match[3],
-				name: cleanText(extractFirst(item, /<h2[^>]*>([\s\S]*?)<\/h2>/) ?? extractFirst(item, /<img[^>]*alt=["']([^"']+)["']/) ?? `Reciter ${match[2]}`),
-				thumbnail: absolutize(extractFirst(item, /<img[^>]*src=["']([^"']+)["']/)) ?? iconUrl(),
+				name: clean_text(extract_first(item, /<h2[^>]*>([\s\S]*?)<\/h2>/) ?? extract_first(item, /<img[^>]*alt=["']([^"']+)["']/) ?? `Reciter ${match[2]}`),
+				thumbnail: absolutize(extract_first(item, /<img[^>]*src=["']([^"']+)["']/)) ?? iconUrl(),
 				pageUrl: absolutize(match[1])
 			};
 			reciters.push(cacheReciter(reciter));
 		}
-		return dedupeById(reciters);
+		return dedupe_by(reciters, (item) => item.id);
 	}
 	function parseReciterProfile(html, fallbackUrl) {
-		const canonical = extractFirst(html, /<link[^>]*rel=["']canonical["'][^>]*href=["']([^"']+)["']/) ?? fallbackUrl;
+		const canonical = extract_first(html, /<link[^>]*rel=["']canonical["'][^>]*href=["']([^"']+)["']/) ?? fallbackUrl;
 		const reciterMatch = canonical.match(REGEX.WEB_RECITER) ?? String(fallbackUrl ?? "").match(REGEX.WEB_RECITER);
-		const details = extractFirst(html, /<div class=["']sheikh-details["'][\s\S]*?<\/div>\s*<div class=["']moshaf-group["']/) ?? html;
+		const details = extract_first(html, /<div class=["']sheikh-details["'][\s\S]*?<\/div>\s*<div class=["']moshaf-group["']/) ?? html;
 		let reciter = cacheReciter({
-			id: String(reciterMatch?.[1] ?? extractFirst(html, /\/[a-z]{2}\/scholar\/(\d+)\/profile/) ?? ""),
+			id: String(reciterMatch?.[1] ?? extract_first(html, /\/[a-z]{2}\/scholar\/(\d+)\/profile/) ?? ""),
 			slug: reciterMatch?.[2] ?? "",
-			name: cleanText(extractFirst(details, /<h3[^>]*>([\s\S]*?)<\/h3>/) ?? extractFirst(html, /data-title=["']([^"']+)["']/) ?? "tvQuran Reciter"),
-			thumbnail: absolutize(extractFirst(details, /<img[^>]*src=["']([^"']+)["']/)) ?? iconUrl(),
-			description: cleanText(extractFirst(details, /<div id=["']scholarBiography["'][^>]*>([\s\S]*?)<\/div>/) ?? ""),
+			name: clean_text(extract_first(details, /<h3[^>]*>([\s\S]*?)<\/h3>/) ?? extract_first(html, /data-title=["']([^"']+)["']/) ?? "tvQuran Reciter"),
+			thumbnail: absolutize(extract_first(details, /<img[^>]*src=["']([^"']+)["']/)) ?? iconUrl(),
+			description: clean_text(extract_first(details, /<div id=["']scholarBiography["'][^>]*>([\s\S]*?)<\/div>/) ?? ""),
 			pageUrl: canonical
 		});
 		const profileCollections = parseReciterProfileCollections(html, reciter);
@@ -1970,13 +1976,13 @@
 		let match;
 		while ((match = titleRegex.exec(html)) !== null) {
 			const section = match[0];
-			const pageUrl = absolutize(extractFirst(section, /data-url=["']([^"']*\/[a-z]{2}\/collection\/\d+[^"']*)["']/));
-			const id = extractFirst(pageUrl, /\/collection\/(\d+)/);
-			const title = cleanText(extractFirst(section, /<h2[^>]*>([\s\S]*?)<\/h2>/) ?? extractFirst(section, /data-title=["']([^"']+)["']/) ?? "");
+			const pageUrl = absolutize(extract_first(section, /data-url=["']([^"']*\/[a-z]{2}\/collection\/\d+[^"']*)["']/));
+			const id = extract_first(pageUrl, /\/collection\/(\d+)/);
+			const title = clean_text(extract_first(section, /<h2[^>]*>([\s\S]*?)<\/h2>/) ?? extract_first(section, /data-title=["']([^"']+)["']/) ?? "");
 			if (!id && !title) continue;
 			const collection = {
 				id: String(id ?? ""),
-				slug: extractFirst(pageUrl, /\/collection\/\d+\/([^/?#]+)/) ?? "",
+				slug: extract_first(pageUrl, /\/collection\/\d+\/([^/?#]+)/) ?? "",
 				title: title || `tvQuran Collection ${id}`,
 				pageUrl: pageUrl || ""
 			};
@@ -1989,21 +1995,21 @@
 			})));
 		}
 		return {
-			collections: dedupeById(collections),
-			recitations: dedupeById(recitations)
+			collections: dedupe_by(collections, (item) => item.id),
+			recitations: dedupe_by(recitations, (item) => item.id)
 		};
 	}
 	function parseCollectionPage(html, fallbackUrl) {
-		const canonical = extractFirst(html, /<link[^>]*rel=["']canonical["'][^>]*href=["']([^"']+)["']/) ?? fallbackUrl;
+		const canonical = extract_first(html, /<link[^>]*rel=["']canonical["'][^>]*href=["']([^"']+)["']/) ?? fallbackUrl;
 		const match = canonical.match(REGEX.WEB_COLLECTION) ?? String(fallbackUrl ?? "").match(REGEX.WEB_COLLECTION);
-		const title = cleanText(extractFirst(html, /<div class=["']moshaf-title["'][\s\S]*?<h2[^>]*>([\s\S]*?)<\/h2>/) ?? extractFirst(html, /<h2[^>]*>([\s\S]*?)<\/h2>/) ?? extractFirst(html, /data-title=["']([^"']+)["']/) ?? `tvQuran Collection ${match?.[1] ?? ""}`);
-		const reciterUrl = absolutize(extractFirst(html, /<a[^>]*href=["']([^"']*\/[a-z]{2}\/scholar\/\d+\/profile\/[^"']+)["'][^>]*title=["']([^"']+)["']/)) ?? canonical;
+		const title = clean_text(extract_first(html, /<div class=["']moshaf-title["'][\s\S]*?<h2[^>]*>([\s\S]*?)<\/h2>/) ?? extract_first(html, /<h2[^>]*>([\s\S]*?)<\/h2>/) ?? extract_first(html, /data-title=["']([^"']+)["']/) ?? `tvQuran Collection ${match?.[1] ?? ""}`);
+		const reciterUrl = absolutize(extract_first(html, /<a[^>]*href=["']([^"']*\/[a-z]{2}\/scholar\/\d+\/profile\/[^"']+)["'][^>]*title=["']([^"']+)["']/)) ?? canonical;
 		const reciter = cacheReciter({
-			id: String(extractFirst(reciterUrl, /\/scholar\/(\d+)\/profile/) ?? extractFirst(html, /\/[a-z]{2}\/scholar\/(\d+)\/profile/) ?? ""),
-			slug: extractFirst(reciterUrl, /\/profile\/([^/?#]+)/) ?? "",
-			name: cleanText(extractFirst(html, /<a[^>]*href=["'][^"']*\/scholar\/\d+\/profile\/[^"']+["'][^>]*title=["']([^"']+)["']/) ?? title.replace(/\s+-\s+.*$/, "") ?? "tvQuran Reciter"),
-			thumbnail: absolutize(extractFirst(html, /<img[^>]*src=["']([^"']*uploads\/authors\/images\/[^"']+)["']/)) ?? iconUrl(),
-			description: cleanText(extractFirst(html, /<meta name=["']description["'][^>]*content=["']([^"']+)["']/) ?? ""),
+			id: String(extract_first(reciterUrl, /\/scholar\/(\d+)\/profile/) ?? extract_first(html, /\/[a-z]{2}\/scholar\/(\d+)\/profile/) ?? ""),
+			slug: extract_first(reciterUrl, /\/profile\/([^/?#]+)/) ?? "",
+			name: clean_text(extract_first(html, /<a[^>]*href=["'][^"']*\/scholar\/\d+\/profile\/[^"']+["'][^>]*title=["']([^"']+)["']/) ?? title.replace(/\s+-\s+.*$/, "") ?? "tvQuran Reciter"),
+			thumbnail: absolutize(extract_first(html, /<img[^>]*src=["']([^"']*uploads\/authors\/images\/[^"']+)["']/)) ?? iconUrl(),
+			description: clean_text(extract_first(html, /<meta name=["']description["'][^>]*content=["']([^"']+)["']/) ?? ""),
 			pageUrl: reciterUrl
 		});
 		const recitations = parseRecitations(html, reciter).map((recitation) => ({
@@ -2015,7 +2021,7 @@
 			id: String(match?.[1] ?? ""),
 			slug: match?.[2] ?? "",
 			title,
-			description: cleanText(extractFirst(html, /<meta name=["']description["'][^>]*content=["']([^"']+)["']/) ?? ""),
+			description: clean_text(extract_first(html, /<meta name=["']description["'][^>]*content=["']([^"']+)["']/) ?? ""),
 			pageUrl: canonical,
 			reciter,
 			recitations
@@ -2027,12 +2033,12 @@
 		let match;
 		while ((match = articleRegex.exec(html)) !== null) {
 			const article = match[0];
-			const audioUrl = absolutize(extractFirst(article, /data-file=["']([^"']+)["']/) ?? extractFirst(article, /href=["']([^"']+\.mp3)["']/));
+			const audioUrl = absolutize(extract_first(article, /data-file=["']([^"']+)["']/) ?? extract_first(article, /href=["']([^"']+\.mp3)["']/));
 			if (!audioUrl) continue;
-			const id = extractFirst(article, /\/[a-z]{2}\/recitation\/(\d+)/) ?? match[1];
-			const title = cleanText(extractFirst(article, /<h4[^>]*>\s*<span>([\s\S]*?)<\/span>\s*<\/h4>/) ?? extractFirst(article, /data-title=["']([^"']+)["']/) ?? `Recitation ${id}`);
-			const surahNumber = Number(cleanText(extractFirst(article, /<span[^>]*class=["'][^"']*sorah-num[^"']*["'][^>]*>([\s\S]*?)<\/span>/))) || 0;
-			const views = Number((extractFirst(article, /fa-play[\s\S]*?<span[^>]*>([\d\s]+)<\/span>/) ?? "0").replace(/\s+/g, "")) || 0;
+			const id = extract_first(article, /\/[a-z]{2}\/recitation\/(\d+)/) ?? match[1];
+			const title = clean_text(extract_first(article, /<h4[^>]*>\s*<span>([\s\S]*?)<\/span>\s*<\/h4>/) ?? extract_first(article, /data-title=["']([^"']+)["']/) ?? `Recitation ${id}`);
+			const surahNumber = Number(clean_text(extract_first(article, /<span[^>]*class=["'][^"']*sorah-num[^"']*["'][^>]*>([\s\S]*?)<\/span>/))) || 0;
+			const views = Number((extract_first(article, /fa-play[\s\S]*?<span[^>]*>([\d\s]+)<\/span>/) ?? "0").replace(/\s+/g, "")) || 0;
 			const recitation = {
 				id: String(id),
 				playerId: match[1],
@@ -2042,12 +2048,12 @@
 				thumbnail: reciter.thumbnail || iconUrl(),
 				audioUrl,
 				views,
-				pageUrl: absolutize(extractFirst(article, /data-url=["']([^"']*\/[a-z]{2}\/recitation\/\d+)["']/)) ?? `${BASE_URL}/${language()}/recitation/${id}`
+				pageUrl: absolutize(extract_first(article, /data-url=["']([^"']*\/[a-z]{2}\/recitation\/\d+)["']/)) ?? `${BASE_URL}/${language()}/recitation/${id}`
 			};
 			recitations.push(recitation);
 			cacheSet("recitationCache", recitation.id, recitation);
 		}
-		return dedupeById(recitations);
+		return dedupe_by(recitations, (item) => item.id);
 	}
 	function parseTvVideos(html, videoType) {
 		const videos = [];
@@ -2055,14 +2061,14 @@
 		let match;
 		while ((match = articleRegex.exec(html)) !== null) {
 			const article = match[0];
-			const href = extractFirst(article, /<a[^>]*href=["']([^"']*\/[a-z]{2}\/video\/\d+[^"']*)["'][^>]*class=["'][^"']*vid-thumb/) ?? extractFirst(article, /<h3[^>]*>[\s\S]*?<a[^>]*href=["']([^"']*\/[a-z]{2}\/video\/\d+[^"']*)["']/);
-			const id = extractFirst(href, /\/[a-z]{2}\/video\/(\d+)/);
+			const href = extract_first(article, /<a[^>]*href=["']([^"']*\/[a-z]{2}\/video\/\d+[^"']*)["'][^>]*class=["'][^"']*vid-thumb/) ?? extract_first(article, /<h3[^>]*>[\s\S]*?<a[^>]*href=["']([^"']*\/[a-z]{2}\/video\/\d+[^"']*)["']/);
+			const id = extract_first(href, /\/[a-z]{2}\/video\/(\d+)/);
 			if (!id) continue;
-			const title = cleanText(extractFirst(article, /<h3[^>]*>[\s\S]*?<a[^>]*title=["']([^"']+)["']/) ?? extractFirst(article, /<img[^>]*alt=["']([^"']+)["']/) ?? extractFirst(article, /<h3[^>]*>([\s\S]*?)<\/h3>/) ?? `Video ${id}`);
-			const thumbnail = absolutize(extractFirst(article, /<img[^>]*src=["']([^"']+)["']/)) ?? youtubeThumbnail(extractYoutubeId(article)) ?? iconUrl();
-			const description = cleanText(extractFirst(article, /<p[^>]*class=["'][^"']*mt-?15[^"']*["'][^>]*>([\s\S]*?)<\/p>/) ?? "");
-			const views = Number((extractFirst(article, /fa-play[\s\S]*?<span[^>]*>([\d\s]+)<\/span>/) ?? "0").replace(/\s+/g, "")) || 0;
-			const durationText = cleanText(extractFirst(article, /<span[^>]*class=["'][^"']*vid-duration[^"']*["'][^>]*>\s*<strong>([\s\S]*?)<\/strong>/) ?? "");
+			const title = clean_text(extract_first(article, /<h3[^>]*>[\s\S]*?<a[^>]*title=["']([^"']+)["']/) ?? extract_first(article, /<img[^>]*alt=["']([^"']+)["']/) ?? extract_first(article, /<h3[^>]*>([\s\S]*?)<\/h3>/) ?? `Video ${id}`);
+			const thumbnail = absolutize(extract_first(article, /<img[^>]*src=["']([^"']+)["']/)) ?? youtubeThumbnail(extractYoutubeId(article)) ?? iconUrl();
+			const description = clean_text(extract_first(article, /<p[^>]*class=["'][^"']*mt-?15[^"']*["'][^>]*>([\s\S]*?)<\/p>/) ?? "");
+			const views = Number((extract_first(article, /fa-play[\s\S]*?<span[^>]*>([\d\s]+)<\/span>/) ?? "0").replace(/\s+/g, "")) || 0;
+			const durationText = clean_text(extract_first(article, /<span[^>]*class=["'][^"']*vid-duration[^"']*["'][^>]*>\s*<strong>([\s\S]*?)<\/strong>/) ?? "");
 			const youtubeId = extractYoutubeId(article);
 			const pageUrl = absolutize(href);
 			videos.push({
@@ -2078,7 +2084,7 @@
 				contentUrl: youtubeId ? youtubeUrl(youtubeId) : pageUrl
 			});
 		}
-		return dedupeById(videos);
+		return dedupe_by(videos, (item) => item.id);
 	}
 	function selectionToVideo(selection) {
 		const details = grayjay.video(selection.id, {
@@ -2188,14 +2194,14 @@
 	function getTvVideoDetails(id) {
 		if (!id) throw new ScriptException("tvQuran video not found");
 		const html = callHtml(`${BASE_URL}/${language()}/video/${id}`);
-		const canonical = extractFirst(html, /<link[^>]*rel=["']canonical["'][^>]*href=["']([^"']+)["']/) ?? `${BASE_URL}/${language()}/video/${id}`;
+		const canonical = extract_first(html, /<link[^>]*rel=["']canonical["'][^>]*href=["']([^"']+)["']/) ?? `${BASE_URL}/${language()}/video/${id}`;
 		const youtubeId = extractYoutubeId(html);
 		return tvVideoToWebDetails({
 			id: String(id),
-			title: cleanText(extractFirst(html, /<div class=["']l-box["'][\s\S]*?<h2[^>]*>([\s\S]*?)<\/h2>/) ?? extractFirst(html, /data-title=["']([^"']+)["']/) ?? `Video ${id}`),
+			title: clean_text(extract_first(html, /<div class=["']l-box["'][\s\S]*?<h2[^>]*>([\s\S]*?)<\/h2>/) ?? extract_first(html, /data-title=["']([^"']+)["']/) ?? `Video ${id}`),
 			thumbnail: youtubeThumbnail(youtubeId) ?? iconUrl(),
-			description: cleanText(extractFirst(html, /<meta name=["']description["'][^>]*content=["']([^"']+)["']/) ?? extractFirst(html, /<p[^>]*class=["'][^"']*mtb-15[^"']*["'][^>]*>([\s\S]*?)<\/p>/) ?? ""),
-			views: Number((extractFirst(html, /fa-play[\s\S]*?<span[^>]*>([\d\s]+)<\/span>/) ?? "0").replace(/\s+/g, "")) || 0,
+			description: clean_text(extract_first(html, /<meta name=["']description["'][^>]*content=["']([^"']+)["']/) ?? extract_first(html, /<p[^>]*class=["'][^"']*mtb-15[^"']*["'][^>]*>([\s\S]*?)<\/p>/) ?? ""),
+			views: Number((extract_first(html, /fa-play[\s\S]*?<span[^>]*>([\d\s]+)<\/span>/) ?? "0").replace(/\s+/g, "")) || 0,
 			youtubeId,
 			videoType: videoTypeFromHtml(html),
 			pageUrl: canonical,
@@ -2287,7 +2293,7 @@
 		const playlists = [];
 		if (contentAllowed(filters, "selections")) playlists.push(...CATEGORIES.filter((category) => categoryMatchesFilters(category, filters)).map((category) => categoryToPlaylist(category)));
 		if (contentAllowed(filters, "recitations")) playlists.push(...searchReciterCollectionPlaylists(query, filters));
-		return dedupePlaylists(playlists).filter((playlist) => playlistMatches(playlist, q));
+		return dedupe_by_url(playlists).filter((playlist) => playlistMatches(playlist, q));
 	}
 	function categoryToPlaylist(category, enrich = false) {
 		const thumbnail = categoryChannelMetadata("selection", category, enrich).thumbnail || iconUrl();
@@ -2368,7 +2374,7 @@
 				debug_log(PLATFORM, "Failed to load playlist reciter search", e);
 			}
 		}
-		return dedupeById(reciters).flatMap(reciterCollectionPlaylists);
+		return dedupe_by(reciters, (item) => item.id).flatMap(reciterCollectionPlaylists);
 	}
 	function reciterWithCollections(reciter) {
 		if (reciter.collections?.length) return reciter;
@@ -2460,7 +2466,7 @@
 			hasMore = hasMore || pageResult.hasMore;
 		}
 		return {
-			videos: dedupeVideos(results),
+			videos: dedupe_by(results, (video) => video.url || video.name),
 			hasMore
 		};
 	}
@@ -2475,7 +2481,7 @@
 				const html = callHtml(categoryUrl(categoryId, page, view));
 				const parsed = parseSelections(html);
 				selections.push(...parsed.filter((selection) => selectionMatches(selection, q) && selectionMatchesFilters(selection, filters)));
-				hasMore = hasMore || pageHasMore(html, parsed);
+				hasMore = hasMore || hasLoadMore(html, parsed);
 			}
 			return {
 				items: selections.map(selectionToVideo),
@@ -2487,14 +2493,14 @@
 			const parsed = parseSelections(html);
 			return {
 				items: parsed.filter((selection) => selectionMatches(selection, q) && selectionMatchesFilters(selection, filters)).map(selectionToVideo),
-				hasMore: pageHasMore(html, parsed)
+				hasMore: hasLoadMore(html, parsed)
 			};
 		}
 		const html = callHtml(categoryUrl((CATEGORIES[Number(_settings.homeCategory ?? 0)] ?? CATEGORIES[0]).id, page, view));
 		const parsed = parseSelections(html);
 		return {
 			items: parsed.filter((selection) => selectionMatchesFilters(selection, filters)).map(selectionToVideo),
-			hasMore: pageHasMore(html, parsed)
+			hasMore: hasLoadMore(html, parsed)
 		};
 	}
 	function searchRecitationsPage(query, page = 1, filters = null) {
@@ -2524,7 +2530,7 @@
 		const videos = parseTvVideos(html, videoType);
 		return {
 			items: videos.filter((video) => !q || normalize(video.title).indexOf(q) >= 0 || normalize(video.description).indexOf(q) >= 0).filter((video) => tvVideoMatchesFilters(video, filters)).map(tvVideoToNested),
-			hasMore: pageHasMore(html, videos)
+			hasMore: hasLoadMore(html, videos)
 		};
 	}
 	function channelSearchPage(kind, value, query, order, filters, page = 1) {
@@ -2534,7 +2540,7 @@
 			const selections = parseSelections(html);
 			return {
 				videos: selections.filter((selection) => selectionMatches(selection, q) && selectionMatchesFilters(selection, filters)).map(selectionToVideo),
-				hasMore: pageHasMore(html, selections)
+				hasMore: hasLoadMore(html, selections)
 			};
 		}
 		return searchTvVideosPage(query, value, page, filters);
@@ -2584,7 +2590,7 @@
 		} catch (e) {
 			debug_log(PLATFORM, "Failed to load reciter filter options", e);
 		}
-		return dedupeById([...cached, ...firstPage]).sort((a, b) => String(a.name ?? "").localeCompare(String(b.name ?? ""), language()));
+		return dedupe_by([...cached, ...firstPage], (item) => item.id).sort((a, b) => String(a.name ?? "").localeCompare(String(b.name ?? ""), language()));
 	}
 	function resolveReciterFilter(value) {
 		const directId = reciterIdFromFilter(value);
@@ -2712,7 +2718,7 @@
 		return !query || normalize(recitation.reciter.name).indexOf(query) >= 0 || normalize(recitation.title).indexOf(query) >= 0 || normalize(recitation.collectionTitle).indexOf(query) >= 0 || String(recitation.surahNumber || "").indexOf(query) >= 0;
 	}
 	function videoTypeFromHtml(html) {
-		const categoryId = extractFirst(html, /\/videos\/category\/(\d+)\//);
+		const categoryId = extract_first(html, /\/videos\/category\/(\d+)\//);
 		return VIDEO_CATEGORIES.find((category) => String(category.id) === String(categoryId))?.type ?? "videos";
 	}
 	function textMentionsSurah(value, surahId) {
@@ -2818,7 +2824,7 @@
 			const html = callHtml(kind === "video" ? videoCategoryPageUrl(category) : selectionCategoryPageUrl(category));
 			const items = kind === "video" ? parseTvVideos(html, category.type) : parseSelections(html);
 			const metadata = {
-				description: cleanText(extractFirst(html, /<meta name=["']description["'][^>]*content=["']([^"']+)["']/)) || fallback.description,
+				description: clean_text(extract_first(html, /<meta name=["']description["'][^>]*content=["']([^"']+)["']/)) || fallback.description,
 				thumbnail: items.find((item) => item.thumbnail)?.thumbnail || fallback.thumbnail
 			};
 			cacheSet("categoryMetadataCache", cacheKey, metadata);
@@ -2853,9 +2859,6 @@
 		};
 		return cacheSet("reciterCache", reciter.id, updated);
 	}
-	var extractFirst = extract_first;
-	var lastMatch = last_match;
-	var cleanText = clean_text;
 	function absolutize(url) {
 		if (!url) return null;
 		if (url.startsWith("//")) return "https:" + url;
@@ -2865,58 +2868,14 @@
 	function hasLoadMore(html) {
 		return /id=["']load-more["']/.test(String(html ?? ""));
 	}
-	function pageHasMore(html) {
-		return hasLoadMore(html);
-	}
 	function extractYoutubeId(value) {
-		return extractFirst(value, /youtube\.com\/embed\/([a-zA-Z0-9_-]+)/) ?? extractFirst(value, /youtu\.be\/([a-zA-Z0-9_-]+)/) ?? extractFirst(value, /i\.ytimg\.com\/vi\/([a-zA-Z0-9_-]+)\//);
+		return extract_first(value, /youtube\.com\/embed\/([a-zA-Z0-9_-]+)/) ?? extract_first(value, /youtu\.be\/([a-zA-Z0-9_-]+)/) ?? extract_first(value, /i\.ytimg\.com\/vi\/([a-zA-Z0-9_-]+)\//);
 	}
 	function youtubeUrl(id) {
 		return `https://www.youtube.com/watch?v=${id}`;
 	}
 	function youtubeThumbnail(id) {
 		return id ? `https://i.ytimg.com/vi/${id}/hqdefault.jpg` : null;
-	}
-	function dedupeById(items) {
-		const seen = {};
-		const deduped = [];
-		for (const item of items) {
-			if (seen[item.id]) continue;
-			seen[item.id] = true;
-			deduped.push(item);
-		}
-		return deduped;
-	}
-	function dedupeChannels(channels) {
-		const seen = {};
-		const deduped = [];
-		for (const channel of channels) {
-			if (seen[channel.url]) continue;
-			seen[channel.url] = true;
-			deduped.push(channel);
-		}
-		return deduped;
-	}
-	function dedupeVideos(videos) {
-		const seen = {};
-		const deduped = [];
-		for (const video of videos) {
-			const key = video.url || video.name;
-			if (seen[key]) continue;
-			seen[key] = true;
-			deduped.push(video);
-		}
-		return deduped;
-	}
-	function dedupePlaylists(playlists) {
-		const seen = {};
-		const deduped = [];
-		for (const playlist of playlists) {
-			if (seen[playlist.url]) continue;
-			seen[playlist.url] = true;
-			deduped.push(playlist);
-		}
-		return deduped;
 	}
 	function normalize(value) {
 		return String(value ?? "").toLowerCase().trim();

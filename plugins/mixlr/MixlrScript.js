@@ -39,6 +39,21 @@
 		return thumbnails(url || plugin_icon_url(config, default_icon));
 	}
 
+	function dedupe_by(items, key) {
+		const seen = {};
+		const result = [];
+		for (const item of items) {
+			const value = key(item);
+			if (!value || seen[value]) continue;
+			seen[value] = true;
+			result.push(item);
+		}
+		return result;
+	}
+	function dedupe_by_url(items) {
+		return dedupe_by(items, (item) => item.url ?? item.contentUrl);
+	}
+
 	var REDACTED = "[redacted]";
 	var SENSITIVE_KEY = /authorization|cookie|token|secret|password|signature/i;
 	function is_testing() {
@@ -572,7 +587,7 @@
 			hasMore = hasMore || hasNextPage(html);
 		}
 		return {
-			items: dedupeVideos(items),
+			items: dedupe_by_url(items),
 			hasMore,
 			nextPage: page + 1
 		};
@@ -592,7 +607,7 @@
 			if (!video || video.url === excludeUrl || categoryId && video.categoryId !== categoryId) continue;
 			videos.push(video);
 		}
-		return dedupeVideos(videos);
+		return dedupe_by_url(videos);
 	}
 	function safeEventVideo(slug, eventId) {
 		try {
@@ -634,10 +649,10 @@
 	function cached(cacheName, key, loader) {
 		const cacheKey = String(key);
 		const cachedItem = state[cacheName]?.[cacheKey];
-		if (cachedItem?.expiresAt > now()) return cachedItem.value;
+		if (cachedItem?.expiresAt > Date.now()) return cachedItem.value;
 		const value = loader();
 		cache_set(state, CACHE_LIMITS, cacheName, cacheKey, {
-			expiresAt: now() + CACHE_MAX_AGE_MS,
+			expiresAt: Date.now() + CACHE_MAX_AGE_MS,
 			value
 		});
 		return value;
@@ -901,25 +916,12 @@
 		const time = new Date(value ?? 0).getTime();
 		return Number.isFinite(time) ? Math.floor(time / 1e3) : 0;
 	}
-	function now() {
-		return Date.now();
-	}
 	function normalize(value) {
 		return normalize_search_text(value);
 	}
 	function videoMatches(video, query) {
 		const q = normalize(query);
 		return !q || normalize(video.name).indexOf(q) >= 0 || normalize(video.description).indexOf(q) >= 0 || normalize(video.author?.name).indexOf(q) >= 0;
-	}
-	function dedupeVideos(items) {
-		const seen = {};
-		const results = [];
-		for (const item of items) {
-			if (!item?.url || seen[item.url]) continue;
-			seen[item.url] = true;
-			results.push(item);
-		}
-		return results;
 	}
 	function categoryIdFromName(name) {
 		const normalized = normalize(name);

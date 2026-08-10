@@ -1,4 +1,6 @@
 import { content_thumbnails, plugin_icon_url, static_thumbnails } from '@lib/assets.js'
+import { dedupe_by_url } from '@lib/collections.js'
+import { selected_filter_values } from '@lib/filters.js'
 import { grayjay_platform } from '@lib/grayjay.js'
 import { get_text, init_lru_caches, query_string, cache_set } from '@lib/http.js'
 import { audio_source_descriptor, video_source_descriptor } from '@lib/media.js'
@@ -82,7 +84,7 @@ function mixedFeed(order) {
   items.push(...loadFeed('lessons', 1, order).items.slice(0, HOME_LIMIT))
   items.push(...loadFeed('audiobooks', 1, order).items.slice(0, HOME_LIMIT))
   items.push(...loadYoutubeFeed(1).items.slice(0, HOME_LIMIT))
-  return new ArrayVideoPager(dedupeByUrl(items), DEFAULT_LIMIT)
+  return new ArrayVideoPager(dedupe_by_url(items), DEFAULT_LIMIT)
 }
 
 source.getSearchCapabilities = () => ({
@@ -119,7 +121,7 @@ source.searchChannels = function (query) {
     .items.filter((hit) => hit.type === 'scholar')
     .map((hit) => hitToChannel(hit))
     .filter(Boolean)
-  return new ArrayChannelPager(dedupeByUrl(channels), DEFAULT_LIMIT)
+  return new ArrayChannelPager(dedupe_by_url(channels), DEFAULT_LIMIT)
 }
 
 source.isChannelUrl = function (url) {
@@ -353,7 +355,7 @@ function loadPlaylistSearch(query, page, order) {
     .map(hitToPlaylist)
     .filter(Boolean)
   const fallbackItems = page === 1 ? searchCollectionList(query, order || Type.Order.Chronological) : []
-  const items = dedupeByUrl([...searchItems, ...fallbackItems])
+  const items = dedupe_by_url([...searchItems, ...fallbackItems])
   if (order === Type.Order.Popularity) items.sort((a, b) => Number(b.videoCount || 0) - Number(a.videoCount || 0))
   if (order === Type.Order.Chronological) items.sort((a, b) => Number(b.datetime || 0) - Number(a.datetime || 0))
 
@@ -653,20 +655,9 @@ function sectionFilter() {
 
 function selectedSection(filters) {
   if (!filters) return 'all'
-  const raw = typeof filters === 'string' ? filters : (filters.section ?? selectedFilterValues(filters, 'section')[0])
+  const raw = typeof filters === 'string' ? filters : (filters.section ?? selected_filter_values(filters, 'section')[0])
   const value = String(raw?.value ?? raw?.id ?? raw ?? 'all')
   return sectionDefinition(value)?.id ?? (value === 'all' ? 'all' : 'all')
-}
-
-function selectedFilterValues(filters, id) {
-  if (!filters) return []
-  if (Array.isArray(filters)) return filters.filter((filter) => filter?.id === id || filter?.group?.id === id)
-  if (typeof filters.get === 'function') {
-    const value = filters.get(id)
-    return Array.isArray(value) ? value : value ? [value] : []
-  }
-  const value = filters[id]
-  return Array.isArray(value) ? value : value ? [value] : []
 }
 
 function scholarPlaylistQuery(name) {
@@ -840,22 +831,6 @@ function iconUrl() {
 
 function staticThumbnails() {
   return static_thumbnails(_config, DEFAULT_ICON)
-}
-
-function dedupeByUrl(items) {
-  return dedupeBy(items, (item) => item?.url ?? item?.contentUrl)
-}
-
-function dedupeBy(items, key) {
-  const seen = {}
-  const result = []
-  for (const item of items) {
-    const value = key(item)
-    if (!value || seen[value]) continue
-    seen[value] = true
-    result.push(item)
-  }
-  return result
 }
 
 function normalize(value) {

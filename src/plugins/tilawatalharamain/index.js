@@ -1,5 +1,5 @@
 import { plugin_icon_url, static_thumbnails } from '@lib/assets.js'
-import { dedupe_by_url, dedupe_strings } from '@lib/collections.js'
+import { dedupe_by_url } from '@lib/collections.js'
 import { selected_filter_values } from '@lib/filters.js'
 import { grayjay_platform } from '@lib/grayjay.js'
 import { extract_first } from '@lib/html.js'
@@ -264,7 +264,7 @@ function parseItems(html) {
     const thumbnail = normalizePublicUrl(extract_first(body, /<img\b[^>]*src="([^"]+)"/i))
     if (title && url) items.push({ type: detailType(url), title, authorName, thumbnail, url })
   }
-  return dedupeItems(items)
+  return dedupe_by_url(items)
 }
 
 function parseCategories(html, sectionId) {
@@ -278,7 +278,7 @@ function parseCategories(html, sectionId) {
     const count = Number(extract_first(match[2], /التلاوات\s*\((\d+)\)/) ?? 0)
     if (title && url) categories.push({ type: 'category', sectionId: sectionId ?? detailType(url), title, url, count })
   }
-  return dedupeItems(categories)
+  return dedupe_by_url(categories)
 }
 
 function itemToFeed(item) {
@@ -471,11 +471,6 @@ function sectionById(id) {
 
 function sectionByUrl(url) {
   return SECTIONS.find((section) => section.url === url)
-}
-
-function dedupeItems(items) {
-  const urls = dedupe_strings(items.map((item) => item.url))
-  return urls.map((url) => items.find((item) => item.url === url))
 }
 
 function sectionInternalUrl(id) {

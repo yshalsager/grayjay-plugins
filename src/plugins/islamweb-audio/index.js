@@ -207,7 +207,7 @@ function parseChannels(html, kind) {
         )
       )
   }
-  return dedupeChannels(items)
+  return dedupe_by_url(items)
 }
 
 function parseSeries(html) {
@@ -408,15 +408,6 @@ function selectedSearchTab(filters) {
 
 function rootAuthor() {
   return grayjay.author('islamweb-audio', 'إسلام ويب', BASE_URL, iconUrl())
-}
-
-function dedupeChannels(channels) {
-  const seen = {}
-  return channels.filter((channel) => {
-    if (!channel.url || seen[channel.url]) return false
-    seen[channel.url] = true
-    return true
-  })
 }
 
 function iconUrl() {

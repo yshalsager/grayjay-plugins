@@ -17,15 +17,5 @@ export function dedupe_by_url(items) {
 }
 
 export function dedupe_strings(values, key = (value) => value) {
-  const seen = {}
-  const result = []
-
-  for (const value of values) {
-    const dedupeKey = key(value)
-    if (!dedupeKey || seen[dedupeKey]) continue
-    seen[dedupeKey] = true
-    result.push(value)
-  }
-
-  return result
+  return dedupe_by(values, key)
 }

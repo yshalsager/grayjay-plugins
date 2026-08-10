@@ -1,4 +1,5 @@
 import { content_thumbnails, plugin_icon_url } from '@lib/assets.js'
+import { dedupe_by_url } from '@lib/collections.js'
 import { debug_log } from '@lib/debug.js'
 import { selected_filter_values } from '@lib/filters.js'
 import { grayjay_platform } from '@lib/grayjay.js'
@@ -330,7 +331,7 @@ function loadSearch(query, categoryId, content, page) {
   }
 
   return {
-    items: dedupeVideos(items),
+    items: dedupe_by_url(items),
     hasMore,
     nextPage: page + 1
   }
@@ -356,7 +357,7 @@ function eventLinksToVideos(links, excludeUrl = null, categoryId = '') {
     }
     videos.push(video)
   }
-  return dedupeVideos(videos)
+  return dedupe_by_url(videos)
 }
 
 function safeEventVideo(slug, eventId) {
@@ -412,13 +413,13 @@ function fetchEvent(slug, eventId) {
 function cached(cacheName, key, loader) {
   const cacheKey = String(key)
   const cachedItem = state[cacheName]?.[cacheKey]
-  if (cachedItem?.expiresAt > now()) {
+  if (cachedItem?.expiresAt > Date.now()) {
     return cachedItem.value
   }
 
   const value = loader()
   cache_set(state, CACHE_LIMITS, cacheName, cacheKey, {
-    expiresAt: now() + CACHE_MAX_AGE_MS,
+    expiresAt: Date.now() + CACHE_MAX_AGE_MS,
     value
   })
   return value
@@ -725,10 +726,6 @@ function unixDate(value) {
   return Number.isFinite(time) ? Math.floor(time / 1000) : 0
 }
 
-function now() {
-  return Date.now()
-}
-
 function normalize(value) {
   return normalize_search_text(value)
 }
@@ -741,19 +738,6 @@ function videoMatches(video, query) {
     normalize(video.description).indexOf(q) >= 0 ||
     normalize(video.author?.name).indexOf(q) >= 0
   )
-}
-
-function dedupeVideos(items) {
-  const seen = {}
-  const results = []
-  for (const item of items) {
-    if (!item?.url || seen[item.url]) {
-      continue
-    }
-    seen[item.url] = true
-    results.push(item)
-  }
-  return results
 }
 
 function categoryIdFromName(name) {

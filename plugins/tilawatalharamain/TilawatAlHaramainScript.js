@@ -53,17 +53,6 @@
 	function dedupe_by_url(items) {
 		return dedupe_by(items, (item) => item.url ?? item.contentUrl);
 	}
-	function dedupe_strings(values, key = (value) => value) {
-		const seen = {};
-		const result = [];
-		for (const value of values) {
-			const dedupeKey = key(value);
-			if (!dedupeKey || seen[dedupeKey]) continue;
-			seen[dedupeKey] = true;
-			result.push(value);
-		}
-		return result;
-	}
 
 	function selected_filter_values(filters, id) {
 		if (!filters) return [];
@@ -515,7 +504,7 @@
 				url
 			});
 		}
-		return dedupeItems(items);
+		return dedupe_by_url(items);
 	}
 	function parseCategories(html, sectionId) {
 		const categories = [];
@@ -533,7 +522,7 @@
 				count
 			});
 		}
-		return dedupeItems(categories);
+		return dedupe_by_url(categories);
 	}
 	function itemToFeed(item) {
 		return grayjay.feed_video(`${item.type}-${mediaId(item.url)}`, {
@@ -701,9 +690,6 @@
 	}
 	function sectionByUrl(url) {
 		return SECTIONS.find((section) => section.url === url);
-	}
-	function dedupeItems(items) {
-		return dedupe_strings(items.map((item) => item.url)).map((url) => items.find((item) => item.url === url));
 	}
 	function sectionInternalUrl(id) {
 		return `tilawatalharamain://section/${encodeURIComponent(id)}`;

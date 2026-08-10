@@ -489,7 +489,7 @@
 				image: imageFromHtml(tag)
 			});
 		}
-		return dedupeChannels(items.map(speakerItemToChannel));
+		return dedupe_by_url(items.map(speakerItemToChannel));
 	}
 	function mediaItemToFeed(item) {
 		return grayjay.feed_video(`media-${item.slug}`, {
@@ -821,14 +821,6 @@
 	}
 	function iconUrl() {
 		return plugin_icon_url(_config, DEFAULT_ICON);
-	}
-	function dedupeChannels(channels) {
-		const seen = {};
-		return channels.filter((channel) => {
-			if (!channel.url || seen[channel.url]) return false;
-			seen[channel.url] = true;
-			return true;
-		});
 	}
 	var BahethSearchPager = class BahethSearchPager extends VideoPager {
 		constructor(page = 1, query = "العلم", scope = {}) {

@@ -442,7 +442,7 @@
 			const name = clean_text(match[2]);
 			if (name && !/^\d+$/.test(name)) items.push(simpleChannel(`${kind}-${match[1]}`, name, kind === "reader" ? readerUrl(match[1], name) : speakerUrl(match[1], name), kind === "reader" ? readerPage(match[1]) : speakerPage(match[1])));
 		}
-		return dedupeChannels(items);
+		return dedupe_by_url(items);
 	}
 	function parseSeries(html) {
 		const items = [];
@@ -661,14 +661,6 @@
 	}
 	function rootAuthor() {
 		return grayjay.author("islamweb-audio", "إسلام ويب", BASE_URL, iconUrl());
-	}
-	function dedupeChannels(channels) {
-		const seen = {};
-		return channels.filter((channel) => {
-			if (!channel.url || seen[channel.url]) return false;
-			seen[channel.url] = true;
-			return true;
-		});
 	}
 	function iconUrl() {
 		return plugin_icon_url(_config, DEFAULT_ICON);
