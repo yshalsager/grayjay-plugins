@@ -7,12 +7,12 @@
   "sourceUrl": "https://raw.githubusercontent.com/yshalsager/grayjay-plugins/master/plugins/archiveorg/ArchiveOrgConfig.json",
   "repositoryUrl": "https://github.com/yshalsager/grayjay-plugins",
   "scriptUrl": "./ArchiveOrgScript.js",
-  "version": 1,
+  "version": 2,
   "iconUrl": "https://archive.org/images/glogo.png",
   "id": "11f3e2ca-f9a8-41e7-a2f5-197cec497409",
   "packages": ["Http"],
   "allowEval": false,
-  "allowUrls": ["everywhere"],
+  "allowUrls": ["archive.org", ".archive.org", ".us.archive.org"],
   "settings": [
     {
       "variable": "sort",
@@ -34,8 +34,9 @@
   "changelog": {
     "1": [
       "Initial general Archive.org audio/video search, Archive.org item playlists, direct file playback, direct details/download URL handling, and media-type/sort settings."
-    ]
+    ],
+    "2": ["Improve playback, durations, retries, availability, channels, and permissions based on FUTO's Internet Archive plugin."]
   },
   "scriptPublicKey": "MIICIjANBgkqhkiG9w0BAQEFAAOCAg8AMIICCgKCAgEAwi2xI2mEI/H1NQqXhdU2DLze4ik+YxgC5QIq+MXgHWYXW0JCUrLsiSRHhYv22wo0PPj64V/WANZ4AyAmpCthJhlvfVc0CYlOjK52jBBTZCbs/3yU+GrRS+HnZNogA6tu/89Lcyheqvoks8XQ/M60PVgCnwzy1EDS6MODR+47J2y/cBeKqr/agYXerfDyrFoVdVICsWFTFJ/w3MQ+faVt+CDxYiYWJ38ntJjOrF6xiMrO1jgqBp9ND9H/2uBYEECE8GnujqUsod8dSctYkNNTM5MVkgZKUjchuRBAoNRlSTcvaSZi1j1CREjqKJDfq8jt5zwbV79N8wpUGpxmQ4e5K+6HNfnvIe+jA9W5sjFOT/q1ztkYO8MKRsJAiqoJBxvglRu9/lqvNIzJsyLr6afB49DQxoUBNWn2pQIQk/AZe8GA5FRCUFwbDXYa3ly5H57B8ZavXaY864N5yLnylt2LWrj7XqGSOh2vGWkS836m6trthFZdsigCxMB55USDIj5HHtxCQH1oHmmuJFn/uZW28RIIbSN+9vGsf9KvmxZ28cPeJwHalGNBq7Qp7YAEu+SOr5W8Hq4wh1e2JMCQbEqZU8qBNZWaz0HGC2ISkSBrDiWEb+epTzLBeD0pdz2Vy1avGHW4oOM8d/c8hLDwJ+vkLdQ5mddr2VjCoNt8SQBJapECAwEAAQ==",
-  "scriptSignature": "XUAZuujZdV5cuLYciCD2eyi3kezIRMPN8X0+L7ty+p5l5sSb4FL21AoiSag7meNLGUJepm0MpZiSuP4BlJUJDIDNXk6TM4CP7WdJ7j6Yoyu67xj4XpFG5gnqXKT+Rena0W7N/Wcs+0BL6mXoyNiCHcr0zGzah4R4JjC+JrTyqId6cjmW3ZkSuR0x90YXdvFD34GQmQZSv3LlRC0Z4TzcHBBnrNbxvABwsp+DqwG40QFBYMjkWQdWjfKN2tFSnsKMCYuW7XMpuifMy9oOqNqogRuh7mO8uca786S/FlbT/65DUVZOG2d7q+1H2o7b+Z5NCeAyID+GeJZ01+ZVsbSvfucc/VGCeEv9dT56ZhjKIYlj/4TwEqJkE1JjXdiu7+5+fEoVk3AASEhJkhJrz7r+9LOHIBEwYh38dxKG2xOAsWOWGb+icR8JY4lANQirb5Cb4sBZXvv+xDrLgvCvw546CGA2QuLAHBUevaTqx0fQdeAXf5Py7pPRiwAWNrOZ04fjCrjwGlTa+Yrorvxqk0JuzW2E64G5sAPZDbtzfmsiwVN2s5jn8liBJyw0lgwMYu4Xz2hL/Zf9DJVql/I6d3sF9MVVc6gTTXvOqdKEt6tWE16MbcQY/2ZvMCt6slA386+WvWCsdGK9J3/mS7ruF9yIWKHl8eC8XdOJenPINiXe5/E="
+  "scriptSignature": "MaqJzCW45fZ3ZYn76h1kxl31qlaFZkfIbEgXW+xYhXUaD+SAbnRfosmJcBI4RAC8Myng1/MY5VXIrO1qOkQ5cBKH3L9uG0U6pK7koNbaiIAmoSHUzZbie0vpzShr1R+WEpxI3xUf4wan6NLRGSyoXdsSa2NiSRU0OEPEmwcQKtBd6XOe+rHAw71SNdDbPk5Unm66cqCI8Z0ufxWGwrWsXKmr2TnwsyBvxwKVnA1/egPqmomwsrsHlFv6luOobaFLxtSzFPvpdoJsT9m9lITY6/RRdljvPdHB4uFPpoFb8zB8ulmtvcMXnPNtYS6pLl7f8gM9ofMaYsy+1dioHZqTrYUbuzxyzsOJ1VS7vRz1tQF+6N0JLaou/xqNvC124CMPMf6LOXmLaqIz5EAodFwh1Bb/Ahaj3i/Is5zmCP1qaNKeHruQ9wQ9+jx4irrfxT4JQ6IWkETk7hlOquZ9OK8JAkx9nAFJmAb7o6jTpvUo3M0SqdDy+T2va/Gpb8FOWivhoJE2+kebDS45oFyjqJb0kyK6GaqxTSiXbE7b9aQ357152ARUdWsAOGFS7Rxca+qytw7LGYkH316SmVyigRMQnN+PsafbXsc+JiQLKz0ZXLCdU6BVQpUsgN3SbG3HI1xzOL6BIDadzMv/m8eHIONAYzJsRYs+/94rN1X0xxjCW4w="
 }

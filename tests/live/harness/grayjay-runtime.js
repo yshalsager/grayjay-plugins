@@ -84,6 +84,7 @@ class ChannelPager extends Pager {}
 class PlaylistPager extends Pager {}
 
 class ScriptException extends Error {}
+class UnavailableException extends Error {}
 
 function runtime_type() {
   return {
@@ -185,6 +186,7 @@ export async function load_plugin(name, settings = {}) {
     Thumbnail,
     Thumbnails,
     Type,
+    UnavailableException,
     UnMuxVideoSourceDescriptor,
     VideoPager,
     VideoSourceDescriptor,

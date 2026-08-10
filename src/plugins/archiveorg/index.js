@@ -4,8 +4,8 @@ import { debug_log } from '@lib/debug.js'
 import { selected_filter_values } from '@lib/filters.js'
 import { grayjay_platform } from '@lib/grayjay.js'
 import { define_grayjay_tests, search_first_detail_test } from '@lib/grayjay-tests.js'
-import { get_json, query_string } from '@lib/http.js'
-import { audio_sources_descriptor, thumbnails, video_source_descriptor } from '@lib/media.js'
+import { query_string } from '@lib/http.js'
+import { audio_sources_descriptor, hls_source, hls_source_descriptor, thumbnails } from '@lib/media.js'
 import { apply_pager_state, array_pager_class, empty_pager_class } from '@lib/paging.js'
 import { clean_text, normalize_search_text, normalize_text } from '@lib/text.js'
 
@@ -31,14 +31,18 @@ const DEFAULT_HEADERS = {
   'User-Agent': `grayjay.app/${bridge.buildVersion}`,
   Accept: 'application/json'
 }
-const PLAYABLE_AUDIO_FORMATS = ['VBR MP3', 'MP3', '64Kbps MP3', 'Ogg Vorbis', 'FLAC']
-const PLAYABLE_VIDEO_FORMATS = ['MPEG4', 'h.264', '512Kb MPEG4', 'Ogg Video', 'WebM']
+const TRANSIENT_HTTP_STATUSES = [429, 500, 501, 502, 503, 504]
+const PLAYABLE_AUDIO_FORMATS = ['VBR MP3', 'MP3', '64Kbps MP3', 'Ogg Vorbis', 'FLAC', 'WAVE', 'WAV', 'M4A', 'AAC', 'Opus']
+const PLAYABLE_VIDEO_FORMATS = ['MPEG4', 'h.264', '512Kb MPEG4', 'Ogg Video', 'WebM', 'QuickTime', 'AVI', 'MPEG2', 'HLS']
 const SKIPPED_FORMATS = ['Metadata', 'Item Tile', 'Archive BitTorrent', 'JPEG Thumb', 'PNG', 'JSON', 'Text', 'PDF', 'Abbyy GZ']
 const REGEX = {
   CREATOR: /^archiveorg:\/\/creator\/(.+)$/,
+  CHANNEL: /^archiveorg:\/\/channel\/(creator|uploader)\/(.+)$/,
   ITEM: /^archiveorg:\/\/item\/([^/?#]+)\/(audio|video|both)$/,
   PLAYLIST: /^archiveorg:\/\/playlist\/([^/?#]+)(?:\/(audio|video|both))?$/,
   CONTENT: /^archiveorg:\/\/content\/([^/?#]+)\/(.+)$/,
+  WEB_ACCOUNT: /^https?:\/\/(?:www\.)?archive\.org\/(?:details\/)?@([^/?#]+)/,
+  WEB_CHANNEL_SEARCH: /^https?:\/\/(?:www\.)?archive\.org\/search(?:\.php)?\?/,
   WEB_DETAILS: /^https?:\/\/(?:www\.)?archive\.org\/details\/([^/?#]+)/,
   WEB_DOWNLOAD: /^https?:\/\/(?:www\.)?archive\.org\/download\/([^/?#]+)\/([^?#]+)/
 }
@@ -110,15 +114,15 @@ source.searchPlaylists = function (query, type, order, filters) {
 }
 
 source.isChannelUrl = function (_url) {
-  return REGEX.CREATOR.test(_url)
+  return Boolean(channelFromUrl(_url))
 }
 
 source.getChannel = function (url) {
-  return creatorToChannel(creatorFromUrl(url))
+  return archiveChannel(requiredChannel(url))
 }
 
 source.getChannelPlaylists = function (url) {
-  return new ArchivePlaylistSearchPager('', mediaType(), defaultSort(), null, null, 0, false, creatorFromUrl(url))
+  return new ArchivePlaylistSearchPager('', mediaType(), defaultSort(), null, null, 0, false, requiredChannel(url))
 }
 
 source.getSearchChannelContentsCapabilities = () => source.getSearchCapabilities()
@@ -128,16 +132,16 @@ source.getChannelCapabilities = () => source.getSearchCapabilities()
 source.getPeekChannelTypes = () => ['Media']
 
 source.peekChannelContents = function (url, _type) {
-  const pager = new ArchiveSearchPager('', mediaType(), defaultSort(), null, null, 0, false, creatorFromUrl(url))
+  const pager = new ArchiveSearchPager('', mediaType(), defaultSort(), null, null, 0, false, requiredChannel(url))
   return pager.results.slice(0, 6)
 }
 
 source.searchChannelContents = function (url, query, type, order, filters) {
-  return new ArchiveSearchPager(query, selectedMedia(filters), order || defaultSort(), null, null, 0, false, creatorFromUrl(url))
+  return new ArchiveSearchPager(query, selectedMedia(filters), order || defaultSort(), null, null, 0, false, requiredChannel(url))
 }
 
 source.getChannelContents = function (url, _type, order, filters) {
-  return new ArchiveSearchPager('', selectedMedia(filters), order || defaultSort(), null, null, 0, false, creatorFromUrl(url))
+  return new ArchiveSearchPager('', selectedMedia(filters), order || defaultSort(), null, null, 0, false, requiredChannel(url))
 }
 
 source.isPlaylistUrl = function (url) {
@@ -145,20 +149,27 @@ source.isPlaylistUrl = function (url) {
 }
 
 source.getPlaylist = function (url) {
-  return itemToPlaylistDetails(getItemFromUrl(url), mediaFromUrl(url))
+  const item = getItemFromUrl(url)
+  assertItemCanOpen(item)
+  return itemToPlaylistDetails(item, mediaFromUrl(url))
 }
 
 source.isContentDetailsUrl = function (url) {
-  return REGEX.ITEM.test(url) || REGEX.CONTENT.test(url) || REGEX.WEB_DOWNLOAD.test(url) || REGEX.WEB_DETAILS.test(url)
+  return (
+    !REGEX.WEB_ACCOUNT.test(url) &&
+    (REGEX.ITEM.test(url) || REGEX.CONTENT.test(url) || REGEX.WEB_DOWNLOAD.test(url) || REGEX.WEB_DETAILS.test(url))
+  )
 }
 
 source.getContentDetails = function (url) {
   const direct = fileFromUrl(url)
   if (direct) {
+    assertItemCanOpen(direct.item)
     return fileToVideo(direct.item, direct.file, url)
   }
 
   const item = getItemFromUrl(url)
+  assertItemCanOpen(item)
   const file = firstPlayableFile(item, mediaFromUrl(url))
   if (!file) {
     throw new ScriptException('Archive.org item has no playable audio or video files')
@@ -260,9 +271,9 @@ class ArchiveCreatorPager extends ChannelPager {
   }
 }
 
-function searchArchive(query, media, order, pageNumber, creator = null) {
+function searchArchive(query, media, order, pageNumber, channel = null) {
   const params = [
-    ['q', searchQuery(query, media, creator)],
+    ['q', searchQuery(query, media, channel)],
     ['rows', String(SEARCH_COUNT)],
     ['page', String(pageNumber || 1)],
     ['output', 'json'],
@@ -271,6 +282,7 @@ function searchArchive(query, media, order, pageNumber, creator = null) {
     ['fl[]', 'creator'],
     ['fl[]', 'mediatype'],
     ['fl[]', 'format'],
+    ['fl[]', 'runtime'],
     ['fl[]', 'downloads'],
     ['fl[]', 'publicdate'],
     ['fl[]', 'date']
@@ -295,12 +307,12 @@ function searchArchive(query, media, order, pageNumber, creator = null) {
   }
 }
 
-function searchQuery(query, media, creator = null) {
+function searchQuery(query, media, channel = null) {
   const parts = []
   const q = cleanText(query)
 
-  if (creator) {
-    parts.push(creatorSearchQuery(creator))
+  if (channel) {
+    parts.push(channelSearchQuery(channel))
   }
 
   if (q) {
@@ -308,12 +320,13 @@ function searchQuery(query, media, creator = null) {
   }
 
   if (media === MEDIA.AUDIO) {
-    parts.push('mediatype:audio')
+    parts.push('(mediatype:audio OR mediatype:etree)')
   } else if (media === MEDIA.VIDEO) {
-    parts.push('mediatype:movies')
+    parts.push('(mediatype:movies OR mediatype:video)')
   } else {
-    parts.push('(mediatype:audio OR mediatype:movies)')
+    parts.push('(mediatype:audio OR mediatype:etree OR mediatype:movies OR mediatype:video)')
   }
+  parts.push('NOT access-restricted-item:true')
 
   return parts.join(' AND ')
 }
@@ -328,8 +341,9 @@ function userSearchQuery(query) {
   return `(${dedupe_strings(clauses).join(' OR ')})`
 }
 
-function creatorSearchQuery(creator) {
-  return `creator:"${escapeSearch(creator)}"`
+function channelSearchQuery(channel) {
+  const field = channel.field === 'uploader' ? 'uploader' : 'creator'
+  return `${field}:"${escapeSearch(channel.value)}"`
 }
 
 function rankSearchItems(items, query) {
@@ -383,7 +397,7 @@ function itemsToPlaylists(items, media) {
   for (const summary of items ?? []) {
     try {
       const item = getItem(summary.identifier, summary)
-      if (firstPlayableFile(item, media)) {
+      if (playableFileCount(item, media) > 1) {
         playlists.push(itemToPlaylist(item, media))
       }
     } catch (e) {
@@ -402,7 +416,10 @@ function getItem(identifier, summary = null) {
 
   if (!state.itemCache[id]?.files?.length) {
     const item = callJson(`${BASE_URL}/metadata/${encodeURIComponent(id)}`)
-    if (!item?.files?.length && !summary) {
+    if (!item?.metadata) {
+      if (Object.keys(item ?? {}).length) {
+        throw new UnavailableException('Archive.org item is temporarily unavailable')
+      }
       throw new ScriptException('Archive.org item not found')
     }
     state.itemCache[id] = normalizeItem(item, id, summary)
@@ -449,16 +466,7 @@ function playableFiles(item, media = MEDIA.BOTH) {
 }
 
 function firstPlayableFile(item, media = MEDIA.BOTH) {
-  const preferredMedia = itemMedia(item, media)
-  let best = null
-
-  for (const file of item.files ?? []) {
-    if (isPlayableFile(file, preferredMedia) && (!best || fileSort(file, best) < 0)) {
-      best = file
-    }
-  }
-
-  return best
+  return playableFiles(item, itemMedia(item, media))[0] ?? null
 }
 
 function itemMedia(item, media = MEDIA.BOTH) {
@@ -467,10 +475,10 @@ function itemMedia(item, media = MEDIA.BOTH) {
   }
 
   const mediatype = normalize(item?.metadata?.mediatype || item?.summary?.mediatype)
-  if (mediatype === 'movies' || mediatype === 'movie') {
+  if (mediatype === 'movies' || mediatype === 'movie' || mediatype === 'video') {
     return MEDIA.VIDEO
   }
-  if (mediatype === 'audio') {
+  if (mediatype === 'audio' || mediatype === 'etree') {
     return MEDIA.AUDIO
   }
 
@@ -478,7 +486,29 @@ function itemMedia(item, media = MEDIA.BOTH) {
 }
 
 function playableFileCount(item, media = MEDIA.BOTH) {
-  return (item.files ?? []).filter((file) => isPlayableFile(file, media)).length
+  return playableGroups(item, media).length
+}
+
+function playableGroups(item, media = MEDIA.BOTH) {
+  const groups = {}
+
+  for (const file of playableFiles(item, media)) {
+    const key = mediaGroupKey(file)
+    groups[key] ??= []
+    groups[key].push(file)
+  }
+
+  return Object.keys(groups).map((key) => groups[key])
+}
+
+function mediaGroupKey(file) {
+  const name = String(file.original || file.name || '')
+  return `${fileKind(file)}:${name.replace(/\.[^.]+$/, '')}`
+}
+
+function renditionFiles(item, selected) {
+  const key = mediaGroupKey(selected)
+  return playableFiles(item, fileKind(selected)).filter((file) => mediaGroupKey(file) === key)
 }
 
 function isPlayableFile(file, media = MEDIA.BOTH) {
@@ -508,6 +538,10 @@ function isSkippedFile(file) {
 
   return (
     !name ||
+    file.private === true ||
+    file.private === 'true' ||
+    file.source === 'metadata' ||
+    name.indexOf('__ia_spool/') >= 0 ||
     SKIPPED_FORMATS.some((skipped) => format.indexOf(skipped) >= 0) ||
     /\.(xml|json|txt|pdf|torrent|sqlite|srt|vtt|jpg|jpeg|png|gif|zip|rar|7z)$/i.test(name)
   )
@@ -517,11 +551,11 @@ function fileKind(file) {
   const name = String(file.name ?? '')
   const format = String(file.format ?? '')
 
-  if (PLAYABLE_AUDIO_FORMATS.some((value) => format.indexOf(value) >= 0) || /\.(mp3|ogg|oga|flac)$/i.test(name)) {
+  if (PLAYABLE_AUDIO_FORMATS.some((value) => format.indexOf(value) >= 0) || /\.(mp3|ogg|oga|flac|wav|m4a|aac|opus)$/i.test(name)) {
     return MEDIA.AUDIO
   }
 
-  if (PLAYABLE_VIDEO_FORMATS.some((value) => format.indexOf(value) >= 0) || /\.(mp4|m4v|webm|ogv)$/i.test(name)) {
+  if (PLAYABLE_VIDEO_FORMATS.some((value) => format.indexOf(value) >= 0) || /\.(mp4|m4v|mov|avi|mkv|webm|ogv|mpg|mpeg|m3u8)$/i.test(name)) {
     return MEDIA.VIDEO
   }
 
@@ -563,7 +597,7 @@ function summaryToVideo(summary, media = MEDIA.BOTH) {
     thumbnails: itemThumbnails(identifier),
     author: summaryAuthor(summary),
     uploadDate: unixDate(summary.publicdate || summary.date),
-    duration: 0,
+    duration: runtimeSeconds(summary.runtime),
     viewCount: Number(summary.downloads || 0),
     isLive: false,
     url: itemUrl(identifier, media),
@@ -602,26 +636,26 @@ function fileToVideo(item, file, urlOverride = null) {
   const itemTitle = cleanText(meta.title || summary.title || identifier)
   const kind = fileKind(file)
   const mediaUrl = fileUrl(identifier, file.name)
-  const directMediaUrl = itemFileUrl(item, file.name)
+  const selectedGroup = mediaGroupKey(file)
   const details = grayjay.video(`${identifier}-${file.name}`, {
     name: title === itemTitle ? title : `${title} - ${itemTitle}`,
     thumbnails: itemThumbnails(identifier),
     author: itemAuthor(item),
     uploadDate: unixDate(meta.publicdate || summary.publicdate || meta.date),
-    duration: durationSeconds(file.length || file.runtime || meta.runtime),
+    duration: durationSeconds(file.length || file.runtime) || runtimeSeconds(meta.runtime),
     viewCount: Number(meta.downloads || summary.downloads || 0),
     isLive: false,
     url: urlOverride || contentUrl(identifier, file.name),
     description: itemDescription(item, file, mediaUrl),
-    video: sourceDescriptor(file, mediaUrl, kind, directMediaUrl),
+    video: sourceDescriptor(item, renditionFiles(item, file), kind),
     shareUrl: detailsUrl(identifier)
   })
 
   details.getContentRecommendations = function () {
     return new ArrayVideoPager(
-      playableFiles(item)
-        .filter((candidate) => candidate.name !== file.name)
-        .map((candidate) => fileToVideo(item, candidate)),
+      playableGroups(item)
+        .filter((files) => mediaGroupKey(files[0]) !== selectedGroup)
+        .map((files) => fileToVideo(item, files[0])),
       DEFAULT_LIMIT
     )
   }
@@ -629,31 +663,46 @@ function fileToVideo(item, file, urlOverride = null) {
   return details
 }
 
-function sourceDescriptor(file, url, kind, fallbackUrl = null) {
+function sourceDescriptor(item, files, kind) {
   if (kind === MEDIA.AUDIO) {
-    const urls = [url, fallbackUrl].filter((value, index, list) => value && list.indexOf(value) === index)
     return audio_sources_descriptor(
-      urls.map((sourceUrl) => ({
+      files.map((file) => ({
         name: sourceName(file),
         container: audioContainer(file),
         codec: audioCodec(file),
         bitrate: bitrateBitsPerSecond(file),
         duration: durationSeconds(file.length || file.runtime),
-        url: sourceUrl
+        url: fileUrl(itemIdentifier(item), file.name)
       }))
     )
   }
 
-  return video_source_descriptor({
-    name: sourceName(file),
-    width: Number(file.width ?? 0),
-    height: Number(file.height ?? 0),
-    container: videoContainer(file),
-    codec: videoCodec(file),
-    bitrate: bitrateBitsPerSecond(file),
-    duration: durationSeconds(file.length || file.runtime),
-    url
-  })
+  const hls = files.find((file) =>
+    String(file.name ?? '')
+      .toLowerCase()
+      .endsWith('.m3u8')
+  )
+  if (hls) {
+    return hls_source_descriptor(
+      hls_source({ name: sourceName(hls), url: fileUrl(itemIdentifier(item), hls.name), duration: durationSeconds(hls.length) })
+    )
+  }
+
+  return new VideoSourceDescriptor(
+    files.map(
+      (file) =>
+        new VideoUrlSource({
+          name: sourceName(file),
+          width: Number(file.width ?? 0),
+          height: Number(file.height ?? 0),
+          container: videoContainer(file),
+          codec: videoCodec(file),
+          bitrate: bitrateBitsPerSecond(file),
+          duration: durationSeconds(file.length || file.runtime),
+          url: fileUrl(itemIdentifier(item), file.name)
+        })
+    )
+  )
 }
 
 function itemToPlaylist(item, media = MEDIA.BOTH) {
@@ -685,7 +734,7 @@ function itemToPlaylistDetails(item, media = MEDIA.BOTH) {
     videoCount: playlist.videoCount,
     thumbnail: playlist.thumbnail,
     contents: new ArrayVideoPager(
-      playableFiles(item, media).map((file) => fileToVideo(item, file)),
+      playableGroups(item, media).map((files) => fileToVideo(item, files[0])),
       DEFAULT_LIMIT
     )
   })
@@ -723,16 +772,21 @@ function itemDescription(item, file, mediaUrl) {
 }
 
 function creatorToChannel(creator) {
-  const name = cleanText(creator)
+  return archiveChannel({ field: 'creator', value: creator })
+}
+
+function archiveChannel(channel) {
+  const name = cleanText(channel.value)
+  const field = channel.field === 'uploader' ? 'uploader' : 'creator'
   const id = creatorId(name)
 
-  return grayjay.channel(`creator-${id}`, {
+  return grayjay.channel(`${field}-${id}`, {
     name,
     thumbnail: iconUrl(),
     banner: iconUrl(),
     description: `Archive.org items by ${name}.`,
-    url: creatorUrl(name),
-    urlAlternatives: [creatorPublicUrl(name)]
+    url: field === 'creator' ? creatorUrl(name) : channelUrl(field, name),
+    urlAlternatives: [channelPublicUrl(field, name)]
   })
 }
 
@@ -740,7 +794,9 @@ function creatorId(creator) {
   return (
     normalize(creator)
       .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-|-$/g, '') || 'internet-archive'
+      .replace(/^-|-$/g, '') ||
+    encodeURIComponent(normalize(creator)) ||
+    'internet-archive'
   )
 }
 
@@ -748,17 +804,45 @@ function creatorUrl(creator) {
   return `archiveorg://creator/${encodeURIComponent(cleanText(creator))}`
 }
 
-function creatorPublicUrl(creator) {
-  return `${BASE_URL}/search?${query_string([['query', creatorSearchQuery(creator)]])}`
+function channelUrl(field, value) {
+  return `archiveorg://channel/${field}/${encodeURIComponent(cleanText(value))}`
 }
 
-function creatorFromUrl(url) {
-  const match = String(url ?? '').match(REGEX.CREATOR)
-  if (!match?.[1]) {
-    throw new ScriptException('Archive.org creator not found')
-  }
+function channelPublicUrl(field, value) {
+  return `${BASE_URL}/search?${query_string([['query', channelSearchQuery({ field, value })]])}`
+}
 
-  return decodeURIComponent(match[1])
+function channelFromUrl(url) {
+  const value = String(url ?? '')
+  let match = value.match(REGEX.CREATOR)
+  if (match?.[1]) return { field: 'creator', value: safeDecode(match[1]) }
+
+  match = value.match(REGEX.CHANNEL)
+  if (match?.[1] && match?.[2]) return { field: match[1], value: safeDecode(match[2]) }
+
+  match = value.match(REGEX.WEB_ACCOUNT)
+  if (match?.[1]) return { field: 'creator', value: safeDecode(match[1]) }
+
+  if (!REGEX.WEB_CHANNEL_SEARCH.test(value)) return null
+  const decoded = safeDecode(value.replace(/\+/g, ' '))
+  match = decoded.match(/(creator|uploader):(?:"([^"]+)"|([^&#]+))/)
+  if (!match) return null
+
+  return { field: match[1], value: cleanText(match[2] || match[3]) }
+}
+
+function requiredChannel(url) {
+  const channel = channelFromUrl(url)
+  if (!channel) throw new ScriptException('Archive.org channel not found')
+  return channel
+}
+
+function safeDecode(value) {
+  try {
+    return decodeURIComponent(value)
+  } catch (_error) {
+    return value
+  }
 }
 
 function normalizeItem(item, fallbackIdentifier, summary = null) {
@@ -774,6 +858,19 @@ function normalizeItem(item, fallbackIdentifier, summary = null) {
     },
     summary: summary ?? item?.summary ?? null,
     files: item?.files ?? []
+  }
+}
+
+function assertItemCanOpen(item) {
+  const metadata = item.metadata ?? {}
+  if (normalize(metadata.mediatype) === 'collection') {
+    throw new ScriptException('Archive.org collections are not playable items')
+  }
+  if (item.is_dark === true || item.is_dark === 'true') {
+    throw new UnavailableException('This Archive.org item has been withdrawn')
+  }
+  if (metadata['access-restricted-item'] === true || metadata['access-restricted-item'] === 'true') {
+    throw new UnavailableException('This Archive.org item is access restricted')
   }
 }
 
@@ -864,7 +961,20 @@ function sortParam(order) {
 }
 
 function callJson(url) {
-  return get_json(url, DEFAULT_HEADERS)
+  let response = http.GET(url, DEFAULT_HEADERS)
+  if (!response?.isOk && TRANSIENT_HTTP_STATUSES.indexOf(response?.code) >= 0) {
+    response = http.GET(url, { ...DEFAULT_HEADERS, 'X-Accept-Reduced-Priority': '1' })
+  }
+  if (!response?.isOk) {
+    throw new ScriptException(`Archive.org request failed (HTTP ${response?.code ?? 'unknown'})`)
+  }
+
+  try {
+    return JSON.parse(response.body)
+  } catch (e) {
+    debug_log(PLATFORM, 'Archive.org returned invalid JSON', e)
+    throw new ScriptException('Archive.org returned an unreadable response')
+  }
 }
 
 function iconUrl() {
@@ -881,21 +991,6 @@ function thumbnailUrl(identifier) {
 
 function fileUrl(identifier, fileName) {
   return `${BASE_URL}/download/${encodeURIComponent(identifier)}/${encodePath(fileName)}`
-}
-
-function itemFileUrl(item, fileName) {
-  const server = itemServer(item)
-  const dir = String(item?.dir ?? '')
-  if (server && dir) {
-    return `https://${server}${encodePath(dir)}/${encodePath(fileName)}`
-  }
-
-  return fileUrl(itemIdentifier(item), fileName)
-}
-
-function itemServer(item) {
-  const servers = item?.workable_servers ?? []
-  return cleanText(servers[0] || item?.d1 || item?.d2 || item?.server)
 }
 
 function detailsUrl(identifier) {
@@ -953,9 +1048,13 @@ function audioContainer(file) {
   if (name.endsWith('.ogg') || name.endsWith('.oga')) {
     return 'audio/ogg'
   }
+  if (name.endsWith('.opus')) return 'audio/ogg'
   if (name.endsWith('.flac')) {
     return 'audio/flac'
   }
+  if (name.endsWith('.wav')) return 'audio/wav'
+  if (name.endsWith('.m4a')) return 'audio/mp4'
+  if (name.endsWith('.aac')) return 'audio/aac'
 
   return 'audio/mpeg'
 }
@@ -965,9 +1064,12 @@ function audioCodec(file) {
   if (name.endsWith('.ogg') || name.endsWith('.oga')) {
     return 'vorbis'
   }
+  if (name.endsWith('.opus')) return 'opus'
   if (name.endsWith('.flac')) {
     return 'flac'
   }
+  if (name.endsWith('.wav')) return 'pcm'
+  if (name.endsWith('.m4a') || name.endsWith('.aac')) return 'aac'
 
   return 'mp3'
 }
@@ -977,8 +1079,12 @@ function videoContainer(file) {
   if (name.endsWith('.ogv')) {
     return 'video/ogg'
   }
+  if (name.endsWith('.webm')) return 'video/webm'
+  if (name.endsWith('.mpg') || name.endsWith('.mpeg')) return 'video/mpeg'
+  if (name.endsWith('.avi')) return 'video/x-msvideo'
+  if (name.endsWith('.mkv')) return 'video/x-matroska'
 
-  return name.endsWith('.webm') ? 'video/webm' : 'video/mp4'
+  return 'video/mp4'
 }
 
 function videoCodec(file) {
@@ -986,8 +1092,16 @@ function videoCodec(file) {
   if (name.endsWith('.ogv')) {
     return 'theora'
   }
+  if (name.endsWith('.webm')) return 'vp9'
+  if (name.endsWith('.mpg') || name.endsWith('.mpeg')) return 'mpeg2video'
+  if (
+    String(file.format ?? '')
+      .toLowerCase()
+      .indexOf('cinepak') >= 0
+  )
+    return 'cinepak'
 
-  return name.endsWith('.webm') ? 'vp9' : 'h264'
+  return name.endsWith('.avi') || name.endsWith('.mkv') ? '' : 'h264'
 }
 
 function durationSeconds(value) {
@@ -1008,6 +1122,13 @@ function durationSeconds(value) {
     .split(':')
     .map(Number)
     .reduce((total, part) => total * 60 + (part || 0), 0)
+}
+
+function runtimeSeconds(value) {
+  const text = String(value ?? '').trim()
+  if (!text) return 0
+  if (/^\d+$/.test(text)) return Number(text) * 60
+  return durationSeconds(text)
 }
 
 function bitrateBitsPerSecond(file) {

@@ -29,11 +29,13 @@ const grayjay_plugin_globals = readonly([
   'ChannelPager',
   'PlaylistPager',
   'ScriptException',
+  'UnavailableException',
   'Type',
   'VideoPager',
   '__GRAYJAY_DEBUG_TESTS__',
   'IS_TESTING',
   'bridge',
+  'http',
   'log',
   'source'
 ])
@@ -69,7 +71,10 @@ export default [
   {
     files: ['src/plugins/**/*.js'],
     languageOptions: {
-      globals: grayjay_plugin_globals
+      globals: {
+        ...grayjay_media_globals,
+        ...grayjay_plugin_globals
+      }
     },
     rules: {
       'no-unused-vars': ['warn', { argsIgnorePattern: '^_', varsIgnorePattern: '^_', caughtErrorsIgnorePattern: '^_' }]

@@ -47,9 +47,7 @@ test('archiveorg public details URLs open as quick content details, not playlist
   assert_has_media(details, 'public details URL')
   const urls = media_sources(details).map((source) => source.url)
   expect(urls[0]).toBe('https://archive.org/download/sadek_abdo_yahoo_033_20180316_2015/033.mp3')
-  expect(
-    urls.some((sourceUrl) => /^https:\/\/ia\d+.*\.archive\.org\/\d+\/items\/sadek_abdo_yahoo_033_20180316_2015\/033\.mp3$/.test(sourceUrl))
-  ).toBe(true)
+  expect(urls).toContain('https://archive.org/download/sadek_abdo_yahoo_033_20180316_2015/033.ogg')
   expect(details.video.videoSources.length).toBe(0)
   expect(details.video.audioSources[0]).toMatchObject({
     container: 'audio/mpeg',
@@ -57,6 +55,7 @@ test('archiveorg public details URLs open as quick content details, not playlist
     language: 'Unknown'
   })
   expect(details.video.audioSources[0].bitrate).toBeGreaterThan(0)
+  expect(details.video.audioSources[1]).toMatchObject({ container: 'audio/ogg', codec: 'vorbis' })
   expect(details.video.audioSources[1].bitrate).toBeGreaterThan(0)
 })
 
@@ -73,6 +72,7 @@ test('archiveorg public Quran video details prefer playable MP4 video when avail
     codec: 'h264'
   })
   expect(videoSources[0].url).toMatch(/^https:\/\/archive\.org\/download\/.*\.mp4$/)
+  expect(videoSources.some((source) => source.container === 'video/ogg' && source.codec === 'theora')).toBe(true)
 })
 
 test('archiveorg public Quran video details prefer MP4 video when available', () => {
@@ -116,6 +116,9 @@ test('archiveorg creator channels expose contents, scoped search, peeks, and pla
   const channel = assert_channel(source.getChannel('archiveorg://creator/NASA%20TV'), 'creator channel')
   expect(source.isChannelUrl(channel.url)).toBe(true)
   expect(source.getChannel(channel.url).url).toBe(channel.url)
+  expect(source.isChannelUrl('https://archive.org/search.php?query=creator:NASA%20TV')).toBe(true)
+  expect(source.isChannelUrl('https://archive.org/search.php?query=uploader:nasa@example.com')).toBe(true)
+  expect(source.isChannelUrl('https://archive.org/@NASA')).toBe(true)
 
   assert_pager(source.getChannelContents(channel.url, null, Type.Order.Chronological, null), 'channel contents')
   assert_pager(source.searchChannelContents(channel.url, 'moon', null, Type.Order.Popularity, { content: 'video' }), 'channel search')

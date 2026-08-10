@@ -14,17 +14,17 @@
 			language
 		})));
 	}
-	function video_source_descriptor({ name, url, width = 0, height = 0, container = "video/mp4", codec = "h264", duration = 0, bitrate = 0 }) {
-		return new VideoSourceDescriptor([new VideoUrlSource({
+	function hls_source({ name, url, language = "", duration = -1, priority = true }) {
+		return new HLSSource({
 			name,
-			width,
-			height,
-			container,
-			codec,
-			bitrate,
 			duration,
-			url
-		})]);
+			url,
+			priority,
+			language
+		});
+	}
+	function hls_source_descriptor(source) {
+		return new UnMuxVideoSourceDescriptor([source], []);
 	}
 
 	function plugin_asset(config, path) {
@@ -145,80 +145,8 @@
 		};
 	}
 
-	var BODY_PREVIEW_LENGTH = 500;
-	function get_response(url, headers = {}, useAuth = false, debugContext = null) {
-		const response = request("GET", url, "", headers, useAuth, debugContext);
-		if (!response.isOk) throw request_error(response, url);
-		return response;
-	}
-	function get_text(url, headers = {}, useAuth = false, debugContext = null) {
-		return get_response(url, headers, useAuth, debugContext).body;
-	}
-	function get_json(url, headers = {}, useAuth = false, debugContext = null) {
-		const text = get_text(url, headers, useAuth, debugContext);
-		try {
-			return JSON.parse(text);
-		} catch (e) {
-			debug_log(debug_scope(debugContext), "JSON parse failed", {
-				url,
-				error: String(e),
-				preview: debug_string(text, BODY_PREVIEW_LENGTH)
-			});
-			throw e;
-		}
-	}
 	function query_string(params) {
 		return params.filter((item) => item[1] !== null && item[1] !== void 0).map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`).join("&");
-	}
-	function request(method, url, body, headers, useAuth, debugContext = null) {
-		const start = Date.now();
-		try {
-			const response = method === "POST" ? http.POST(url, body, headers, useAuth) : http.GET(url, headers, useAuth);
-			log_response(method, url, response, Date.now() - start, debugContext);
-			return response;
-		} catch (e) {
-			debug_log(debug_scope(debugContext), "HTTP exception", {
-				method,
-				url,
-				ms: Date.now() - start,
-				error: String(e)
-			});
-			throw e;
-		}
-	}
-	function log_response(method, url, response, ms, debugContext) {
-		const details = {
-			method,
-			url,
-			code: response?.code,
-			ms,
-			bytes: body_length(response)
-		};
-		if (response?.isOk) {
-			debug_log(debug_scope(debugContext), "HTTP OK", details);
-			return;
-		}
-		debug_log(debug_scope(debugContext), "HTTP failure", {
-			...details,
-			preview: body_preview(response)
-		});
-	}
-	function request_error(response, url) {
-		return new ScriptException(`Request failed with code ${response.code}: ${url}`);
-	}
-	function debug_scope(debugContext) {
-		if (!debugContext) return "http";
-		if (typeof debugContext === "string") return debugContext;
-		return debugContext.scope || "http";
-	}
-	function body_length(response) {
-		const body = response?.body;
-		if (typeof body === "string") return body.length;
-		return body?.length ?? body?.byteLength ?? 0;
-	}
-	function body_preview(response) {
-		const body = response?.body;
-		return typeof body === "string" ? debug_string(body, BODY_PREVIEW_LENGTH) : "";
 	}
 
 	function apply_pager_state(target, next) {
@@ -288,19 +216,36 @@
 		"User-Agent": `grayjay.app/${bridge.buildVersion}`,
 		Accept: "application/json"
 	};
+	var TRANSIENT_HTTP_STATUSES = [
+		429,
+		500,
+		501,
+		502,
+		503,
+		504
+	];
 	var PLAYABLE_AUDIO_FORMATS = [
 		"VBR MP3",
 		"MP3",
 		"64Kbps MP3",
 		"Ogg Vorbis",
-		"FLAC"
+		"FLAC",
+		"WAVE",
+		"WAV",
+		"M4A",
+		"AAC",
+		"Opus"
 	];
 	var PLAYABLE_VIDEO_FORMATS = [
 		"MPEG4",
 		"h.264",
 		"512Kb MPEG4",
 		"Ogg Video",
-		"WebM"
+		"WebM",
+		"QuickTime",
+		"AVI",
+		"MPEG2",
+		"HLS"
 	];
 	var SKIPPED_FORMATS = [
 		"Metadata",
@@ -315,9 +260,12 @@
 	];
 	var REGEX = {
 		CREATOR: /^archiveorg:\/\/creator\/(.+)$/,
+		CHANNEL: /^archiveorg:\/\/channel\/(creator|uploader)\/(.+)$/,
 		ITEM: /^archiveorg:\/\/item\/([^/?#]+)\/(audio|video|both)$/,
 		PLAYLIST: /^archiveorg:\/\/playlist\/([^/?#]+)(?:\/(audio|video|both))?$/,
 		CONTENT: /^archiveorg:\/\/content\/([^/?#]+)\/(.+)$/,
+		WEB_ACCOUNT: /^https?:\/\/(?:www\.)?archive\.org\/(?:details\/)?@([^/?#]+)/,
+		WEB_CHANNEL_SEARCH: /^https?:\/\/(?:www\.)?archive\.org\/search(?:\.php)?\?/,
 		WEB_DETAILS: /^https?:\/\/(?:www\.)?archive\.org\/details\/([^/?#]+)/,
 		WEB_DOWNLOAD: /^https?:\/\/(?:www\.)?archive\.org\/download\/([^/?#]+)\/([^?#]+)/
 	};
@@ -373,39 +321,45 @@
 		return new ArchivePlaylistSearchPager(query, selectedMedia(filters), order || defaultSort(), null);
 	};
 	source.isChannelUrl = function(_url) {
-		return REGEX.CREATOR.test(_url);
+		return Boolean(channelFromUrl(_url));
 	};
 	source.getChannel = function(url) {
-		return creatorToChannel(creatorFromUrl(url));
+		return archiveChannel(requiredChannel(url));
 	};
 	source.getChannelPlaylists = function(url) {
-		return new ArchivePlaylistSearchPager("", mediaType(), defaultSort(), null, null, 0, false, creatorFromUrl(url));
+		return new ArchivePlaylistSearchPager("", mediaType(), defaultSort(), null, null, 0, false, requiredChannel(url));
 	};
 	source.getSearchChannelContentsCapabilities = () => source.getSearchCapabilities();
 	source.getChannelCapabilities = () => source.getSearchCapabilities();
 	source.getPeekChannelTypes = () => ["Media"];
 	source.peekChannelContents = function(url, _type) {
-		return new ArchiveSearchPager("", mediaType(), defaultSort(), null, null, 0, false, creatorFromUrl(url)).results.slice(0, 6);
+		return new ArchiveSearchPager("", mediaType(), defaultSort(), null, null, 0, false, requiredChannel(url)).results.slice(0, 6);
 	};
 	source.searchChannelContents = function(url, query, type, order, filters) {
-		return new ArchiveSearchPager(query, selectedMedia(filters), order || defaultSort(), null, null, 0, false, creatorFromUrl(url));
+		return new ArchiveSearchPager(query, selectedMedia(filters), order || defaultSort(), null, null, 0, false, requiredChannel(url));
 	};
 	source.getChannelContents = function(url, _type, order, filters) {
-		return new ArchiveSearchPager("", selectedMedia(filters), order || defaultSort(), null, null, 0, false, creatorFromUrl(url));
+		return new ArchiveSearchPager("", selectedMedia(filters), order || defaultSort(), null, null, 0, false, requiredChannel(url));
 	};
 	source.isPlaylistUrl = function(url) {
 		return REGEX.PLAYLIST.test(url);
 	};
 	source.getPlaylist = function(url) {
-		return itemToPlaylistDetails(getItemFromUrl(url), mediaFromUrl(url));
+		const item = getItemFromUrl(url);
+		assertItemCanOpen(item);
+		return itemToPlaylistDetails(item, mediaFromUrl(url));
 	};
 	source.isContentDetailsUrl = function(url) {
-		return REGEX.ITEM.test(url) || REGEX.CONTENT.test(url) || REGEX.WEB_DOWNLOAD.test(url) || REGEX.WEB_DETAILS.test(url);
+		return !REGEX.WEB_ACCOUNT.test(url) && (REGEX.ITEM.test(url) || REGEX.CONTENT.test(url) || REGEX.WEB_DOWNLOAD.test(url) || REGEX.WEB_DETAILS.test(url));
 	};
 	source.getContentDetails = function(url) {
 		const direct = fileFromUrl(url);
-		if (direct) return fileToVideo(direct.item, direct.file, url);
+		if (direct) {
+			assertItemCanOpen(direct.item);
+			return fileToVideo(direct.item, direct.file, url);
+		}
 		const item = getItemFromUrl(url);
+		assertItemCanOpen(item);
 		const file = firstPlayableFile(item, mediaFromUrl(url));
 		if (!file) throw new ScriptException("Archive.org item has no playable audio or video files");
 		return fileToVideo(item, file, url);
@@ -485,9 +439,9 @@
 			return apply_pager_state(this, next);
 		}
 	};
-	function searchArchive(query, media, order, pageNumber, creator = null) {
+	function searchArchive(query, media, order, pageNumber, channel = null) {
 		const params = [
-			["q", searchQuery(query, media, creator)],
+			["q", searchQuery(query, media, channel)],
 			["rows", String(SEARCH_COUNT)],
 			["page", String(pageNumber || 1)],
 			["output", "json"],
@@ -496,6 +450,7 @@
 			["fl[]", "creator"],
 			["fl[]", "mediatype"],
 			["fl[]", "format"],
+			["fl[]", "runtime"],
 			["fl[]", "downloads"],
 			["fl[]", "publicdate"],
 			["fl[]", "date"]
@@ -511,14 +466,15 @@
 			hasMore: (response.start ?? (page - 1) * SEARCH_COUNT) + items.length < Number(response.numFound ?? 0)
 		};
 	}
-	function searchQuery(query, media, creator = null) {
+	function searchQuery(query, media, channel = null) {
 		const parts = [];
 		const q = cleanText(query);
-		if (creator) parts.push(creatorSearchQuery(creator));
+		if (channel) parts.push(channelSearchQuery(channel));
 		if (q) parts.push(userSearchQuery(q));
-		if (media === MEDIA.AUDIO) parts.push("mediatype:audio");
-		else if (media === MEDIA.VIDEO) parts.push("mediatype:movies");
-		else parts.push("(mediatype:audio OR mediatype:movies)");
+		if (media === MEDIA.AUDIO) parts.push("(mediatype:audio OR mediatype:etree)");
+		else if (media === MEDIA.VIDEO) parts.push("(mediatype:movies OR mediatype:video)");
+		else parts.push("(mediatype:audio OR mediatype:etree OR mediatype:movies OR mediatype:video)");
+		parts.push("NOT access-restricted-item:true");
 		return parts.join(" AND ");
 	}
 	function userSearchQuery(query) {
@@ -527,8 +483,8 @@
 		if (terms.length > 1) clauses.push(terms[terms.length - 1]);
 		return `(${dedupe_strings(clauses).join(" OR ")})`;
 	}
-	function creatorSearchQuery(creator) {
-		return `creator:"${escapeSearch(creator)}"`;
+	function channelSearchQuery(channel) {
+		return `${channel.field === "uploader" ? "uploader" : "creator"}:"${escapeSearch(channel.value)}"`;
 	}
 	function rankSearchItems(items, query) {
 		const terms = searchTerms(query);
@@ -569,7 +525,7 @@
 		const playlists = [];
 		for (const summary of items ?? []) try {
 			const item = getItem(summary.identifier, summary);
-			if (firstPlayableFile(item, media)) playlists.push(itemToPlaylist(item, media));
+			if (playableFileCount(item, media) > 1) playlists.push(itemToPlaylist(item, media));
 		} catch (e) {
 			debug_log(PLATFORM, "Failed to map playlist", e);
 		}
@@ -580,7 +536,10 @@
 		if (!id) throw new ScriptException("Archive.org item not found");
 		if (!state.itemCache[id]?.files?.length) {
 			const item = callJson(`${BASE_URL}/metadata/${encodeURIComponent(id)}`);
-			if (!item?.files?.length && !summary) throw new ScriptException("Archive.org item not found");
+			if (!item?.metadata) {
+				if (Object.keys(item ?? {}).length) throw new UnavailableException("Archive.org item is temporarily unavailable");
+				throw new ScriptException("Archive.org item not found");
+			}
 			state.itemCache[id] = normalizeItem(item, id, summary);
 		} else if (summary && !state.itemCache[id].summary) state.itemCache[id].summary = summary;
 		state.itemCache[id] = normalizeItem(state.itemCache[id], id, state.itemCache[id].summary ?? summary);
@@ -607,20 +566,34 @@
 		return (item.files ?? []).filter((file) => isPlayableFile(file, media)).sort(fileSort);
 	}
 	function firstPlayableFile(item, media = MEDIA.BOTH) {
-		const preferredMedia = itemMedia(item, media);
-		let best = null;
-		for (const file of item.files ?? []) if (isPlayableFile(file, preferredMedia) && (!best || fileSort(file, best) < 0)) best = file;
-		return best;
+		return playableFiles(item, itemMedia(item, media))[0] ?? null;
 	}
 	function itemMedia(item, media = MEDIA.BOTH) {
 		if (media !== MEDIA.BOTH) return media;
 		const mediatype = normalize(item?.metadata?.mediatype || item?.summary?.mediatype);
-		if (mediatype === "movies" || mediatype === "movie") return MEDIA.VIDEO;
-		if (mediatype === "audio") return MEDIA.AUDIO;
+		if (mediatype === "movies" || mediatype === "movie" || mediatype === "video") return MEDIA.VIDEO;
+		if (mediatype === "audio" || mediatype === "etree") return MEDIA.AUDIO;
 		return media;
 	}
 	function playableFileCount(item, media = MEDIA.BOTH) {
-		return (item.files ?? []).filter((file) => isPlayableFile(file, media)).length;
+		return playableGroups(item, media).length;
+	}
+	function playableGroups(item, media = MEDIA.BOTH) {
+		const groups = {};
+		for (const file of playableFiles(item, media)) {
+			const key = mediaGroupKey(file);
+			groups[key] ??= [];
+			groups[key].push(file);
+		}
+		return Object.keys(groups).map((key) => groups[key]);
+	}
+	function mediaGroupKey(file) {
+		const name = String(file.original || file.name || "");
+		return `${fileKind(file)}:${name.replace(/\.[^.]+$/, "")}`;
+	}
+	function renditionFiles(item, selected) {
+		const key = mediaGroupKey(selected);
+		return playableFiles(item, fileKind(selected)).filter((file) => mediaGroupKey(file) === key);
 	}
 	function isPlayableFile(file, media = MEDIA.BOTH) {
 		if (isSkippedFile(file)) return false;
@@ -640,13 +613,13 @@
 	function isSkippedFile(file) {
 		const name = String(file.name ?? "");
 		const format = String(file.format ?? "");
-		return !name || SKIPPED_FORMATS.some((skipped) => format.indexOf(skipped) >= 0) || /\.(xml|json|txt|pdf|torrent|sqlite|srt|vtt|jpg|jpeg|png|gif|zip|rar|7z)$/i.test(name);
+		return !name || file.private === true || file.private === "true" || file.source === "metadata" || name.indexOf("__ia_spool/") >= 0 || SKIPPED_FORMATS.some((skipped) => format.indexOf(skipped) >= 0) || /\.(xml|json|txt|pdf|torrent|sqlite|srt|vtt|jpg|jpeg|png|gif|zip|rar|7z)$/i.test(name);
 	}
 	function fileKind(file) {
 		const name = String(file.name ?? "");
 		const format = String(file.format ?? "");
-		if (PLAYABLE_AUDIO_FORMATS.some((value) => format.indexOf(value) >= 0) || /\.(mp3|ogg|oga|flac)$/i.test(name)) return MEDIA.AUDIO;
-		if (PLAYABLE_VIDEO_FORMATS.some((value) => format.indexOf(value) >= 0) || /\.(mp4|m4v|webm|ogv)$/i.test(name)) return MEDIA.VIDEO;
+		if (PLAYABLE_AUDIO_FORMATS.some((value) => format.indexOf(value) >= 0) || /\.(mp3|ogg|oga|flac|wav|m4a|aac|opus)$/i.test(name)) return MEDIA.AUDIO;
+		if (PLAYABLE_VIDEO_FORMATS.some((value) => format.indexOf(value) >= 0) || /\.(mp4|m4v|mov|avi|mkv|webm|ogv|mpg|mpeg|m3u8)$/i.test(name)) return MEDIA.VIDEO;
 		return 0;
 	}
 	function fileSort(a, b) {
@@ -672,7 +645,7 @@
 			thumbnails: itemThumbnails(identifier),
 			author: summaryAuthor(summary),
 			uploadDate: unixDate(summary.publicdate || summary.date),
-			duration: 0,
+			duration: runtimeSeconds(summary.runtime),
 			viewCount: Number(summary.downloads || 0),
 			isLive: false,
 			url: itemUrl(identifier, media),
@@ -701,35 +674,41 @@
 		const itemTitle = cleanText(meta.title || summary.title || identifier);
 		const kind = fileKind(file);
 		const mediaUrl = fileUrl(identifier, file.name);
-		const directMediaUrl = itemFileUrl(item, file.name);
+		const selectedGroup = mediaGroupKey(file);
 		const details = grayjay.video(`${identifier}-${file.name}`, {
 			name: title === itemTitle ? title : `${title} - ${itemTitle}`,
 			thumbnails: itemThumbnails(identifier),
 			author: itemAuthor(item),
 			uploadDate: unixDate(meta.publicdate || summary.publicdate || meta.date),
-			duration: durationSeconds(file.length || file.runtime || meta.runtime),
+			duration: durationSeconds(file.length || file.runtime) || runtimeSeconds(meta.runtime),
 			viewCount: Number(meta.downloads || summary.downloads || 0),
 			isLive: false,
 			url: urlOverride || contentUrl(identifier, file.name),
 			description: itemDescription(item, file, mediaUrl),
-			video: sourceDescriptor(file, mediaUrl, kind, directMediaUrl),
+			video: sourceDescriptor(item, renditionFiles(item, file), kind),
 			shareUrl: detailsUrl(identifier)
 		});
 		details.getContentRecommendations = function() {
-			return new ArrayVideoPager(playableFiles(item).filter((candidate) => candidate.name !== file.name).map((candidate) => fileToVideo(item, candidate)), DEFAULT_LIMIT);
+			return new ArrayVideoPager(playableGroups(item).filter((files) => mediaGroupKey(files[0]) !== selectedGroup).map((files) => fileToVideo(item, files[0])), DEFAULT_LIMIT);
 		};
 		return details;
 	}
-	function sourceDescriptor(file, url, kind, fallbackUrl = null) {
-		if (kind === MEDIA.AUDIO) return audio_sources_descriptor([url, fallbackUrl].filter((value, index, list) => value && list.indexOf(value) === index).map((sourceUrl) => ({
+	function sourceDescriptor(item, files, kind) {
+		if (kind === MEDIA.AUDIO) return audio_sources_descriptor(files.map((file) => ({
 			name: sourceName(file),
 			container: audioContainer(file),
 			codec: audioCodec(file),
 			bitrate: bitrateBitsPerSecond(file),
 			duration: durationSeconds(file.length || file.runtime),
-			url: sourceUrl
+			url: fileUrl(itemIdentifier(item), file.name)
 		})));
-		return video_source_descriptor({
+		const hls = files.find((file) => String(file.name ?? "").toLowerCase().endsWith(".m3u8"));
+		if (hls) return hls_source_descriptor(hls_source({
+			name: sourceName(hls),
+			url: fileUrl(itemIdentifier(item), hls.name),
+			duration: durationSeconds(hls.length)
+		}));
+		return new VideoSourceDescriptor(files.map((file) => new VideoUrlSource({
 			name: sourceName(file),
 			width: Number(file.width ?? 0),
 			height: Number(file.height ?? 0),
@@ -737,8 +716,8 @@
 			codec: videoCodec(file),
 			bitrate: bitrateBitsPerSecond(file),
 			duration: durationSeconds(file.length || file.runtime),
-			url
-		});
+			url: fileUrl(itemIdentifier(item), file.name)
+		})));
 	}
 	function itemToPlaylist(item, media = MEDIA.BOTH) {
 		const identifier = itemIdentifier(item);
@@ -765,7 +744,7 @@
 			url: playlist.url,
 			videoCount: playlist.videoCount,
 			thumbnail: playlist.thumbnail,
-			contents: new ArrayVideoPager(playableFiles(item, media).map((file) => fileToVideo(item, file)), DEFAULT_LIMIT)
+			contents: new ArrayVideoPager(playableGroups(item, media).map((files) => fileToVideo(item, files[0])), DEFAULT_LIMIT)
 		});
 	}
 	function itemAuthor(item) {
@@ -791,30 +770,75 @@
 		].filter(Boolean).join("\n");
 	}
 	function creatorToChannel(creator) {
-		const name = cleanText(creator);
+		return archiveChannel({
+			field: "creator",
+			value: creator
+		});
+	}
+	function archiveChannel(channel) {
+		const name = cleanText(channel.value);
+		const field = channel.field === "uploader" ? "uploader" : "creator";
 		const id = creatorId(name);
-		return grayjay.channel(`creator-${id}`, {
+		return grayjay.channel(`${field}-${id}`, {
 			name,
 			thumbnail: iconUrl(),
 			banner: iconUrl(),
 			description: `Archive.org items by ${name}.`,
-			url: creatorUrl(name),
-			urlAlternatives: [creatorPublicUrl(name)]
+			url: field === "creator" ? creatorUrl(name) : channelUrl(field, name),
+			urlAlternatives: [channelPublicUrl(field, name)]
 		});
 	}
 	function creatorId(creator) {
-		return normalize(creator).replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "internet-archive";
+		return normalize(creator).replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || encodeURIComponent(normalize(creator)) || "internet-archive";
 	}
 	function creatorUrl(creator) {
 		return `archiveorg://creator/${encodeURIComponent(cleanText(creator))}`;
 	}
-	function creatorPublicUrl(creator) {
-		return `${BASE_URL}/search?${query_string([["query", creatorSearchQuery(creator)]])}`;
+	function channelUrl(field, value) {
+		return `archiveorg://channel/${field}/${encodeURIComponent(cleanText(value))}`;
 	}
-	function creatorFromUrl(url) {
-		const match = String(url ?? "").match(REGEX.CREATOR);
-		if (!match?.[1]) throw new ScriptException("Archive.org creator not found");
-		return decodeURIComponent(match[1]);
+	function channelPublicUrl(field, value) {
+		return `${BASE_URL}/search?${query_string([["query", channelSearchQuery({
+			field,
+			value
+		})]])}`;
+	}
+	function channelFromUrl(url) {
+		const value = String(url ?? "");
+		let match = value.match(REGEX.CREATOR);
+		if (match?.[1]) return {
+			field: "creator",
+			value: safeDecode(match[1])
+		};
+		match = value.match(REGEX.CHANNEL);
+		if (match?.[1] && match?.[2]) return {
+			field: match[1],
+			value: safeDecode(match[2])
+		};
+		match = value.match(REGEX.WEB_ACCOUNT);
+		if (match?.[1]) return {
+			field: "creator",
+			value: safeDecode(match[1])
+		};
+		if (!REGEX.WEB_CHANNEL_SEARCH.test(value)) return null;
+		match = safeDecode(value.replace(/\+/g, " ")).match(/(creator|uploader):(?:"([^"]+)"|([^&#]+))/);
+		if (!match) return null;
+		return {
+			field: match[1],
+			value: cleanText(match[2] || match[3])
+		};
+	}
+	function requiredChannel(url) {
+		const channel = channelFromUrl(url);
+		if (!channel) throw new ScriptException("Archive.org channel not found");
+		return channel;
+	}
+	function safeDecode(value) {
+		try {
+			return decodeURIComponent(value);
+		} catch (_error) {
+			return value;
+		}
 	}
 	function normalizeItem(item, fallbackIdentifier, summary = null) {
 		const metadata = item?.metadata ?? {};
@@ -829,6 +853,12 @@
 			summary: summary ?? item?.summary ?? null,
 			files: item?.files ?? []
 		};
+	}
+	function assertItemCanOpen(item) {
+		const metadata = item.metadata ?? {};
+		if (normalize(metadata.mediatype) === "collection") throw new ScriptException("Archive.org collections are not playable items");
+		if (item.is_dark === true || item.is_dark === "true") throw new UnavailableException("This Archive.org item has been withdrawn");
+		if (metadata["access-restricted-item"] === true || metadata["access-restricted-item"] === "true") throw new UnavailableException("This Archive.org item is access restricted");
 	}
 	function cacheSummary(summary) {
 		const identifier = summaryIdentifier(summary);
@@ -895,7 +925,18 @@
 		return null;
 	}
 	function callJson(url) {
-		return get_json(url, DEFAULT_HEADERS);
+		let response = http.GET(url, DEFAULT_HEADERS);
+		if (!response?.isOk && TRANSIENT_HTTP_STATUSES.indexOf(response?.code) >= 0) response = http.GET(url, {
+			...DEFAULT_HEADERS,
+			"X-Accept-Reduced-Priority": "1"
+		});
+		if (!response?.isOk) throw new ScriptException(`Archive.org request failed (HTTP ${response?.code ?? "unknown"})`);
+		try {
+			return JSON.parse(response.body);
+		} catch (e) {
+			debug_log(PLATFORM, "Archive.org returned invalid JSON", e);
+			throw new ScriptException("Archive.org returned an unreadable response");
+		}
 	}
 	function iconUrl() {
 		return plugin_icon_url(_config, DEFAULT_ICON);
@@ -908,15 +949,6 @@
 	}
 	function fileUrl(identifier, fileName) {
 		return `${BASE_URL}/download/${encodeURIComponent(identifier)}/${encodePath(fileName)}`;
-	}
-	function itemFileUrl(item, fileName) {
-		const server = itemServer(item);
-		const dir = String(item?.dir ?? "");
-		if (server && dir) return `https://${server}${encodePath(dir)}/${encodePath(fileName)}`;
-		return fileUrl(itemIdentifier(item), fileName);
-	}
-	function itemServer(item) {
-		return cleanText((item?.workable_servers ?? [])[0] || item?.d1 || item?.d2 || item?.server);
 	}
 	function detailsUrl(identifier) {
 		return `${BASE_URL}/details/${encodeURIComponent(identifier)}`;
@@ -950,24 +982,38 @@
 	function audioContainer(file) {
 		const name = String(file.name ?? "").toLowerCase();
 		if (name.endsWith(".ogg") || name.endsWith(".oga")) return "audio/ogg";
+		if (name.endsWith(".opus")) return "audio/ogg";
 		if (name.endsWith(".flac")) return "audio/flac";
+		if (name.endsWith(".wav")) return "audio/wav";
+		if (name.endsWith(".m4a")) return "audio/mp4";
+		if (name.endsWith(".aac")) return "audio/aac";
 		return "audio/mpeg";
 	}
 	function audioCodec(file) {
 		const name = String(file.name ?? "").toLowerCase();
 		if (name.endsWith(".ogg") || name.endsWith(".oga")) return "vorbis";
+		if (name.endsWith(".opus")) return "opus";
 		if (name.endsWith(".flac")) return "flac";
+		if (name.endsWith(".wav")) return "pcm";
+		if (name.endsWith(".m4a") || name.endsWith(".aac")) return "aac";
 		return "mp3";
 	}
 	function videoContainer(file) {
 		const name = String(file.name ?? "").toLowerCase();
 		if (name.endsWith(".ogv")) return "video/ogg";
-		return name.endsWith(".webm") ? "video/webm" : "video/mp4";
+		if (name.endsWith(".webm")) return "video/webm";
+		if (name.endsWith(".mpg") || name.endsWith(".mpeg")) return "video/mpeg";
+		if (name.endsWith(".avi")) return "video/x-msvideo";
+		if (name.endsWith(".mkv")) return "video/x-matroska";
+		return "video/mp4";
 	}
 	function videoCodec(file) {
 		const name = String(file.name ?? "").toLowerCase();
 		if (name.endsWith(".ogv")) return "theora";
-		return name.endsWith(".webm") ? "vp9" : "h264";
+		if (name.endsWith(".webm")) return "vp9";
+		if (name.endsWith(".mpg") || name.endsWith(".mpeg")) return "mpeg2video";
+		if (String(file.format ?? "").toLowerCase().indexOf("cinepak") >= 0) return "cinepak";
+		return name.endsWith(".avi") || name.endsWith(".mkv") ? "" : "h264";
 	}
 	function durationSeconds(value) {
 		if (typeof value === "number") return value;
@@ -975,6 +1021,12 @@
 		if (!text) return 0;
 		if (/^\d+(\.\d+)?$/.test(text)) return Number(text);
 		return text.split(":").map(Number).reduce((total, part) => total * 60 + (part || 0), 0);
+	}
+	function runtimeSeconds(value) {
+		const text = String(value ?? "").trim();
+		if (!text) return 0;
+		if (/^\d+$/.test(text)) return Number(text) * 60;
+		return durationSeconds(text);
 	}
 	function bitrateBitsPerSecond(file) {
 		const explicit = Number(file.bitrate || file.bps || 0);
