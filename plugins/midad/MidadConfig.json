@@ -7,7 +7,7 @@
   "sourceUrl": "https://raw.githubusercontent.com/yshalsager/grayjay-plugins/master/plugins/midad/MidadConfig.json",
   "repositoryUrl": "https://github.com/yshalsager/grayjay-plugins",
   "scriptUrl": "./MidadScript.js",
-  "version": 1,
+  "version": 2,
   "iconUrl": "https://midad.com/favicon.ico",
   "id": "d75401b7-7811-42d9-a483-a7159fb1dafc",
   "packages": ["Http"],
@@ -15,8 +15,9 @@
   "allowUrls": ["midad.com", "www.midad.com", "fra1.digitaloceanspaces.com", "www.youtube.com", "youtube.com", "youtu.be", "i.ytimg.com"],
   "settings": [],
   "changelog": {
-    "1": ["Initial Midad source implementation."]
+    "1": ["Initial Midad source implementation."],
+    "2": ["Fix YouTube feed content URLs receiving array indices."]
   },
   "scriptPublicKey": "MIICIjANBgkqhkiG9w0BAQEFAAOCAg8AMIICCgKCAgEAwi2xI2mEI/H1NQqXhdU2DLze4ik+YxgC5QIq+MXgHWYXW0JCUrLsiSRHhYv22wo0PPj64V/WANZ4AyAmpCthJhlvfVc0CYlOjK52jBBTZCbs/3yU+GrRS+HnZNogA6tu/89Lcyheqvoks8XQ/M60PVgCnwzy1EDS6MODR+47J2y/cBeKqr/agYXerfDyrFoVdVICsWFTFJ/w3MQ+faVt+CDxYiYWJ38ntJjOrF6xiMrO1jgqBp9ND9H/2uBYEECE8GnujqUsod8dSctYkNNTM5MVkgZKUjchuRBAoNRlSTcvaSZi1j1CREjqKJDfq8jt5zwbV79N8wpUGpxmQ4e5K+6HNfnvIe+jA9W5sjFOT/q1ztkYO8MKRsJAiqoJBxvglRu9/lqvNIzJsyLr6afB49DQxoUBNWn2pQIQk/AZe8GA5FRCUFwbDXYa3ly5H57B8ZavXaY864N5yLnylt2LWrj7XqGSOh2vGWkS836m6trthFZdsigCxMB55USDIj5HHtxCQH1oHmmuJFn/uZW28RIIbSN+9vGsf9KvmxZ28cPeJwHalGNBq7Qp7YAEu+SOr5W8Hq4wh1e2JMCQbEqZU8qBNZWaz0HGC2ISkSBrDiWEb+epTzLBeD0pdz2Vy1avGHW4oOM8d/c8hLDwJ+vkLdQ5mddr2VjCoNt8SQBJapECAwEAAQ==",
-  "scriptSignature": "LfYTk6yMOZyPvU1vqF07C/NLOWtp7qisAQx0ZROrlkkciB8tFQ1BZoxSAIx3dESKqMYxsPoqIGH2Aj5ufQcPlHnFaCE+7H2YDI9BnmxeFLN1tyyLXVPRKYiDGsFKKsD27TzBWa8ALW0t36Z0lUg+EacMB14L+uQpIVz/eA91mB5UKr9W3wLEtzapOK83p8ZC2FjvUnc/YkvirCXLwBP4ramRQu+3QsPGxdTne//2GggHygWlZpDzMmiNEzT9WBB11vOaIY8DfKQHiVgw3Ivkidy1cfbRvg10Rv7oloK74bgjHZLDIUfgTDlJLkEr8dCqBMoKzKa/GQpoZQxGC1ee50O1G5PJuqAguMRmyoRgFrJMy5oIUvQblwfircx/0JTBPQYVv0yZoxIrIn8jDUjU8/seI0aGEIPcW+3saUm8+MwG+nttz+S6ZeVA4cqyxnfNt7EyDfexNxW7Y5hg5Y/g/GO6LtYYjWAgjUQWKvZNfJH5ccru8PSmrtFBVFYt9KUgtjYQzw+Gdlo0v5WDqCIXMs5vshHR7omRF2ptXzCwI88wecbLK/EdCIhMHzjELJOWmJRhl18pXpuJwY++8VRMbhgsEgaVZWt+o32Cqh5HaqDVUbgWEZzMildaxU78WZNIHESgp98+SSM8HOb1pdevVtQsiJVXx1RKZO2TC2HGQ8I="
+  "scriptSignature": "XpShqvbn4hae/m9WWNZTZ41WgspNJM2jcTrtoppd/aB7VdblqrHiLiGdDH20CcXMafMBIm7YnvX4oW18dY4YKZcsw+sHIMDJzK5awpoJIeC8LiPfW23grYtT60skqDC5oqnCPMXRM2hv5nCDKTGJ7xEbZ889MSEokjR55/nzq67Om/ABCUEGUcv6JFYcapqqevEJ4L++aWH5DSu8DOuRv0Qq5proEZz3vvz8ggIhQwPqk/S5wpHQMUp3Awv1WctI6pPNDmssFmwbajSwFGpMpsNTu1m7Qmbc4fNh0v8fm7Xn87PxaWWzWukYZwk1TIx/9BIt68WdARO4KptO2P0JmmQbnFJeoQ21YFG0Xk1MDYZVGTaDR/rPXxu138SLvTeu9UDo9mZZ0vaIBz25sC5D1I7HQlDFH/171zLiIPmHaHm8QIjsp77ySlb3VMMj7d+xeYtlSX57oZD02qeSARcCwvvoc9ml1vgL5ItWHKYzf/vWL3jXVad2JvcF8LPsChUl7jkfea/SSdBo/8aMEm/H73OWFOIKP9WCHoI5egK2p7bhdeXDwQrev4rVRPAJodrK1YJb4UIPyU1ppZrodmbtHU5GtWK63dxThXkRBMvoNzpKFnI7fytHCZ+gyoUPiLMEzOCi2/7b/vSDLrPU3rJEDpk2FD+uCVdJZDaaBeUXm6c="
 }

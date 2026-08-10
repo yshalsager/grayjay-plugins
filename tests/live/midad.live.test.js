@@ -23,6 +23,7 @@ test('midad exposes home, capabilities, section filters, and suggestions', () =>
   expect(source.searchSuggestions('تو')).toContain('التوحيد')
 
   const home = assert_pager(source.getHome(), 'home')
+  expect(home.every((item) => typeof item.url === 'string')).toBe(true)
   expect(home.some((item) => item.contentProvider === 'YouTube')).toBe(true)
   expect(home.some((item) => item.url?.startsWith('midad://content/lesson/'))).toBe(true)
 })

@@ -306,7 +306,7 @@ function loadYoutubeFeed(page) {
   const videos = Array.isArray(data.videos?.data) ? data.videos.data : []
   const playlists = Array.isArray(data.playlist?.data) ? data.playlist.data : []
   return {
-    items: [...videos, ...playlists].map(youtubeToNested).filter(Boolean),
+    items: [...videos, ...playlists].map((item) => youtubeToNested(item)).filter(Boolean),
     hasMore: Boolean(data.videos?.links?.next || data.playlist?.links?.next),
     nextPage: Number(page || 1) + 1
   }
