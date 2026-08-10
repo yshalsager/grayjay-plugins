@@ -1,4 +1,5 @@
 import { promises as fs } from 'node:fs'
+import { createPublicKey, verify } from 'node:crypto'
 import { spawn } from 'node:child_process'
 import { dirname, join, basename } from 'node:path'
 import {
@@ -40,6 +41,18 @@ const validate_script_output = async (plugin) => {
   }
 }
 
+const validate_signature = async (plugin, config) => {
+  if (!config.scriptPublicKey || !config.scriptSignature) {
+    throw new Error(`${plugin.config_path} has no script signature`)
+  }
+
+  const public_key = createPublicKey({ key: Buffer.from(config.scriptPublicKey, 'base64'), format: 'der', type: 'spki' })
+  const script = await fs.readFile(plugin.script_path)
+  if (!verify('sha512', script, public_key, Buffer.from(config.scriptSignature, 'base64'))) {
+    throw new Error(`${plugin.config_path} signature does not match ${plugin.script_path}`)
+  }
+}
+
 const options = parse_plugin_args(process.argv.slice(2))
 const plugins = await load_plugin_registry()
 
@@ -59,6 +72,7 @@ for (const plugin of selected_plugins) {
   await assert_fresh_script(plugin)
   const config = JSON.parse(await fs.readFile(plugin.config_path, 'utf8'))
   await validate_config(plugin, config)
+  await validate_signature(plugin, config)
   await validate_script_output(plugin)
   console.log(`Validated ${plugin.label}`)
 }
