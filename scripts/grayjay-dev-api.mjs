@@ -31,41 +31,30 @@ const endpoint_paths = {
   }
 }
 
-export async function get_json(url, options = {}) {
+async function request_text(url, options = {}) {
   const response = await fetch(url, options)
   const text = await response.text()
-  if (!response.ok) {
-    throw new Error(`${url} failed ${response.status}: ${text}`)
-  }
+  if (!response.ok) throw new Error(`${url} failed ${response.status}: ${text}`)
+  return text
+}
 
+export async function get_json(url, options = {}) {
+  const text = await request_text(url, options)
   return text ? JSON.parse(text) : null
 }
 
 export async function post_json(url, body) {
-  const response = await fetch(url, {
+  const text = await request_text(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body)
   })
-  const text = await response.text()
-  if (!response.ok) {
-    throw new Error(`${url} failed ${response.status}: ${text}`)
-  }
 
   try {
     return text ? JSON.parse(text) : null
   } catch {
     return text
   }
-}
-
-async function get_ok(url) {
-  const response = await fetch(url)
-  const text = await response.text()
-  if (!response.ok) {
-    throw new Error(`${url} failed ${response.status}: ${text}`)
-  }
-  return text
 }
 
 async function desktop_server_url() {
@@ -206,7 +195,7 @@ async function load(values) {
     const config = await dev_config(plugin, dev_base)
     const dev_id = await post_json(endpoint(target, 'load', base), config)
     if (target === 'desktop') {
-      await get_ok(endpoint(target, 'enable_dev', base))
+      await request_text(endpoint(target, 'enable_dev', base))
     }
     console.log(`Loaded ${plugin.label} as DEV (${dev_id}) into ${base}`)
   }

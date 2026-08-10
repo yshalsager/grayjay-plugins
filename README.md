@@ -54,6 +54,22 @@ Android clients that support plugin subtitle sources can use the generated WebVT
 
 ## Development
 
+### Live Tests
+
+Run every live integration test:
+
+```sh
+pnpm run test:live
+```
+
+Pass a plugin registry value to run one test file:
+
+```sh
+pnpm run test:live -- midad
+```
+
+Live tests call the upstream provider websites. Set `LIVE_TEST_DEEP=1` to include the slower MP3Quran catalog fallback test.
+
 ### Android Phone
 
 Use Grayjay's Android DevServer while serving this repository from your computer on the same network.
@@ -246,7 +262,7 @@ http://127.0.0.1:11338
 Then inject the local dev plugin into that server-mode process:
 
 ```sh
-mise run grayjay-load-dev-plugin -- --plugin archiveorg
+pnpm run grayjay:dev-api -- load --target desktop --plugin archiveorg
 ```
 
 This posts the local config from `http://127.0.0.1:3000/plugins/archiveorg/ArchiveOrgConfig.json`, rewrites the script URL to the local dev server, and enables the injected plugin as `DEV`.

@@ -84,10 +84,6 @@ fi
 printf "Grayjay Desktop server URL:\nhttp://127.0.0.1:11338\n"
 '''
 
-[tasks.grayjay-load-dev-plugin]
-description = "Load a local dev plugin into Grayjay Desktop server mode"
-run = "node scripts/load-grayjay-dev-plugin.mjs"
-
 [tasks.grayjay-dev-api]
 description = "Call Grayjay developer API helper"
 run = "pnpm run grayjay:dev-api --"
